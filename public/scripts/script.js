@@ -60,6 +60,8 @@ function getNavigationHTML() {
               <a href="base64.html">Base64 image encoder - decoder</a>
               <a href="kanban.html">Kanban Task Manager</a>
               <a href="qr_code_generator.html">QR code generator</a>
+              <a href="docuseal.html">Document signing</a>
+              
               
             </div>
           </div>
@@ -85,6 +87,7 @@ function getNavigationHTML() {
               <a href="base64.html">Base64 image encoder - decoder</a>
               <a href="kanban.html">Kanban Task Manager</a>
               <a href="qr_code_generator.html">QR code generator</a>
+              <a href="docuseal.html">Document signing</a>
               
             </div>
           </div>
@@ -116,14 +119,45 @@ function setupEventListeners() {
   const dropdownContent = document.querySelector(".dropdown-content");
   const shadow = document.getElementById("shadow");
 
-  burger.addEventListener("click", () => {
-    dropdownContent.classList.toggle("show");
-    shadow.classList.toggle("show");
-  });
+  if (!burger || !dropdownContent || !shadow) return;
 
-  shadow.addEventListener("click", () => {
-    dropdownContent.classList.toggle("show");
-    shadow.classList.toggle("show");
+  let isAnimating = false;
+
+  // Optimize for mobile by using passive event listeners where possible
+  const toggleMenu = () => {
+    if (isAnimating) return; // Prevent rapid clicking during animation
+
+    isAnimating = true;
+    const isShowing = dropdownContent.classList.contains("show");
+
+    if (isShowing) {
+      // Close menu
+      dropdownContent.classList.remove("show");
+      shadow.classList.remove("show");
+      shadow.style.pointerEvents = "none";
+      document.body.style.overflow = "";
+    } else {
+      // Open menu
+      dropdownContent.classList.add("show");
+      shadow.classList.add("show");
+      shadow.style.pointerEvents = "auto";
+      document.body.style.overflow = "hidden"; // Prevent background scrolling
+    }
+
+    // Reset animation flag after transition completes
+    setTimeout(() => {
+      isAnimating = false;
+    }, 200); // Match the CSS transition duration
+  };
+
+  burger.addEventListener("click", toggleMenu, { passive: true });
+  shadow.addEventListener("click", toggleMenu, { passive: true });
+
+  // Close menu on escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && dropdownContent.classList.contains("show")) {
+      toggleMenu();
+    }
   });
 }
 
@@ -138,16 +172,14 @@ import {
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 
-// Your Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyC2CwIcLmGi46-VeVBgGuzgjl1rAN_S3IY",
-  authDomain: "red-box-software.firebaseapp.com",
-  projectId: "red-box-software",
-  storageBucket: "red-box-software.appspot.com",
-  messagingSenderId: "94993930256",
-  appId: "1:94993930256:web:b47f330bee30bddffb1295",
-  measurementId: "G-2LX6NFYS1J",
-};
+// Firebase configuration will be loaded from external file
+// Check if configuration is available
+if (!window.firebaseConfig) {
+  console.error(
+    "Firebase configuration not loaded! Make sure config/firebase-config.js is included."
+  );
+}
+const firebaseConfig = window.firebaseConfig;
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

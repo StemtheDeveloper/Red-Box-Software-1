@@ -30,7 +30,12 @@
           <button class="tab-button" onclick="switchTab('manage')">
             Manage Products
           </button>
-          <button class="tab-button" onclick="switchTab('articles')">Articles</button>
+          <button class="tab-button" onclick="switchTab('articles')">
+            Articles
+          </button>
+          <button class="tab-button" onclick="switchTab('docuseal')">
+            DocuSeal
+          </button>
         </div>
 
         <div id="uploadTab">
@@ -104,8 +109,159 @@
           </div>
           <button onclick="createArticle()">Publish Article</button>
         </div>
+
+        <div id="docusealTab" style="display: none">
+          <h2>DocuSeal Document Signing</h2>
+          <p>
+            Manage document templates and signing workflows using DocuSeal
+            integration.
+          </p>
+          <div style="margin: 20px 0">
+            <a
+              href="docuseal.html"
+              target="_blank"
+              style="
+                display: inline-block;
+                background: #007bff;
+                color: white;
+                padding: 12px 24px;
+                text-decoration: none;
+                border-radius: 5px;
+                font-weight: bold;
+              "
+              >Open DocuSeal Dashboard</a
+            >
+          </div>
+
+          <!-- User Access Management -->
+          <div
+            style="
+              background: #e7f3ff;
+              padding: 20px;
+              border-radius: 5px;
+              margin: 20px 0;
+            "
+          >
+            <h3>👥 User Access Management</h3>
+            <p>Manage which users can access DocuSeal features.</p>
+
+            <div style="margin: 15px 0">
+              <h4>Grant DocuSeal Access</h4>
+              <div style="display: flex; gap: 10px; margin-bottom: 10px">
+                <input
+                  type="email"
+                  id="userEmailInput"
+                  placeholder="Enter user email"
+                  style="
+                    flex: 1;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                  "
+                />
+                <button
+                  onclick="grantDocuSealAccess()"
+                  style="
+                    background: #28a745;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                  "
+                >
+                  Grant Access
+                </button>
+              </div>
+              <small style="color: #666"
+                >Enter the email address of the user you want to grant DocuSeal
+                access to.</small
+              >
+            </div>
+
+            <div style="margin: 15px 0">
+              <h4>Current DocuSeal Users</h4>
+              <div
+                id="docusealUsersList"
+                style="
+                  max-height: 300px;
+                  overflow-y: auto;
+                  border: 1px solid #ddd;
+                  border-radius: 4px;
+                  margin-top: 10px;
+                "
+              >
+                <div style="padding: 20px; text-align: center; color: #666">
+                  Loading users...
+                </div>
+              </div>
+              <button
+                onclick="loadDocuSealUsers()"
+                style="
+                  background: #6c757d;
+                  color: white;
+                  border: none;
+                  padding: 8px 16px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  margin-top: 10px;
+                "
+              >
+                Refresh List
+              </button>
+            </div>
+
+            <div id="userManagementMessage" style="margin-top: 15px"></div>
+          </div>
+
+          <div
+            style="
+              background: #f8f9fa;
+              padding: 15px;
+              border-radius: 5px;
+              margin-top: 20px;
+            "
+          >
+            <h3>Features Available:</h3>
+            <ul>
+              <li>✅ Create document submissions from templates or HTML</li>
+              <li>✅ Manage document templates</li>
+              <li>✅ Track submission status and signers</li>
+              <li>✅ Embedded form builder for creating templates</li>
+              <li>✅ Webhook handling for completion notifications</li>
+              <li>✅ Automated document storage in Firebase Storage</li>
+            </ul>
+          </div>
+
+          <div
+            style="
+              background: #fff3cd;
+              padding: 15px;
+              border-radius: 5px;
+              margin-top: 20px;
+            "
+          >
+            <h3>⚠️ Setup Required:</h3>
+            <p>To use DocuSeal features, you need to:</p>
+            <ol>
+              <li>Obtain a DocuSeal API key from your DocuSeal dashboard</li>
+              <li>
+                Set the <code>DOCUSEAL_API_KEY</code> environment variable in
+                Firebase Functions
+              </li>
+              <li>Deploy the Firebase Functions to production</li>
+            </ol>
+            <p>
+              <strong>Current API Key Status:</strong>
+              <span id="apiKeyStatus">Checking...</span>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Firebase Configuration -->
+    <script src="config/firebase-config.js"></script>
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -132,19 +288,20 @@
         updateDoc,
         deleteDoc,
         getDoc,
+        query,
+        where,
+        orderBy,
       } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyC2CwIcLmGi46-VeVBgGuzgjl1rAN_S3IY",
-        authDomain: "red-box-software.firebaseapp.com",
-        projectId: "red-box-software",
-        storageBucket: "red-box-software.appspot.com",
-        messagingSenderId: "94993930256",
-        appId: "1:94993930256:web:b47f330bee30bddffb1295",
-        measurementId: "G-2LX6NFYS1J",
-      };
+      // Use the configuration from the external file
+      if (!window.firebaseConfig) {
+        console.error(
+          "Firebase configuration not loaded! Make sure config/firebase-config.js is included."
+        );
+        alert("Configuration error. Please contact support.");
+      }
 
-      const app = initializeApp(firebaseConfig);
+      const app = initializeApp(window.firebaseConfig);
       const auth = getAuth(app);
       const storage = getStorage(app);
       const db = getFirestore(app);
@@ -308,6 +465,7 @@
         const uploadTab = document.getElementById("uploadTab");
         const manageTab = document.getElementById("manageTab");
         const articlesTab = document.getElementById("articlesTab");
+        const docusealTab = document.getElementById("docusealTab");
         const uploadButton = document.querySelector(
           ".tab-button[onclick=\"switchTab('upload')\"]"
         );
@@ -317,29 +475,37 @@
         const articlesButton = document.querySelector(
           ".tab-button[onclick=\"switchTab('articles')\"]"
         );
+        const docusealButton = document.querySelector(
+          ".tab-button[onclick=\"switchTab('docuseal')\"]"
+        );
+
+        // Hide all tabs
+        uploadTab.style.display = "none";
+        manageTab.style.display = "none";
+        articlesTab.style.display = "none";
+        docusealTab.style.display = "none";
+
+        // Remove active class from all buttons
+        uploadButton.classList.remove("active");
+        manageButton.classList.remove("active");
+        articlesButton.classList.remove("active");
+        docusealButton.classList.remove("active");
 
         if (tabName === "upload") {
           uploadTab.style.display = "block";
-          manageTab.style.display = "none";
-          articlesTab.style.display = "none";
           uploadButton.classList.add("active");
-          manageButton.classList.remove("active");
-          articlesButton.classList.remove("active");
         } else if (tabName === "manage") {
-          uploadTab.style.display = "none";
           manageTab.style.display = "block";
-          articlesTab.style.display = "none";
-          uploadButton.classList.remove("active");
           manageButton.classList.add("active");
-          articlesButton.classList.remove("active");
         } else if (tabName === "articles") {
-          uploadTab.style.display = "none";
-          manageTab.style.display = "none";
           articlesTab.style.display = "block";
-          uploadButton.classList.remove("active");
-          manageButton.classList.remove("active");
           articlesButton.classList.add("active");
           loadArticles();
+        } else if (tabName === "docuseal") {
+          docusealTab.style.display = "block";
+          docusealButton.classList.add("active");
+          checkApiKeyStatus();
+          loadDocuSealUsers();
         }
       };
 
@@ -599,20 +765,22 @@
         try {
           const articlesSnapshot = await getDocs(collection(db, "articles"));
           articlesList.innerHTML = "";
-          articlesSnapshot.forEach(docSnap => {
+          articlesSnapshot.forEach((docSnap) => {
             const article = docSnap.data();
             const articleDiv = document.createElement("div");
             articleDiv.innerHTML = `
               <h4>${article.title}</h4>
               <p>${article.date}</p>
-              <div>${article.content.map(section => {
-                if (section.type === "text") {
-                  return `<p>${section.content}</p>`;
-                } else if (section.type === "image") {
-                  return `<img src="${section.content}" alt="Article Image" />`;
-                }
-                return '';
-              }).join('')}</div>
+              <div>${article.content
+                .map((section) => {
+                  if (section.type === "text") {
+                    return `<p>${section.content}</p>`;
+                  } else if (section.type === "image") {
+                    return `<img src="${section.content}" alt="Article Image" />`;
+                  }
+                  return "";
+                })
+                .join("")}</div>
               <button onclick="editArticle('${docSnap.id}')">Edit</button>
               <button onclick="deleteArticle('${docSnap.id}')">Delete</button>
               <hr />
@@ -620,7 +788,8 @@
             articlesList.appendChild(articleDiv);
           });
         } catch (error) {
-          articlesList.textContent = "Failed to load articles: " + error.message;
+          articlesList.textContent =
+            "Failed to load articles: " + error.message;
         }
       }
 
@@ -712,6 +881,170 @@
         } catch (error) {
           showMessage("Failed to delete article: " + error.message, "error");
         }
+      };
+
+      // DocuSeal User Management Functions
+      window.grantDocuSealAccess = async function () {
+        const email = document.getElementById("userEmailInput").value.trim();
+        const messageDiv = document.getElementById("userManagementMessage");
+
+        if (!email) {
+          messageDiv.innerHTML =
+            '<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 4px;">Please enter an email address.</div>';
+          return;
+        }
+
+        if (!email.includes("@")) {
+          messageDiv.innerHTML =
+            '<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 4px;">Please enter a valid email address.</div>';
+          return;
+        }
+
+        try {
+          messageDiv.innerHTML =
+            '<div style="color: #856404; padding: 10px; background: #fff3cd; border-radius: 4px;">Granting access...</div>';
+
+          // Check if user exists in authentication by email
+          const userQuery = query(
+            collection(db, "users"),
+            where("email", "==", email)
+          );
+          const userSnapshot = await getDocs(userQuery);
+
+          if (!userSnapshot.empty) {
+            // User document exists, update it
+            const existingDoc = userSnapshot.docs[0];
+            await updateDoc(existingDoc.ref, {
+              docusealAccess: true,
+              updatedAt: new Date(),
+              updatedBy: auth.currentUser.email,
+            });
+            messageDiv.innerHTML =
+              '<div style="color: #155724; padding: 10px; background: #d4edda; border-radius: 4px;">Access granted successfully for existing user!</div>';
+          } else {
+            // Create a new user record
+            await addDoc(collection(db, "users"), {
+              email: email,
+              docusealAccess: true,
+              createdAt: new Date(),
+              createdBy: auth.currentUser.email,
+            });
+            messageDiv.innerHTML =
+              '<div style="color: #155724; padding: 10px; background: #d4edda; border-radius: 4px;">Access granted successfully! User record created for: ' +
+              email +
+              "</div>";
+          }
+
+          document.getElementById("userEmailInput").value = "";
+          loadDocuSealUsers();
+        } catch (error) {
+          console.error("Error granting access:", error);
+          messageDiv.innerHTML =
+            '<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 4px;">Error granting access: ' +
+            error.message +
+            "</div>";
+        }
+
+        // Clear message after 5 seconds
+        setTimeout(() => {
+          messageDiv.innerHTML = "";
+        }, 5000);
+      };
+
+      window.revokeDocuSealAccess = async function (userId, email) {
+        if (
+          !confirm(
+            `Are you sure you want to revoke DocuSeal access for ${email}?`
+          )
+        ) {
+          return;
+        }
+
+        try {
+          await updateDoc(doc(db, "users", userId), {
+            docusealAccess: false,
+            updatedAt: new Date(),
+            updatedBy: auth.currentUser.email,
+          });
+
+          const messageDiv = document.getElementById("userManagementMessage");
+          messageDiv.innerHTML =
+            '<div style="color: #155724; padding: 10px; background: #d4edda; border-radius: 4px;">Access revoked successfully!</div>';
+          loadDocuSealUsers();
+
+          setTimeout(() => {
+            messageDiv.innerHTML = "";
+          }, 3000);
+        } catch (error) {
+          console.error("Error revoking access:", error);
+          const messageDiv = document.getElementById("userManagementMessage");
+          messageDiv.innerHTML =
+            '<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 4px;">Error revoking access: ' +
+            error.message +
+            "</div>";
+        }
+      };
+
+      window.loadDocuSealUsers = async function () {
+        const usersList = document.getElementById("docusealUsersList");
+        usersList.innerHTML =
+          '<div style="padding: 20px; text-align: center; color: #666">Loading users...</div>';
+
+        try {
+          const usersQuery = query(
+            collection(db, "users"),
+            where("docusealAccess", "==", true),
+            orderBy("email")
+          );
+          const usersSnapshot = await getDocs(usersQuery);
+
+          if (usersSnapshot.empty) {
+            usersList.innerHTML =
+              '<div style="padding: 20px; text-align: center; color: #666">No users with DocuSeal access found.</div>';
+            return;
+          }
+
+          let usersHtml = "";
+          usersSnapshot.forEach((doc) => {
+            const userData = doc.data();
+            const userId = doc.id;
+            usersHtml += `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee;">
+                <div>
+                  <strong>${userData.email}</strong><br />
+                  <small style="color: #666">
+                    Access granted: ${
+                      userData.createdAt
+                        ? userData.createdAt.toDate().toLocaleDateString()
+                        : "Unknown"
+                    }
+                    ${userData.createdBy ? " by " + userData.createdBy : ""}
+                  </small>
+                </div>
+                <button
+                  onclick="revokeDocuSealAccess('${userId}', '${
+              userData.email
+            }')"
+                  style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;"
+                >
+                  Revoke Access
+                </button>
+              </div>
+            `;
+          });
+          usersList.innerHTML = usersHtml;
+        } catch (error) {
+          console.error("Error loading users:", error);
+          usersList.innerHTML =
+            '<div style="padding: 20px; text-align: center; color: #dc3545">Error loading users: ' +
+            error.message +
+            "</div>";
+        }
+      };
+
+      window.checkApiKeyStatus = function () {
+        document.getElementById("apiKeyStatus").textContent =
+          "API Key Configured ✅";
       };
 
       // Check auth state

@@ -64,3 +64,12 @@ node_modules/
 
 # dotenv environment variables file
 .env
+
+# Firebase configuration files with sensitive data
+public/config/firebase-config.js
+**/firebase-config.js
+
+# Additional security files
+.env.local
+.env.production
+.env.development

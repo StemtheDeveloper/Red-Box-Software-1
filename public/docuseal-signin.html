@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DocuSeal Sign In - RBS</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <style>
+      .signin-container {
+        max-width: 400px;
+        margin: 100px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      .logo {
+        max-width: 150px;
+        margin-bottom: 30px;
+      }
+
+      .signin-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .form-group {
+        text-align: left;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+        box-sizing: border-box;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+      }
+
+      .signin-btn {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 14px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+      }
+
+      .signin-btn:hover {
+        background: linear-gradient(135deg, #0056b3, #004085);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+      }
+
+      .signin-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .google-signin-btn {
+        background: white;
+        color: #333;
+        border: 2px solid #e1e5e9;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+      }
+
+      .google-signin-btn:hover {
+        border-color: #007bff;
+        background: #f8f9fa;
+      }
+
+      .divider {
+        margin: 20px 0;
+        text-align: center;
+        position: relative;
+        color: #666;
+      }
+
+      .divider::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #e1e5e9;
+        z-index: 1;
+      }
+
+      .divider span {
+        background: white;
+        padding: 0 15px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .message {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+
+      .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .message.info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .signup-link {
+        margin-top: 20px;
+        font-size: 14px;
+        color: #666;
+      }
+
+      .signup-link a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .signup-link a:hover {
+        text-decoration: underline;
+      }
+
+      .back-link {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: #007bff;
+        text-decoration: none;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      .features-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 30px;
+        text-align: left;
+      }
+
+      .features-info h3 {
+        margin-top: 0;
+        color: #333;
+        font-size: 18px;
+      }
+
+      .features-info ul {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+
+      .features-info li {
+        margin-bottom: 8px;
+        color: #666;
+      }
+
+      .loading {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .loading.show {
+        display: flex;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .signin-container {
+          margin: 50px 20px;
+          padding: 30px 20px;
+        }
+
+        .back-link {
+          position: static;
+          display: inline-block;
+          margin-bottom: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link"> ← Back to Home </a>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+    </div>
+
+    <div class="signin-container">
+      <img src="Images/RBS Logo main.svg" alt="Red Box Software" class="logo" />
+
+      <h1>DocuSeal Access</h1>
+      <p style="color: #666; margin-bottom: 30px">
+        Sign in to access document signing and management tools
+      </p>
+
+      <div id="messageContainer"></div>
+
+      <form class="signin-form" id="signinForm">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            autocomplete="email"
+            placeholder="Enter your email address"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="current-password"
+            placeholder="Enter your password"
+          />
+        </div>
+
+        <button type="submit" class="signin-btn" id="signinBtn">Sign In</button>
+      </form>
+
+      <div class="divider">
+        <span>or</span>
+      </div>
+
+      <button class="google-signin-btn" id="googleSigninBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path
+            fill="#4285F4"
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+          />
+          <path
+            fill="#34A853"
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+          />
+          <path
+            fill="#FBBC05"
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+          />
+          <path
+            fill="#EA4335"
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+          />
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="signup-link">
+        Need an account?
+        <a href="#" onclick="showSignupInfo()">Request Access</a>
+      </div>
+
+      <div class="features-info">
+        <h3>🔐 What you can do with DocuSeal:</h3>
+        <ul>
+          <li>Create and send documents for electronic signature</li>
+          <li>Track signing progress in real-time</li>
+          <li>Manage document templates</li>
+          <li>Send automated reminders to signers</li>
+          <li>Access completed documents securely</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script src="config/firebase-config.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import {
+        getAuth,
+        signInWithEmailAndPassword,
+        signInWithPopup,
+        GoogleAuthProvider,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+        setDoc,
+        collection,
+        query,
+        where,
+        getDocs,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+      // Use the configuration from the external file
+      if (!window.firebaseConfig) {
+        console.error(
+          "Firebase configuration not loaded! Make sure config/firebase-config.js is included."
+        );
+        document.getElementById("messageContainer").innerHTML =
+          '<div class="message error">Configuration error. Please contact support.</div>';
+      }
+
+      const app = initializeApp(window.firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const googleProvider = new GoogleAuthProvider();
+
+      // Helper function to check user access
+      async function checkUserAccess(user) {
+        try {
+          // Admin always has access
+          if (user.email === "stiaan44@gmail.com") {
+            return true;
+          }
+
+          // Check if user has DocuSeal access
+          // First try to get user document by UID
+          let userDoc = await getDoc(doc(db, "users", user.uid));
+          let userData = userDoc.data();
+
+          // If no document found by UID, try to find by email
+          if (!userData) {
+            const userQuery = query(
+              collection(db, "users"),
+              where("email", "==", user.email)
+            );
+            const userSnapshot = await getDocs(userQuery);
+
+            if (!userSnapshot.empty) {
+              userData = userSnapshot.docs[0].data();
+              // Create a document with UID as well for future quick access
+              await setDoc(doc(db, "users", user.uid), {
+                ...userData,
+                uid: user.uid,
+                email: user.email,
+                updatedAt: new Date(),
+              });
+            }
+          }
+
+          return userData && userData.docusealAccess === true;
+        } catch (error) {
+          console.error("Error checking user access:", error);
+          return false;
+        }
+      }
+
+      // Check if user is already signed in
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          showLoading();
+
+          const hasAccess = await checkUserAccess(user);
+
+          if (hasAccess) {
+            // User has access, redirect to DocuSeal
+            window.location.href = "docuseal.html";
+          } else {
+            // User doesn't have access, show message
+            showMessage(
+              "Your account does not have DocuSeal access. Please contact support for assistance.",
+              "error"
+            );
+            hideLoading();
+          }
+        }
+      });
+
+      // Handle form submission
+      document
+        .getElementById("signinForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+          const signinBtn = document.getElementById("signinBtn");
+
+          if (!email || !password) {
+            showMessage("Please fill in all fields.", "error");
+            return;
+          }
+
+          signinBtn.disabled = true;
+          signinBtn.textContent = "Signing In...";
+          showLoading();
+
+          try {
+            const userCredential = await signInWithEmailAndPassword(
+              auth,
+              email,
+              password
+            );
+            const user = userCredential.user;
+
+            // Check DocuSeal access
+            const hasAccess = await checkUserAccess(user);
+
+            if (hasAccess) {
+              showMessage("Sign in successful! Redirecting...", "success");
+              setTimeout(() => {
+                window.location.href = "docuseal.html";
+              }, 1500);
+            } else {
+              showMessage(
+                "Your account does not have DocuSeal access. Please contact support.",
+                "error"
+              );
+              await auth.signOut();
+            }
+          } catch (error) {
+            console.error("Sign in error:", error);
+            let errorMessage = "Sign in failed. Please try again.";
+
+            switch (error.code) {
+              case "auth/user-not-found":
+                errorMessage = "No account found with this email address.";
+                break;
+              case "auth/wrong-password":
+                errorMessage = "Incorrect password. Please try again.";
+                break;
+              case "auth/invalid-email":
+                errorMessage = "Please enter a valid email address.";
+                break;
+              case "auth/too-many-requests":
+                errorMessage =
+                  "Too many failed attempts. Please try again later.";
+                break;
+              case "auth/invalid-credential":
+                errorMessage =
+                  "Invalid email or password. Please check your credentials.";
+                break;
+            }
+
+            showMessage(errorMessage, "error");
+          } finally {
+            signinBtn.disabled = false;
+            signinBtn.textContent = "Sign In";
+            hideLoading();
+          }
+        });
+
+      // Handle Google Sign In
+      document
+        .getElementById("googleSigninBtn")
+        .addEventListener("click", async () => {
+          const googleBtn = document.getElementById("googleSigninBtn");
+          googleBtn.disabled = true;
+          showLoading();
+
+          try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+
+            // Check DocuSeal access
+            const hasAccess = await checkUserAccess(user);
+
+            if (hasAccess) {
+              showMessage("Sign in successful! Redirecting...", "success");
+              setTimeout(() => {
+                window.location.href = "docuseal.html";
+              }, 1500);
+            } else {
+              showMessage(
+                "Your account does not have DocuSeal access. Please contact support.",
+                "error"
+              );
+              await auth.signOut();
+            }
+          } catch (error) {
+            console.error("Google sign in error:", error);
+            if (error.code !== "auth/popup-closed-by-user") {
+              showMessage("Google sign in failed. Please try again.", "error");
+            }
+          } finally {
+            googleBtn.disabled = false;
+            hideLoading();
+          }
+        });
+
+      // Utility functions
+      function showMessage(message, type = "info") {
+        const container = document.getElementById("messageContainer");
+        container.innerHTML = `<div class="message ${type}">${message}</div>`;
+
+        if (type === "success") {
+          setTimeout(() => {
+            container.innerHTML = "";
+          }, 3000);
+        }
+      }
+
+      function showLoading() {
+        document.getElementById("loading").classList.add("show");
+      }
+
+      function hideLoading() {
+        document.getElementById("loading").classList.remove("show");
+      }
+
+      // Make functions globally available
+      window.showSignupInfo = function () {
+        showMessage(
+          "To request DocuSeal access, please contact support at support@redboxsoftware.com with your name and organization details.",
+          "info"
+        );
+      };
+    </script>
+  </body>
+</html>

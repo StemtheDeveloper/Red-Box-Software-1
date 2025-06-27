@@ -4,6 +4,8 @@
     <title>Articles - Red Box Software</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <!-- Firebase Configuration -->
+    <script src="config/firebase-config.js"></script>
     <script src="scripts/script.js" type="module"></script>
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -13,17 +15,14 @@
         getDocs,
       } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyC2CwIcLmGi46-VeVBgGuzgjl1rAN_S3IY",
-        authDomain: "red-box-software.firebaseapp.com",
-        projectId: "red-box-software",
-        storageBucket: "red-box-software.appspot.com",
-        messagingSenderId: "94993930256",
-        appId: "1:94993930256:web:b47f330bee30bddffb1295",
-        measurementId: "G-2LX6NFYS1J",
-      };
+      // Use configuration from external file
+      if (!window.firebaseConfig) {
+        console.error(
+          "Firebase configuration not loaded! Make sure config/firebase-config.js is included."
+        );
+      }
 
-      const app = initializeApp(firebaseConfig);
+      const app = initializeApp(window.firebaseConfig);
       const db = getFirestore(app);
 
       async function loadArticles() {

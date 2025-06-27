@@ -22,6 +22,18 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // Rules for the users collection
+    match /users/{userId} {
+      // Users can read their own document
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Admin can read all user documents
+      allow read: if isAdmin();
+      // Admin can write (create, update, delete) user documents
+      allow write: if isAdmin();
+      // Users can create their own document (for initial signup)
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+    
     // Default rule - deny all other access
     match /{document=**} {
       allow read, write: if false;

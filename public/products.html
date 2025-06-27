@@ -6,6 +6,8 @@
     <title>Red Box Software | Products</title>
     <link rel="stylesheet" type="text/css" href="./css/style.css" />
     <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <!-- Firebase Configuration -->
+    <script src="config/firebase-config.js"></script>
     <script src="./scripts/script.js" type="module"></script>
     <style>
       .product-container {
@@ -142,19 +144,15 @@
         getDownloadURL,
       } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
 
-      // Firebase configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyC2CwIcLmGi46-VeVBgGuzgjl1rAN_S3IY",
-        authDomain: "red-box-software.firebaseapp.com",
-        projectId: "red-box-software",
-        storageBucket: "red-box-software.appspot.com",
-        messagingSenderId: "94993930256",
-        appId: "1:94993930256:web:b47f330bee30bddffb1295",
-        measurementId: "G-2LX6NFYS1J",
-      };
+      // Use configuration from external file
+      if (!window.firebaseConfig) {
+        console.error(
+          "Firebase configuration not loaded! Make sure config/firebase-config.js is included."
+        );
+      }
 
       // Initialize Firebase
-      const app = initializeApp(firebaseConfig);
+      const app = initializeApp(window.firebaseConfig);
       const db = getFirestore(app);
 
       const CACHE_NAME = "products-cache-v1";
