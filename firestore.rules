@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'stiaan44@gmail.com';
+    }
+    
+    // Rules for the products collection
+    match /products/{product} {
+      // Anyone can read
+      allow read: if true;
+      // Only admin can write (create, update, delete)
+      allow write: if isAdmin();
+    }
+    
+    // Rules for the articles collection
+    match /articles/{article} {
+      // Anyone can read
+      allow read: if true;
+      // Only admin can write (create, update, delete)
+      allow write: if isAdmin();
+    }
+    
+    // Default rule - deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

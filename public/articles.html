@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Articles - Red Box Software</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <script src="scripts/script.js" type="module"></script>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        getDocs,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyC2CwIcLmGi46-VeVBgGuzgjl1rAN_S3IY",
+        authDomain: "red-box-software.firebaseapp.com",
+        projectId: "red-box-software",
+        storageBucket: "red-box-software.appspot.com",
+        messagingSenderId: "94993930256",
+        appId: "1:94993930256:web:b47f330bee30bddffb1295",
+        measurementId: "G-2LX6NFYS1J",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      async function loadArticles() {
+        const container = document.getElementById("articlesContainer");
+        container.textContent = "Loading articles...";
+        try {
+          const snapshot = await getDocs(collection(db, "articles"));
+          container.innerHTML = "";
+          snapshot.forEach((docSnap) => {
+            const article = docSnap.data();
+            const articleEl = document.createElement("div");
+            articleEl.classList.add("article");
+            articleEl.innerHTML = `
+            <h2>${article.title}</h2>
+            <p><strong>${article.date}</strong></p>
+            <div>${article.content
+              .map((section) => {
+                if (section.type === "text") {
+                  return `<p>${section.content}</p>`;
+                } else if (section.type === "image") {
+                  return `<img src="${section.content}" alt="Article Image" />`;
+                }
+                return "";
+              })
+              .join("")}</div>
+            <hr />
+          `;
+            container.appendChild(articleEl);
+          });
+        } catch (e) {
+          container.textContent = "Failed to load articles: " + e.message;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadArticles);
+    </script>
+  </head>
+  <body>
+    <main>
+      <h1>Articles</h1>
+      <div id="articlesContainer"></div>
+    </main>
+    <script src="./scripts/footer.js"></script>
+    <script src="./scripts/grid.js"></script>
+  </body>
+</html>

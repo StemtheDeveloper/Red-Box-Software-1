@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2D Physics Objects with Painting Brush</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.17.1/matter.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Blocked&display=swap");
+
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #2f2f2f;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      canvas {
+        border: 1px solid black;
+        width: 100vw;
+        height: 100vh;
+      }
+      .controls {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        position: fixed;
+        max-width: 130px;
+        top: 140px;
+        left: 10px;
+        background: #f15c41;
+        padding: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        gap: 3px;
+        opacity: 0.9;
+      }
+      .controls button,
+      .controls select {
+        color: #ffffff;
+        font-family: Arial, Helvetica, sans-serif;
+        font-weight: bold;
+        font-size: 16px;
+        background-color: #ee9750;
+        border: none;
+        padding: 5px 10px;
+        margin-right: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .headerCont {
+        position: absolute;
+        top: 30px;
+
+        height: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      /* @keyframes bounceAndShrink {
+        0% {
+          transform: translateX(-50%) scale(1);
+          top: 50px;
+        }
+        25% {
+          transform: translateX(-50%) scale(1.2);
+        }
+        50% {
+          transform: translateX(-50%) scale(1);
+        }
+        75% {
+          transform: translateX(-50%) scale(1.2);
+        }
+        100% {
+          transform: translateX(-50%) scale(0.83);
+          top: 0;
+        }
+      } */
+
+      header img {
+        z-index: 9999;
+        width: 300px;
+        height: auto;
+        margin-left: 10px;
+      }
+
+      .headerCont,
+      .controls {
+        user-select: none;
+      }
+      .blur-effect {
+        filter: blur(8px);
+      }
+
+      .controls label {
+        color: #f3d365;
+        font-family: Arial, Helvetica, sans-serif;
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 5px;
+        display: block;
+      }
+
+      #version {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        color: #f3d365;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+      }
+
+      @media (max-width: 700px) {
+        .controls {
+          padding: 5px;
+          top: 90px;
+        }
+        .controls button,
+        .controls select {
+          font-size: 14px;
+          padding: 3px 8px;
+        }
+
+        .headerCont {
+          align-items: flex-start;
+          top: 20px;
+          left: 30px;
+          width: 150px;
+        }
+
+        header {
+          font-size: 21px;
+          margin-left: 30%;
+          width: 100%;
+        }
+
+        header img {
+          width: 200px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="content">
+      <p id="version">version 4</p>
+      <div class="headerCont">
+        <header>
+          <img
+            src="data:image/png;base64,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"
+            alt="BLOKZ logo"
+          />
+        </header>
+      </div>
+      <div class="controls">
+        <button id="createRandomShape">Create Random Shape</button>
+        <button id="toggleDelete">Toggle Delete</button>
+        <button id="clearAll">Clear All</button>
+        <select id="shapeSelector">
+          <option value="circle">Circle</option>
+          <option value="square">Square</option>
+          <option value="rectangle">Rectangle</option>
+          <option value="triangle">Triangle</option>
+          <option value="hexagon">Hexagon</option>
+        </select>
+        <label for="shapeSize">Shape Size:</label>
+        <div style="display: flex; flex-direction: row">
+          <input type="number" id="shapeSize" min="20" max="100" value="50" />
+          <!-- shape size randomize -->
+          <button id="shapeSizeRand" title="Randomise">?</button>
+        </div>
+        <label for="brushSize">Brush Size:</label>
+        <input type="number" id="brushSize" min="1" max="50" value="10" />
+        <label for="brushColor">Brush Color:</label>
+        <input type="color" id="brushColor" value="#ffffff" />
+        <button id="togglePaint">Toggle Paint</button>
+      </div>
+      <canvas id="canvas"></canvas>
+    </div>
+    <script>
+      var isShapeSizeRandom = false;
+      var size = parseFloat(document.getElementById("shapeSize").value);
+
+      // Randomize shape size
+      document.getElementById("shapeSizeRand").addEventListener("click", () => {
+        if (isShapeSizeRandom) {
+          isShapeSizeRandom = false;
+
+          document.getElementById("shapeSizeRand").style.backgroundColor =
+            "#ee9750";
+        } else {
+          isShapeSizeRandom = true;
+
+          document.getElementById("shapeSizeRand").style.backgroundColor =
+            "#e94e4e";
+        }
+      });
+      // Matter.js module aliases
+      const {
+        Engine,
+        Render,
+        Runner,
+        Bodies,
+        Composite,
+        Mouse,
+        MouseConstraint,
+        Events,
+        Body,
+        Query,
+      } = Matter;
+
+      // Create an engine
+      const engine = Engine.create();
+      const world = engine.world;
+      let isRightMouseDown = false;
+
+      // Create a renderer
+      const canvas = document.getElementById("canvas");
+      const render = Render.create({
+        canvas: canvas,
+        engine: engine,
+        options: {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          wireframes: false,
+          background: "#2f2f2f",
+        },
+      });
+
+      Render.run(render);
+
+      // Create a runner
+      const runner = Runner.create();
+      Runner.run(runner, engine);
+
+      // Create boundaries
+      const boundaries = [
+        Bodies.rectangle(window.innerWidth / 2, -25, window.innerWidth, 50, {
+          isStatic: true,
+        }),
+        Bodies.rectangle(
+          window.innerWidth / 2,
+          window.innerHeight + 25,
+          window.innerWidth,
+          50,
+          { isStatic: true }
+        ),
+        Bodies.rectangle(-25, window.innerHeight / 2, 50, window.innerHeight, {
+          isStatic: true,
+        }),
+        Bodies.rectangle(
+          window.innerWidth + 25,
+          window.innerHeight / 2,
+          50,
+          window.innerHeight,
+          { isStatic: true }
+        ),
+      ];
+      Composite.add(world, boundaries);
+
+      // Function to create a random physics object
+      function createRandomObject(x, y) {
+        if (isShapeSizeRandom) {
+          size = Math.random() * 80 + 20;
+        } else {
+          size = parseFloat(document.getElementById("shapeSize").value);
+        }
+        const shape = Math.floor(Math.random() * 5);
+
+        let body;
+        switch (shape) {
+          case 0:
+            body = Bodies.circle(x, y, size / 2, {
+              restitution: 0.6,
+              friction: 0.1,
+              frictionAir: 0.02,
+            });
+            break;
+          case 1:
+            body = Bodies.rectangle(x, y, size, size, {
+              restitution: 0.6,
+              friction: 0.1,
+              frictionAir: 0.02,
+            });
+            break;
+          case 2:
+            body = Bodies.rectangle(x, y, size, size * 2, {
+              restitution: 0.6,
+              friction: 0.1,
+              frictionAir: 0.02,
+            });
+            break;
+          case 3:
+            const vertices = [
+              { x: x, y: y - size },
+              { x: x - size, y: y + size },
+              { x: x + size, y: y + size },
+            ];
+            body = Bodies.fromVertices(x, y, [vertices], {
+              restitution: 0.6,
+              friction: 0.1,
+              frictionAir: 0.02,
+            });
+            break;
+          case 4:
+            const hexagonVertices = Matter.Vertices.create(
+              [
+                { x: x, y: y - size },
+                { x: x + size * Math.sin(Math.PI / 3), y: y - size / 2 },
+                { x: x + size * Math.sin(Math.PI / 3), y: y + size / 2 },
+                { x: x, y: y + size },
+                { x: x - size * Math.sin(Math.PI / 3), y: y + size / 2 },
+                { x: x - size * Math.sin(Math.PI / 3), y: y - size / 2 },
+              ],
+              null
+            );
+            body = Bodies.fromVertices(x, y, hexagonVertices, {
+              restitution: 0.6,
+              friction: 0.1,
+              frictionAir: 0.02,
+            });
+            break;
+        }
+
+        Composite.add(world, body);
+      }
+
+      // Function to create a physics object based on selected shape
+      function createObject(x, y, shape) {
+        if (isShapeSizeRandom) {
+          size = Math.random() * 80 + 20;
+        } else {
+          size = parseFloat(document.getElementById("shapeSize").value);
+        }
+
+        let body;
+        switch (shape) {
+          case "circle":
+            body = Bodies.circle(x, y, size / 2, {
+              restitution: 0.6,
+              friction: 0.1,
+              frictionAir: 0.02,
+            });
+            break;
+          case "square":
+            body = Bodies.rectangle(x, y, size, size, {
+              restitution: 0.6,
+              friction: 0.1,
+              frictionAir: 0.02,
+            });
+            break;
+          case "rectangle":
+            body = Bodies.rectangle(x, y, size, size * 2, {
+              restitution: 0.6,
+              friction: 0.1,
+              frictionAir: 0.02,
+            });
+            break;
+          case "triangle":
+            const vertices = [
+              { x: x, y: y - size },
+              { x: x - size, y: y + size },
+              { x: x + size, y: y + size },
+            ];
+            body = Bodies.fromVertices(x, y, [vertices], {
+              restitution: 0.6,
+              friction: 0.1,
+              frictionAir: 0.02,
+            });
+            break;
+          case "hexagon":
+            const hexagonVertices = Matter.Vertices.create(
+              [
+                { x: x, y: y - size },
+                { x: x + size * Math.sin(Math.PI / 3), y: y - size / 2 },
+                { x: x + size * Math.sin(Math.PI / 3), y: y + size / 2 },
+                { x: x, y: y + size },
+                { x: x - size * Math.sin(Math.PI / 3), y: y + size / 2 },
+                { x: x - size * Math.sin(Math.PI / 3), y: y - size / 2 },
+              ],
+              null
+            );
+            body = Bodies.fromVertices(x, y, hexagonVertices, {
+              restitution: 0.6,
+              friction: 0.1,
+              frictionAir: 0.02,
+            });
+            break;
+        }
+
+        Composite.add(world, body);
+      }
+
+      // Mouse constraint for dragging
+      const mouse = Mouse.create(render.canvas);
+      const mouseConstraint = MouseConstraint.create(engine, {
+        mouse: mouse,
+        constraint: {
+          stiffness: 0.2,
+          render: {
+            visible: false,
+          },
+        },
+      });
+      Composite.add(world, mouseConstraint);
+
+      // Keep the mouse in sync with rendering
+      render.mouse = mouse;
+
+      // Add event listeners
+      document
+        .getElementById("createRandomShape")
+        .addEventListener("click", () => {
+          createRandomObject(
+            window.innerWidth / 2,
+            window.innerHeight / 2 - 300
+          );
+        });
+
+      document.getElementById("toggleDelete").addEventListener("click", () => {
+        deleteMode = !deleteMode;
+        document.getElementById("toggleDelete").style.backgroundColor =
+          deleteMode ? "#e94e4e" : "#ee9750";
+      });
+
+      document.getElementById("clearAll").addEventListener("click", () => {
+        Composite.clear(world, false);
+        Composite.add(world, boundaries);
+
+        Composite.add(world, mouseConstraint); // Re-add mouse constraint to the world this allows you to continue draging the shapes after clearing
+      });
+
+      document
+        .getElementById("shapeSelector")
+        .addEventListener("change", (event) => {
+          selectedShape = event.target.value;
+        });
+
+      document
+        .getElementById("brushSize")
+        .addEventListener("input", (event) => {
+          brushSize = event.target.value;
+        });
+
+      document
+        .getElementById("brushColor")
+        .addEventListener("input", (event) => {
+          brushColor = event.target.value;
+        });
+
+      // Track delete mode
+      let deleteMode = false;
+
+      // Track selected shape
+      let selectedShape = "circle";
+
+      // Track brush size and color
+      let brushSize = document.getElementById("brushSize").value;
+      let brushColor = document.getElementById("brushColor").value;
+
+      function getTouchPos(canvasDom, touchEvent) {
+        const rect = canvasDom.getBoundingClientRect();
+        return {
+          x: touchEvent.touches[0].clientX - rect.left,
+          y: touchEvent.touches[0].clientY - rect.top,
+        };
+      }
+
+      // Handle right mouse button state
+      render.canvas.addEventListener("mousedown", function (event) {
+        if (event.button === 2) {
+          isRightMouseDown = true;
+        }
+      });
+
+      render.canvas.addEventListener("mouseup", function (event) {
+        if (event.button === 2) {
+          isRightMouseDown = false;
+        }
+      });
+
+      let isPainting = false;
+      let paintStart = null;
+
+      // Prevent context menu from showing on right-click
+      render.canvas.addEventListener("contextmenu", function (event) {
+        event.preventDefault();
+      });
+
+      // Handle right mouse click to create shapes
+      render.canvas.addEventListener("mousedown", function (event) {
+        if (event.button === 2) {
+          const mousePosition = {
+            x: event.clientX,
+            y: event.clientY,
+          };
+
+          const shape = shapeSelector.value;
+          if (!isPainting) {
+            createObject(mousePosition.x, mousePosition.y, shape);
+          }
+        }
+      });
+
+      // Handle mouse click to delete object
+      Events.on(mouseConstraint, "mousedown", (event) => {
+        const mousePosition = mouse.position;
+        const bodies = Composite.allBodies(world);
+        const selectedBody = Query.point(bodies, mousePosition);
+
+        if (deleteMode && selectedBody.length > 0) {
+          Composite.remove(world, selectedBody[0]);
+        }
+      });
+
+      // Toggle paint mode button
+      const togglePaintButton = document.getElementById("togglePaint");
+      togglePaintButton.addEventListener("click", () => {
+        isPainting = !isPainting;
+        togglePaintButton.innerText = isPainting
+          ? "Painting: On"
+          : "Painting: Off";
+      });
+
+      // Handle mouse move to paint
+      render.canvas.addEventListener("mousemove", function (event) {
+        if (isPainting && isRightMouseDown) {
+          // Added condition to check if right mouse button is held
+          const mouseX = event.clientX;
+          const mouseY = event.clientY;
+
+          const shape = shapeSelector.value;
+          const size = parseFloat(brushSize);
+          const color = brushColor;
+
+          // Paint a circle
+          const body = Bodies.circle(mouseX, mouseY, size / 2, {
+            render: {
+              fillStyle: color,
+              strokeStyle: color,
+              lineWidth: 1,
+            },
+            isStatic: true,
+          });
+
+          Composite.add(world, body);
+        }
+      });
+
+      // Resize canvas and boundaries on window resize
+      window.addEventListener("resize", () => {
+        render.canvas.width = window.innerWidth;
+        render.canvas.height = window.innerHeight;
+
+        Body.setPosition(boundaries[0], {
+          x: window.innerWidth / 2,
+          y: -25,
+        });
+        Body.setPosition(boundaries[1], {
+          x: window.innerWidth / 2,
+          y: window.innerHeight + 25,
+        });
+        Body.setPosition(boundaries[2], {
+          x: -25,
+          y: window.innerHeight / 2,
+        });
+        Body.setPosition(boundaries[3], {
+          x: window.innerWidth + 25,
+          y: window.innerHeight / 2,
+        });
+
+        Body.setVertices(boundaries[0], [
+          { x: 0, y: 0 },
+          { x: window.innerWidth, y: 0 },
+          { x: window.innerWidth, y: 50 },
+          { x: 0, y: 50 },
+        ]);
+        Body.setVertices(boundaries[1], [
+          { x: 0, y: 0 },
+          { x: window.innerWidth, y: 0 },
+          { x: window.innerWidth, y: 50 },
+          { x: 0, y: 50 },
+        ]);
+        Body.setVertices(boundaries[2], [
+          { x: 0, y: 0 },
+          { x: 50, y: 0 },
+          { x: 50, y: window.innerHeight },
+          { x: 0, y: window.innerHeight },
+        ]);
+        Body.setVertices(boundaries[3], [
+          { x: 0, y: 0 },
+          { x: 50, y: 0 },
+          { x: 50, y: window.innerHeight },
+          { x: 0, y: window.innerHeight },
+        ]);
+      });
+
+      // Delete object on click
+      Events.on(mouseConstraint, "mousedown", (event) => {
+        if (deleteMode && event.button === 0) {
+          const clickedBodies = Query.point(
+            Composite.allBodies(world),
+            mouse.position
+          );
+          clickedBodies.forEach((body) => {
+            Composite.remove(world, body);
+          });
+        }
+      });
+
+      // Handle touch events for creating objects
+      function handleTouch(event) {
+        if (!deleteMode) {
+          const touchPos = getTouchPos(canvas, event);
+          createObject(touchPos.x, touchPos.y, selectedShape);
+        }
+      }
+      canvas.addEventListener("touchstart", handleTouch);
+    </script>
+    <script>
+      // Create the help button
+      const helpButton = document.createElement("button");
+      helpButton.textContent = "?";
+      helpButton.style.position = "fixed";
+      helpButton.style.top = "20px";
+      helpButton.style.right = "20px";
+      helpButton.style.width = "40px";
+      helpButton.style.height = "40px";
+      helpButton.style.border = "none";
+      helpButton.style.fontFamily = "Blocked, sans-serif";
+      helpButton.style.fontSize = "24px";
+      helpButton.style.zIndex = "1001";
+      helpButton.style.backgroundColor = "#ececd3";
+
+      // Create the help menu
+      const helpMenu = document.createElement("div");
+      helpMenu.innerHTML = `<p>Left click to drag / delete</p><p>Right click to create</p>`;
+      helpMenu.style.display = "none";
+      helpMenu.style.position = "fixed";
+      helpMenu.style.top = "50%";
+      helpMenu.style.left = "50%";
+      helpMenu.style.transform = "translate(-50%, -50%)";
+      helpMenu.style.backgroundColor = "#ececd3";
+      helpMenu.style.padding = "20px";
+      helpMenu.style.borderRadius = "0px";
+      helpMenu.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
+      helpMenu.style.zIndex = "1000";
+      helpMenu.style.fontFamily = "Blocked, sans-serif";
+
+      // Create the close button inside the help menu
+      const closeButton = document.createElement("button");
+      closeButton.textContent = "Close";
+      closeButton.style.display = "block";
+      closeButton.style.marginTop = "20px";
+      closeButton.style.padding = "10px";
+      closeButton.style.boxShadow = "0 4px 8px rgba(0,0,0,0.8)";
+      closeButton.style.borderRadius = "0px";
+      closeButton.style.border = "none";
+      closeButton.style.fontFamily = "Blocked, sans-serif";
+      closeButton.style.backgroundColor = "#f15c41";
+
+      // Append the close button to the help menu
+      helpMenu.appendChild(closeButton);
+
+      // Append the help button and help menu to the body
+      document.body.appendChild(helpButton);
+      document.body.appendChild(helpMenu);
+
+      // Select the content container
+      const contentContainer = document.getElementById("content");
+
+      // Adjust the event listener to show the help menu
+      helpButton.addEventListener("click", (event) => {
+        helpMenu.style.display = "block";
+        contentContainer.style.filter = "blur(8px)";
+        // Prevent the click event from propagating to the document
+      });
+
+      // Adjust the event listener to hide the help menu
+      closeButton.addEventListener("click", () => {
+        helpMenu.style.display = "none";
+        contentContainer.style.filter = "none";
+      });
+
+      // New: Event listener to close the help menu when clicking outside
+      document.addEventListener("click", (event) => {
+        const isClickInsideMenu = helpMenu.contains(event.target);
+        const isClickHelpButton = helpButton.contains(event.target);
+
+        if (!isClickInsideMenu && !isClickHelpButton) {
+          helpMenu.style.display = "none";
+          contentContainer.style.filter = "none";
+        }
+      });
+    </script>
+  </body>
+</html>

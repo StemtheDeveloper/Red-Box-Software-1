@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Red Box Software Cubic Bezier</title>
+    <link rel="stylesheet" type="text/css" href="./css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+  </head>
+  <body>
+    <main>
+      <div class="CB_container">
+        <div class="editorCont">
+          <h1 class="title">Cubic Bezier Editor</h1>
+          <p id="zoomTip">
+            You can hold ctrl and scroll to zoom out if you need more space to
+            drag the points
+          </p>
+          <div class="editor-wrapper">
+            <div class="editor">
+              <!-- egrid -->
+              <svg>
+                <g class="egrid">
+                  <line class="egrid-line" x1="0" y1="25%" x2="100%" y2="25%" />
+                  <line class="egrid-line" x1="0" y1="50%" x2="100%" y2="50%" />
+                  <line class="egrid-line" x1="0" y1="75%" x2="100%" y2="75%" />
+                  <line class="egrid-line" x1="25%" y1="0" x2="25%" y2="100%" />
+                  <line class="egrid-line" x1="50%" y1="0" x2="50%" y2="100%" />
+                  <line class="egrid-line" x1="75%" y1="0" x2="75%" y2="100%" />
+
+                  <!-- Axes -->
+                  <line class="axis-line" x1="0" y1="0" x2="0" y2="100%" />
+                  <line
+                    class="axis-line"
+                    x1="0"
+                    y1="100%"
+                    x2="100%"
+                    y2="100%"
+                  />
+                </g>
+              </svg>
+            </div>
+
+            <!-- SVG for curves and control lines -->
+            <svg
+              class="curves"
+              width="800"
+              height="800"
+              style="position: absolute; top: 0; left: 0; overflow: visible"
+            >
+              <line class="control-line" id="start-handle" />
+              <line class="control-line" id="end-handle" />
+              <path class="comparison-curve" id="comparison-curve" />
+              <path class="main-curve" id="main-curve" />
+            </svg>
+
+            <!-- Control points -->
+            <div class="control-point" id="p1"></div>
+            <div class="control-point" id="p2"></div>
+          </div>
+        </div>
+
+        <div class="controlsCont">
+          <div class="cubic-bezier">
+            cubic-bezier(<span id="bezier-values">0.42, 0, 0.58, 1</span>)
+            <button class="copy-button">Copy</button>
+          </div>
+
+          <div class="duration-control">
+            Duration:
+            <input
+              type="range"
+              id="duration"
+              min="0.1"
+              max="5"
+              step="0.1"
+              value="1"
+            />
+            <span id="duration-value">1s</span>
+          </div>
+
+          <div class="CB_controls">
+            <button id="play">Play Animation</button>
+
+            <button id="reset">Reset</button>
+          </div>
+
+          <div class="animation-area">
+            <div class="dot main-dot"></div>
+          </div>
+
+          <div class="library">
+            <h2>Library</h2>
+            <div class="library-grid">
+              <!-- <div class="preset" data-values="0,0,1,1">
+              <svg viewBox="0 0 100 100">
+                <path class="preset-curve" d="M10,90 L90,10" />
+                <text x="50" y="96" text-anchor="middle" class="preset-label">
+                  linear
+                </text>
+              </svg>
+            </div> -->
+              <!-- Add more presets -->
+            </div>
+            <div class="CB_controls">
+              <button id="save">Save to Library</button>
+              <button id="import">Import</button>
+              <button id="export">Export</button>
+              <!-- <button id="animateBtn">Hello</button> -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Dialogs -->
+        <div class="dialog" id="import-dialog">
+          <h3>Import Curve</h3>
+          <textarea
+            id="import-data"
+            placeholder="Paste curve data here..."
+          ></textarea>
+          <div class="CB_controls">
+            <button class="cancel">Cancel</button>
+            <button class="confirm">Import</button>
+          </div>
+        </div>
+
+        <div class="dialog" id="export-dialog">
+          <h3>Export Curve</h3>
+          <textarea id="export-data" readonly></textarea>
+          <div class="CB_controls">
+            <button class="close">Close</button>
+          </div>
+        </div>
+      </div>
+      <br /><br /><br /><br /><br />
+      <div class="overlay"></div>
+    </main>
+    <div class="grid"></div>
+
+    <script>
+      class BezierEditor {
+        constructor() {
+          this.setupElements();
+          this.setupState();
+          this.setupEventListeners();
+          this.setupTouchEventListeners(); // Add this line
+          this.loadLibrary();
+          this.updateCurve();
+        }
+
+        setupElements() {
+          // Main elements
+          this.editor = document.querySelector(".editor");
+          this.p1 = document.getElementById("p1");
+          this.p2 = document.getElementById("p2");
+          this.mainCurve = document.getElementById("main-curve");
+          this.startHandle = document.getElementById("start-handle");
+          this.endHandle = document.getElementById("end-handle");
+
+          // Control elements
+          this.bezierValues = document.getElementById("bezier-values");
+          this.durationInput = document.getElementById("duration");
+          this.durationValue = document.getElementById("duration-value");
+          this.mainDot = document.querySelector(".main-dot");
+
+          // Buttons
+          this.playButton = document.getElementById("play");
+          this.resetButton = document.getElementById("reset");
+          this.copyButton = document.querySelector(".copy-button");
+
+          // Library elements
+          this.librarygrid = document.querySelector(".library-grid");
+          this.saveButton = document.getElementById("save");
+          this.importButton = document.getElementById("import");
+          this.exportButton = document.getElementById("export");
+        }
+
+        setupState() {
+          this.points = {
+            p1: { x: 0.42, y: 0 },
+            p2: { x: 0.58, y: 1 },
+          };
+          this.activeDrag = null;
+          this.lastTouch = null;
+          this.isZooming = false;
+          this.initialPinchDistance = 0;
+          this.currentZoom = 1;
+        }
+
+        setupTouchEventListeners() {
+          // Control point touch events
+          [this.p1, this.p2].forEach((point) => {
+            point.addEventListener(
+              "touchstart",
+              this.handleTouchStart.bind(this),
+              { passive: false }
+            );
+            point.addEventListener(
+              "touchmove",
+              this.handleTouchMove.bind(this),
+              { passive: false }
+            );
+            point.addEventListener("touchend", this.handleTouchEnd.bind(this));
+            point.addEventListener(
+              "touchcancel",
+              this.handleTouchEnd.bind(this)
+            );
+          });
+
+          // Editor touch events for zooming
+          this.editor.addEventListener(
+            "touchstart",
+            this.handleEditorTouchStart.bind(this),
+            { passive: false }
+          );
+          this.editor.addEventListener(
+            "touchmove",
+            this.handleEditorTouchMove.bind(this),
+            { passive: false }
+          );
+          this.editor.addEventListener(
+            "touchend",
+            this.handleEditorTouchEnd.bind(this)
+          );
+        }
+
+        handleTouchStart(e) {
+          e.preventDefault();
+          if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            this.activeDrag = e.target;
+            this.lastTouch = touch;
+            this.activeDrag.style.zIndex = "1000";
+          }
+        }
+
+        handleTouchMove(e) {
+          e.preventDefault();
+          if (!this.activeDrag || !this.lastTouch) return;
+
+          const touch = e.touches[0];
+          const rect = this.editor.getBoundingClientRect();
+
+          let x = (touch.clientX - rect.left) / rect.width;
+          let y = 1 - (touch.clientY - rect.top) / rect.height;
+
+          // Constrain x values between 0 and 1
+          x = Math.max(0, Math.min(1, x));
+
+          const zoomTip = document.getElementById("zoomTip");
+          if (y > 1.5 || y < -0.5) {
+            zoomTip.style.display = "flex";
+          } else {
+            zoomTip.style.display = "none";
+          }
+
+          if (this.activeDrag === this.p1) {
+            this.points.p1 = { x, y };
+          } else {
+            this.points.p2 = { x, y };
+          }
+
+          this.updateCurve();
+          this.lastTouch = touch;
+        }
+
+        handleTouchEnd(e) {
+          if (this.activeDrag) {
+            this.activeDrag.style.zIndex = "";
+            this.activeDrag = null;
+            this.lastTouch = null;
+          }
+        }
+
+        handleEditorTouchStart(e) {
+          if (e.touches.length === 2) {
+            e.preventDefault();
+            this.isZooming = true;
+            this.initialPinchDistance = this.getPinchDistance(e.touches);
+          }
+        }
+
+        handleEditorTouchMove(e) {
+          if (this.isZooming && e.touches.length === 2) {
+            e.preventDefault();
+            const currentDistance = this.getPinchDistance(e.touches);
+            const newZoom =
+              (currentDistance / this.initialPinchDistance) * this.currentZoom;
+
+            // Limit zoom range
+            this.currentZoom = Math.min(Math.max(newZoom, 0.5), 3);
+
+            // Apply zoom transformation
+            this.editor.style.transform = `scale(${this.currentZoom})`;
+            this.editor.style.transformOrigin = "center center";
+            this.updateCurve();
+          }
+        }
+
+        handleEditorTouchEnd() {
+          this.isZooming = false;
+        }
+
+        getPinchDistance(touches) {
+          return Math.hypot(
+            touches[0].clientX - touches[1].clientX,
+            touches[0].clientY - touches[1].clientY
+          );
+        }
+
+        setupEventListeners() {
+          // Control point dragging
+          [this.p1, this.p2].forEach((point) => {
+            point.addEventListener("mousedown", this.startDrag.bind(this));
+          });
+          document.addEventListener("mousemove", this.drag.bind(this));
+          document.addEventListener("mouseup", this.stopDrag.bind(this));
+
+          // CB_controls
+          this.playButton.addEventListener("click", () => this.playAnimation());
+          this.resetButton.addEventListener("click", () => this.reset());
+          this.durationInput.addEventListener("input", (e) => {
+            this.durationValue.textContent = `${e.target.value}s`;
+          });
+
+          // Copy button
+          this.copyButton.addEventListener("click", () => {
+            const text = `cubic-bezier(${this.bezierValues.textContent})`;
+            navigator.clipboard.writeText(text);
+            this.copyButton.textContent = "Copied!";
+            setTimeout(() => (this.copyButton.textContent = "Copy"), 2000);
+          });
+
+          // Library CB_controls
+          this.saveButton.addEventListener("click", () => this.saveToLibrary());
+          this.importButton.addEventListener("click", () =>
+            this.showImportDialog()
+          );
+          this.exportButton.addEventListener("click", () =>
+            this.showExportDialog()
+          );
+        }
+
+        startDrag(e) {
+          this.activeDrag = e.target;
+          this.activeDrag.style.zIndex = "1000";
+        }
+
+        drag(e) {
+          if (!this.activeDrag) return;
+
+          const rect = this.editor.getBoundingClientRect();
+          let x = (e.clientX - rect.left) / rect.width;
+          let y = 1 - (e.clientY - rect.top) / rect.height;
+          const zoomTip = document.getElementById("zoomTip");
+
+          // Constrain x values between 0 and 1
+          x = Math.max(0, Math.min(1, x));
+
+          if (y > 1.5 || y < -0.5) {
+            zoomTip.style.display = "flex";
+          } else {
+            zoomTip.style.display = "none";
+          }
+
+          if (this.activeDrag === this.p1) {
+            this.points.p1 = { x, y };
+          } else {
+            this.points.p2 = { x, y };
+          }
+
+          this.updateCurve();
+        }
+
+        stopDrag() {
+          if (this.activeDrag) {
+            this.activeDrag.style.zIndex = "";
+            this.activeDrag = null;
+          }
+        }
+
+        updateCurve() {
+          // Update your existing updateCurve method to handle zooming
+          const width = this.editor.offsetWidth;
+          const height = this.editor.offsetHeight;
+
+          // Apply zoom scaling to point positions
+          const zoomTransform = (coord, center) =>
+            center + (coord - center) * this.currentZoom;
+
+          // Update control points position with zoom
+          const p1X = zoomTransform(this.points.p1.x, 0.5) * width;
+          const p1Y = (1 - zoomTransform(this.points.p1.y, 0.5)) * height;
+          const p2X = zoomTransform(this.points.p2.x, 0.5) * width;
+          const p2Y = (1 - zoomTransform(this.points.p2.y, 0.5)) * height;
+
+          this.p1.style.left = `${p1X}px`;
+          this.p1.style.top = `${p1Y}px`;
+          this.p2.style.left = `${p2X}px`;
+          this.p2.style.top = `${p2Y}px`;
+
+          // Update handle lines
+          this.startHandle.setAttribute("x1", "0");
+          this.startHandle.setAttribute("y1", height);
+          this.startHandle.setAttribute("x2", p1X);
+          this.startHandle.setAttribute("y2", p1Y);
+
+          this.endHandle.setAttribute("x1", width);
+          this.endHandle.setAttribute("y1", "0");
+          this.endHandle.setAttribute("x2", p2X);
+          this.endHandle.setAttribute("y2", p2Y);
+
+          // Update curve path
+          const mainPath = `M0,${height} C${p1X},${p1Y} ${p2X},${p2Y} ${width},0`;
+          this.mainCurve.setAttribute("d", mainPath);
+
+          // Update bezier values display
+          this.bezierValues.textContent = `${this.points.p1.x.toFixed(
+            2
+          )}, ${this.points.p1.y.toFixed(2)}, ${this.points.p2.x.toFixed(
+            2
+          )}, ${this.points.p2.y.toFixed(2)}`;
+        }
+
+        playAnimation() {
+          const duration = this.durationInput.value;
+
+          // Reset dots
+          this.mainDot.style.transition = "none";
+          this.mainDot.style.left = "0px";
+
+          // Trigger animation
+          requestAnimationFrame(() => {
+            // Main dot animation
+            this.mainDot.style.transition = `left ${duration}s cubic-bezier(${this.points.p1.x}, ${this.points.p1.y}, ${this.points.p2.x}, ${this.points.p2.y})`;
+            this.mainDot.style.left = "380px";
+          });
+        }
+
+        reset() {
+          this.points = {
+            p1: { x: 0.42, y: 0 },
+            p2: { x: 0.58, y: 1 },
+          };
+          this.updateCurve();
+        }
+
+        saveToLibrary() {
+          const newValues = [
+            this.points.p1.x,
+            this.points.p1.y,
+            this.points.p2.x,
+            this.points.p2.y,
+          ];
+
+          // Check for duplicates
+          const existingPresets = Array.from(this.librarygrid.children);
+          const isDuplicate = existingPresets.some((preset) => {
+            const values = preset.dataset.values.split(",").map(Number);
+            return values.every((v, i) => Math.abs(v - newValues[i]) < 0.01);
+          });
+
+          if (isDuplicate) {
+            alert("This curve already exists in the library!");
+            return;
+          }
+
+          const preset = {
+            values: newValues,
+            label: "Custom",
+          };
+
+          this.createPresetElement(preset);
+          this.saveLibraryToStorage();
+        }
+
+        createPresetElement(preset) {
+          const div = document.createElement("div");
+          div.className = "preset";
+          div.dataset.values = preset.values.join(",");
+
+          const svg = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "svg"
+          );
+          svg.setAttribute("viewBox", "0 0 100 100");
+
+          const path = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path"
+          );
+          path.setAttribute("class", "preset-curve");
+          const [x1, y1, x2, y2] = preset.values;
+          path.setAttribute(
+            "d",
+            `M10,90 C${10 + x1 * 80},${90 - y1 * 80} ${10 + x2 * 80},${
+              90 - y2 * 80
+            } 90,10`
+          );
+
+          svg.appendChild(path);
+          div.appendChild(svg);
+
+          const label = document.createElement("div");
+          label.className = "preset-label";
+          label.textContent = preset.label;
+          div.appendChild(label);
+
+          // Add delete button (except for linear preset)
+          if (preset.label !== "linear") {
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-btn";
+            deleteBtn.textContent = "×";
+            deleteBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.deletePreset(div);
+            });
+            div.appendChild(deleteBtn);
+          }
+
+          div.addEventListener("click", () => this.applyPreset(preset.values));
+          this.librarygrid.appendChild(div);
+        }
+
+        deletePreset(presetElement) {
+          presetElement.remove();
+          this.saveLibraryToStorage();
+        }
+
+        saveLibraryToStorage() {
+          const presets = Array.from(this.librarygrid.children).map((el) => ({
+            values: el.dataset.values.split(",").map(Number),
+            label: el.querySelector(".preset-label").textContent,
+          }));
+          localStorage.setItem("bezierLibrary", JSON.stringify(presets));
+        }
+
+        loadLibrary() {
+          const savedLibrary = localStorage.getItem("bezierLibrary");
+          if (savedLibrary) {
+            const presets = JSON.parse(savedLibrary);
+            presets.forEach((preset) => this.createPresetElement(preset));
+          }
+
+          // Add default presets if no curves exist
+          if (!this.librarygrid.children.length) {
+            // Add default linear preset
+            this.createPresetElement({
+              values: [0, 0, 1, 1],
+              label: "linear",
+            });
+
+            // Add default ease preset
+            this.createPresetElement({
+              values: [0.25, 0.1, 0.25, 1],
+              label: "ease",
+            });
+
+            this.saveLibraryToStorage();
+
+            // Set the initial curve to ease
+            this.points = {
+              p1: { x: 0.25, y: 0.1 },
+              p2: { x: 0.25, y: 1 },
+            };
+            this.updateCurve();
+          }
+        }
+
+        applyPreset(values) {
+          // Fix: Check if values is already an array
+          const [x1, y1, x2, y2] = Array.isArray(values)
+            ? values
+            : values.split(",").map((v) => parseFloat(v));
+          this.points.p1 = { x: x1, y: y1 };
+          this.points.p2 = { x: x2, y: y2 };
+          this.updateCurve();
+        }
+
+        showImportDialog() {
+          document.getElementById("import-dialog").classList.add("active");
+          document.querySelector(".overlay").classList.add("active");
+
+          // Clear previous import data
+          document.getElementById("import-data").value = "";
+        }
+
+        showExportDialog() {
+          const exportData = {
+            points: this.points,
+            // Add additional metadata
+            timestamp: new Date().toISOString(),
+            version: "1.0",
+          };
+
+          document.getElementById("export-data").value = JSON.stringify(
+            exportData,
+            null,
+            2
+          );
+          document.getElementById("export-dialog").classList.add("active");
+          document.querySelector(".overlay").classList.add("active");
+        }
+
+        importCurve(data) {
+          try {
+            let curveData;
+
+            // Handle different data formats
+            if (typeof data === "string") {
+              // Try parsing JSON string
+              curveData = JSON.parse(data);
+            } else {
+              curveData = data;
+            }
+
+            // Validate the imported data
+            if (!this.isValidCurveData(curveData)) {
+              throw new Error("Invalid curve data format");
+            }
+
+            // Update the points
+            this.points = {
+              p1: {
+                x: parseFloat(curveData.points.p1.x),
+                y: parseFloat(curveData.points.p1.y),
+              },
+              p2: {
+                x: parseFloat(curveData.points.p2.x),
+                y: parseFloat(curveData.points.p2.y),
+              },
+            };
+
+            // Update the curve visualization
+            this.updateCurve();
+
+            // Close dialog
+            document
+              .querySelectorAll(".dialog, .overlay")
+              .forEach((el) => el.classList.remove("active"));
+
+            return true;
+          } catch (error) {
+            console.error("Import error:", error);
+            alert("Invalid curve data. Please check the format and try again.");
+            return false;
+          }
+        }
+
+        isValidCurveData(data) {
+          // Check if data has the required structure
+          if (!data || !data.points || !data.points.p1 || !data.points.p2) {
+            return false;
+          }
+
+          // Check if all required coordinates exist and are numbers
+          const coordinates = [
+            data.points.p1.x,
+            data.points.p1.y,
+            data.points.p2.x,
+            data.points.p2.y,
+          ];
+
+          return coordinates.every(
+            (coord) =>
+              typeof coord === "number" ||
+              (typeof coord === "string" && !isNaN(parseFloat(coord)))
+          );
+        }
+      }
+
+      // Initialize the editor
+      const editor = new BezierEditor();
+
+      document.addEventListener("keydown", (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          if (e.key === "i") {
+            e.preventDefault();
+            editor.showImportDialog();
+          } else if (e.key === "e") {
+            e.preventDefault();
+            editor.showExportDialog();
+          }
+        }
+      });
+
+      // Setup dialog CB_controls
+      document
+        .querySelectorAll(".dialog .cancel, .dialog .close")
+        .forEach((button) => {
+          button.addEventListener("click", () => {
+            document
+              .querySelectorAll(".dialog, .overlay")
+              .forEach((el) => el.classList.remove("active"));
+          });
+        });
+
+      document
+        .querySelector("#import-dialog .confirm")
+        .addEventListener("click", () => {
+          try {
+            const data = JSON.parse(
+              document.getElementById("import-data").value
+            );
+            if (data.points) {
+              editor.points = data.points;
+              editor.updateCurve();
+            }
+            document
+              .querySelectorAll(".dialog, .overlay")
+              .forEach((el) => el.classList.remove("active"));
+          } catch (e) {
+            alert("Invalid import data");
+          }
+        });
+    </script>
+    <!-- Code injected by live-server -->
+    <script>
+      // <![CDATA[  <-- For SVG support
+      if ("WebSocket" in window) {
+        (function () {
+          function refreshCSS() {
+            var sheets = [].slice.call(document.getElementsByTagName("link"));
+            var head = document.getElementsByTagName("head")[0];
+            for (var i = 0; i < sheets.length; ++i) {
+              var elem = sheets[i];
+              var parent = elem.parentElement || head;
+              parent.removeChild(elem);
+              var rel = elem.rel;
+              if (
+                (elem.href && typeof rel != "string") ||
+                rel.length == 0 ||
+                rel.toLowerCase() == "stylesheet"
+              ) {
+                var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, "");
+                elem.href =
+                  url +
+                  (url.indexOf("?") >= 0 ? "&" : "?") +
+                  "_cacheOverride=" +
+                  new Date().valueOf();
+              }
+              parent.appendChild(elem);
+            }
+          }
+          var protocol =
+            window.location.protocol === "http:" ? "ws://" : "wss://";
+          var address =
+            protocol + window.location.host + window.location.pathname + "/ws";
+          var socket = new WebSocket(address);
+          socket.onmessage = function (msg) {
+            if (msg.data == "reload") window.location.reload();
+            else if (msg.data == "refreshcss") refreshCSS();
+          };
+          if (
+            sessionStorage &&
+            !sessionStorage.getItem("IsThisFirstTime_Log_From_LiveServer")
+          ) {
+            console.log("Live reload enabled.");
+            sessionStorage.setItem("IsThisFirstTime_Log_From_LiveServer", true);
+          }
+        })();
+      } else {
+        console.error(
+          "Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading."
+        );
+      }
+
+      // ]]>
+    </script>
+    <script src="./scripts/script.js" type="module"></script>
+    <script src="./scripts/footer.js"></script>
+    <script src="./scripts/grid.js"></script>
+  </body>
+</html>

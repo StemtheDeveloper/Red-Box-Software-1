@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Red Box Software | Kanban</title>
+    <link rel="stylesheet" type="text/css" href="./css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <script src="scripts/script.js" type="module"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+
+        background: no-repeat linear-gradient(to bottom, #000000, #280303);
+        color: #fff;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .boards-menu {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .board-actions {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        justify-content: center;
+        max-height: 50px;
+      }
+
+      .view-toggle {
+        margin-left: 20px;
+      }
+
+      .add-task-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .add-task-form input {
+        color: #fff;
+        padding: 8px;
+        border: 1px solid #ff2c3c;
+        background-color: #1a1a1a;
+        width: 300px;
+      }
+
+      .kanban-board {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        min-height: 500px;
+        width: 100%;
+        margin-bottom: 30px;
+      }
+
+      .column {
+        background-color: rgba(235, 236, 240, 0.9);
+        border-radius: 8px;
+        width: 30%;
+        padding: 12px;
+      }
+
+      .column-header {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 12px;
+        color: #172b4d;
+      }
+
+      .task-list {
+        min-height: 500px;
+      }
+
+      .task {
+        background-color: rgb(0, 0, 0);
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        text-wrap: wrap;
+        max-width: 100%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        cursor: move;
+        user-select: none;
+        transition: all 0.2s ease;
+        overflow-y: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .task:hover {
+        background-color: #0c0c0c;
+      }
+
+      .task-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+      }
+
+      .delete-btn {
+        color: #dc3545;
+        background: none;
+        border: none;
+        cursor: pointer;
+        border-radius: 10%;
+        font-size: 35px;
+        scale: 0.5;
+      }
+
+      .delete-btn:hover {
+        color: #fff;
+      }
+
+      .dragging {
+        opacity: 0.5;
+      }
+
+      .board-button {
+        padding: 8px 16px;
+        background-color: #ff2c3c;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .board-button.active {
+        background-color: #87000b;
+      }
+
+      .board-button:hover {
+        background-color: #ff6f2c;
+      }
+
+      .board-delete {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        right: -10px;
+        top: -10px;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 100%;
+        width: 20px;
+        font-size: 15px;
+        padding: 2px;
+        margin: 0;
+        cursor: pointer;
+        display: none;
+      }
+
+      .board-button:hover .board-delete {
+        display: block;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .boards-container-cascade {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        align-items: center;
+      }
+
+      .board-title {
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      #boardTitleInput {
+        background-color: #1a1a1a;
+        color: white;
+        border: 1px solid #ff2c3c;
+        padding: 8px;
+        height: 32px;
+      }
+
+      .kanban-cont {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #1a1a1a;
+        padding: 10px;
+      }
+
+      .subtask-list {
+        list-style: none;
+        padding-left: 20px;
+        margin: 5px 0;
+      }
+
+      .subtask {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 5px;
+      }
+
+      .subtask input[type="datetime-local"],
+      .task input[type="datetime-local"] {
+        background-color: #1a1a1a;
+        color: #fff;
+        border: 1px solid #ff2c3c;
+        padding: 4px;
+        border-radius: 4px;
+      }
+
+      .task button:not(.delete-btn) {
+        background-color: #ff2c3c;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .task button:not(.delete-btn):hover {
+        background-color: #ff6f2c;
+      }
+
+      .subtask button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #dc3545;
+        padding: 2px;
+      }
+
+      .task-edit-input {
+        width: 100%;
+        background-color: #1a1a1a;
+        color: #fff;
+        border: 1px solid #ff2c3c;
+        padding: 4px;
+        border-radius: 4px;
+      }
+
+      .edit-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        font-size: 16px;
+      }
+
+      .task-text {
+        word-break: break-word;
+      }
+
+      /* Mobile Responsive Styles */
+      @media (max-width: 768px) {
+        .board-actions {
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+          max-height: none;
+        }
+
+        .board-actions input,
+        .board-actions button {
+          width: 90%;
+          max-width: 300px;
+        }
+
+        .view-toggle {
+          margin: 10px 0;
+        }
+
+        .kanban-board {
+          flex-direction: column;
+          width: 100%;
+          gap: 10px;
+        }
+
+        .column {
+          width: 100%;
+        }
+
+        .add-task-form {
+          flex-direction: row;
+          align-items: flex-start;
+          width: 100%;
+        }
+
+        .add-task-form button {
+          text-align: center;
+        }
+
+        .add-task-form input {
+          width: 100%;
+          min-height: 32px;
+          max-width: 300px;
+        }
+
+        .boards-menu {
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+        }
+
+        .board-button {
+          width: 90%;
+          max-width: 300px;
+          text-align: center;
+        }
+
+        .task {
+          font-size: 14px;
+        }
+
+        .boards-container-cascade {
+          width: 95%;
+        }
+
+        .board-container {
+          display: flex;
+          flex-direction: column;
+
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+        }
+
+        .board-title {
+          font-size: 20px;
+        }
+
+        /* Improve touch targets for mobile */
+        .delete-btn,
+        .board-delete {
+          min-width: 44px;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* Show delete buttons by default on mobile */
+        .board-button .board-delete {
+          display: block;
+        }
+      }
+
+      /* Tablet Responsive Styles */
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .kanban-board {
+          width: 100%;
+        }
+
+        .column {
+          width: 32%;
+        }
+
+        .board-actions {
+          flex-wrap: wrap;
+          justify-content: center;
+          max-height: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="kanban-cont">
+        <div class="header">
+          <h1>Kanban Boards</h1>
+        </div>
+
+        <div class="board-actions">
+          <input
+            type="text"
+            id="boardTitleInput"
+            placeholder="Enter board title"
+          />
+          <button onclick="createNewBoard()">Create New Board</button>
+          <button onclick="exportBoards()">Export Boards</button>
+          <input
+            type="file"
+            id="importInput"
+            accept=".json"
+            style="display: none"
+            onchange="importBoards(event)"
+          />
+          <button onclick="document.getElementById('importInput').click()">
+            Import Boards
+          </button>
+          <div class="view-toggle">
+            <label>
+              <input
+                type="radio"
+                name="view"
+                value="tabs"
+                checked
+                onchange="toggleView('tabs')"
+              />
+              Tabs
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="view"
+                value="cascade"
+                onchange="toggleView('cascade')"
+              />
+              Cascade
+            </label>
+          </div>
+        </div>
+
+        <div class="boards-menu" id="boardsMenu">
+          <!-- Board buttons will be added here -->
+        </div>
+
+        <div id="boardsContainer">
+          <!-- Individual boards will be added here -->
+        </div>
+      </div>
+    </main>
+
+    <script>
+      let boards = {};
+      let currentBoardId = null;
+      let currentView = "tabs";
+
+      function createNewBoard() {
+        const titleInput = document.getElementById("boardTitleInput");
+        const title = titleInput.value.trim();
+
+        if (title) {
+          const boardId = "board-" + Date.now();
+          boards[boardId] = {
+            title: title,
+            columns: {
+              todo: [],
+              inprogress: [],
+              done: [],
+            },
+          };
+
+          titleInput.value = "";
+          saveBoards();
+          renderBoardsMenu();
+          if (currentView === "tabs") {
+            switchBoard(boardId);
+          } else {
+            renderCascadeView();
+          }
+        }
+      }
+
+      function deleteBoard(boardId, event) {
+        event.stopPropagation();
+        if (confirm("Are you sure you want to delete this board?")) {
+          delete boards[boardId];
+          saveBoards();
+
+          if (currentBoardId === boardId) {
+            currentBoardId = null;
+          }
+
+          if (currentView === "tabs") {
+            renderBoardsMenu();
+            const firstBoardId = Object.keys(boards)[0];
+            if (firstBoardId) {
+              switchBoard(firstBoardId);
+            } else {
+              document.getElementById("boardsContainer").innerHTML = "";
+            }
+          } else {
+            renderCascadeView();
+          }
+        }
+      }
+
+      function toggleView(view) {
+        currentView = view;
+        if (view === "tabs") {
+          renderBoardsMenu();
+          const firstBoardId = Object.keys(boards)[0];
+          if (firstBoardId) {
+            switchBoard(firstBoardId);
+          }
+        } else {
+          document.getElementById("boardsMenu").style.display = "none";
+          renderCascadeView();
+        }
+      }
+
+      function renderCascadeView() {
+        const container = document.getElementById("boardsContainer");
+        container.className = "boards-container-cascade";
+        container.innerHTML = "";
+
+        Object.keys(boards).forEach((boardId) => {
+          const boardContainer = document.createElement("div");
+          boardContainer.className = "board-container";
+
+          const titleElement = document.createElement("h2");
+          titleElement.className = "board-title";
+          titleElement.textContent = boards[boardId].title;
+
+          const deleteButton = document.createElement("button");
+          deleteButton.textContent = "×";
+          deleteButton.className = "delete-btn";
+          deleteButton.title = "Delete Board";
+          deleteButton.onclick = (e) => deleteBoard(boardId, e);
+          titleElement.appendChild(deleteButton);
+
+          boardContainer.appendChild(titleElement);
+          boardContainer.appendChild(createBoardElement(boardId));
+          container.appendChild(boardContainer);
+          loadTasks(boardId);
+        });
+      }
+
+      function createBoardElement(boardId) {
+        const board = boards[boardId];
+        const boardElement = document.createElement("div");
+        boardElement.className = "board-container";
+        boardElement.id = boardId;
+
+        boardElement.innerHTML = `
+                <form class="add-task-form">
+                    <input type="text" placeholder="Enter a new task" required />
+                    <button type="submit">Add Task</button>
+                </form>
+                <div class="kanban-board">
+                    <div class="column">
+                        <div class="column-header">To Do</div>
+                        <div class="task-list" data-column="todo" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    </div>
+                    <div class="column">
+                        <div class="column-header">In Progress</div>
+                        <div class="task-list" data-column="inprogress" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    </div>
+                    <div class="column">
+                        <div class="column-header">Done</div>
+                        <div class="task-list" data-column="done" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    </div>
+                </div>
+
+                <br>
+                <br>
+                <br>
+            `;
+
+        boardElement
+          .querySelector(".add-task-form")
+          .addEventListener("submit", (e) => {
+            e.preventDefault();
+            const input = e.target.querySelector("input");
+            const taskText = input.value.trim();
+
+            if (taskText) {
+              addTask(boardId, taskText);
+              input.value = "";
+            }
+          });
+
+        return boardElement;
+      }
+
+      function renderBoardsMenu() {
+        const menu = document.getElementById("boardsMenu");
+        menu.style.display = "flex";
+        menu.innerHTML = "";
+
+        Object.keys(boards).forEach((boardId) => {
+          const button = document.createElement("button");
+          button.className = `board-button ${
+            boardId === currentBoardId ? "active" : ""
+          }`;
+          button.textContent = boards[boardId].title;
+          button.onclick = () => switchBoard(boardId);
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "board-delete";
+          deleteBtn.textContent = "×";
+          deleteBtn.onclick = (e) => deleteBoard(boardId, e);
+          button.appendChild(deleteBtn);
+
+          menu.appendChild(button);
+        });
+      }
+
+      function switchBoard(boardId) {
+        currentBoardId = boardId;
+        renderBoardsMenu();
+
+        const container = document.getElementById("boardsContainer");
+        container.className = "";
+        container.innerHTML = "";
+
+        if (boardId && boards[boardId]) {
+          const boardElement = createBoardElement(boardId);
+          container.appendChild(boardElement);
+          loadTasks(boardId);
+        }
+      }
+
+      function addTask(boardId, text, deadline = null, subtasks = []) {
+        const task = createTaskElement(text, deadline, subtasks);
+        const todoList = document.querySelector(
+          `#${boardId} [data-column="todo"]`
+        );
+        todoList.appendChild(task);
+        saveTasksForBoard(boardId);
+      }
+
+      function createTaskElement(text, deadline = null, subtasks = []) {
+          const task = document.createElement("div");
+          task.className = "task";
+          task.draggable = true;
+          task.id = "task-" + Date.now();
+
+          const taskContent = document.createElement("div");
+          taskContent.textContent = text;
+          taskContent.className = "task-text";
+
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "✏️";
+          editBtn.className = "edit-btn";
+          editBtn.onclick = () => editTaskTitle(task, taskContent);
+
+          const deadlineInput = document.createElement("input");
+          deadlineInput.type = "datetime-local";
+          deadlineInput.value = deadline || "";
+          deadlineInput.addEventListener("change", () => updateTaskDeadline(task));
+
+          const subtaskButton = document.createElement("button");
+          subtaskButton.textContent = "➕ Subtask";
+          subtaskButton.onclick = () => addSubtask(task);
+
+          const subtaskList = document.createElement("ul");
+          subtaskList.className = "subtask-list";
+          subtasks.forEach(subtask => {
+              const subtaskElement = createSubtaskElement(subtask.text, subtask.deadline);
+              subtaskList.appendChild(subtaskElement);
+          });
+
+          const taskActions = document.createElement("div");
+          taskActions.className = "task-actions";
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "delete-btn";
+          deleteBtn.textContent = "🗑️";
+          deleteBtn.onclick = () => {
+              task.remove();
+              saveTasksForBoard(currentBoardId);
+          };
+
+          taskActions.appendChild(editBtn);
+          taskActions.appendChild(deleteBtn);
+          task.appendChild(taskContent);
+          task.appendChild(deadlineInput);
+          task.appendChild(subtaskButton);
+          task.appendChild(subtaskList);
+          task.appendChild(taskActions);
+
+          task.addEventListener("dragstart", dragStart);
+          task.addEventListener("dragend", dragEnd);
+
+          updateTaskDeadline(task);
+          return task;
+      }
+
+      function editTaskTitle(task, taskContent) {
+          const oldText = taskContent.textContent;
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = oldText;
+          input.className = "task-edit-input";
+          taskContent.replaceWith(input);
+          input.focus();
+
+          function saveEdit() {
+              if (input.value.trim()) {
+                  taskContent.textContent = input.value.trim();
+              } else {
+                  taskContent.textContent = oldText; // Restore old text if empty
+              }
+              input.replaceWith(taskContent);
+              saveTasksForBoard(currentBoardId);
+          }
+
+          input.addEventListener("blur", saveEdit);
+          input.addEventListener("keypress", (e) => {
+              if (e.key === "Enter") {
+                  saveEdit();
+              }
+          });
+      }
+
+      function createSubtaskElement(text, deadline = null) {
+        const subtask = document.createElement("li");
+        subtask.className = "subtask";
+
+        const subtaskContent = document.createElement("div");
+        subtaskContent.textContent = text;
+
+        const subtaskDeadline = document.createElement("input");
+        subtaskDeadline.type = "datetime-local";
+        subtaskDeadline.value = deadline ? new Date(deadline).toISOString().slice(0, 16) : "";
+        subtaskDeadline.onchange = () => updateSubtaskDeadline(subtask);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "×";
+        deleteBtn.onclick = () => {
+          subtask.remove();
+          saveTasksForBoard(currentBoardId);
+        };
+
+        subtask.appendChild(subtaskContent);
+        subtask.appendChild(subtaskDeadline);
+        subtask.appendChild(deleteBtn);
+
+        return subtask;
+      }
+
+      function addSubtask(task) {
+        const subtaskText = prompt("Enter subtask text:");
+        if (subtaskText) {
+          const subtaskList = task.querySelector(".subtask-list");
+          const subtaskElement = createSubtaskElement(subtaskText);
+          subtaskList.appendChild(subtaskElement);
+          saveTasksForBoard(currentBoardId);
+        }
+      }
+
+      function updateTaskDeadline(task) {
+        saveTasksForBoard(currentBoardId);
+      }
+
+      function updateSubtaskDeadline(subtask) {
+        saveTasksForBoard(currentBoardId);
+      }
+
+      function dragStart(e) {
+        e.target.classList.add("dragging");
+      }
+
+      function dragEnd(e) {
+        e.target.classList.remove("dragging");
+      }
+
+      function allowDrop(e) {
+        e.preventDefault();
+      }
+
+      function drop(e) {
+        e.preventDefault();
+        const column = e.target.closest(".task-list");
+        const draggingTask = document.querySelector(".dragging");
+
+        if (draggingTask && column) {
+          column.appendChild(draggingTask);
+          saveTasksForBoard(currentBoardId);
+        }
+      }
+
+      function saveTasksForBoard(boardId) {
+        if (!boardId || !boards[boardId]) return;
+
+        const boardElement = document.getElementById(boardId);
+        const columns = boardElement.querySelectorAll(".task-list");
+
+        columns.forEach((column) => {
+          const columnName = column.dataset.column;
+          const tasks = Array.from(column.children).map((task) => ({
+            id: task.id,
+            text: task.querySelector("div").textContent,
+            deadline: task.querySelector('input[type="datetime-local"]').value,
+            subtasks: Array.from(task.querySelectorAll(".subtask")).map(subtask => ({
+              text: subtask.querySelector("div").textContent,
+              deadline: subtask.querySelector('input[type="datetime-local"]').value
+            }))
+          }));
+          boards[boardId].columns[columnName] = tasks;
+        });
+
+        saveBoards();
+      }
+
+      function loadTasks(boardId) {
+        const board = boards[boardId];
+        if (!board) return;
+
+        Object.entries(board.columns).forEach(([columnName, tasks]) => {
+          const column = document.querySelector(
+            `#${boardId} [data-column="${columnName}"]`
+          );
+          tasks.forEach((task) => {
+            const taskElement = createTaskElement(task.text, task.deadline, task.subtasks);
+            taskElement.id = task.id;
+            column.appendChild(taskElement);
+          });
+        });
+      }
+
+      function saveBoards() {
+        localStorage.setItem("kanbanBoards", JSON.stringify(boards));
+      }
+
+      function loadBoards() {
+        const savedBoards = localStorage.getItem("kanbanBoards");
+        if (savedBoards) {
+          boards = JSON.parse(savedBoards);
+          renderBoardsMenu();
+
+          const firstBoardId = Object.keys(boards)[0];
+          if (firstBoardId) {
+            switchBoard(firstBoardId);
+          }
+        }
+      }
+
+      function exportBoards() {
+        const dataStr = JSON.stringify(boards, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "kanban-boards.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function importBoards(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const importedBoards = JSON.parse(e.target.result);
+            boards = importedBoards;
+            saveBoards();
+            renderBoardsMenu();
+
+            const firstBoardId = Object.keys(boards)[0];
+            if (firstBoardId) {
+              switchBoard(firstBoardId);
+            }
+          } catch (error) {
+            alert("Error importing boards: Invalid file format");
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        loadBoards();
+        if (currentView === "cascade") {
+          document.querySelector('input[value="cascade"]').checked = true;
+          toggleView("cascade");
+        }
+      });
+    </script>
+    <div class="grid"></div>
+    <script src="./scripts/footer.js"></script>
+    <script src="./scripts/grid.js"></script>
+  </body>
+</html>

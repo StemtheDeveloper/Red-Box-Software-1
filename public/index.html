@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <title>Red Box Software</title>
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/10.9.0/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/10.9.0/firebase-auth-compat.js"></script>
+    <!-- <script defer src="/__/firebase/10.9.0/firebase-database-compat.js"></script> -->
+    <script
+      defer
+      src="/__/firebase/10.9.0/firebase-firestore-compat.js"
+    ></script>
+    <script
+      defer
+      src="/__/firebase/10.9.0/firebase-functions-compat.js"
+    ></script>
+    <!-- <script defer src="/__/firebase/10.9.0/firebase-messaging-compat.js"></script> -->
+    <script defer src="/__/firebase/10.9.0/firebase-storage-compat.js"></script>
+    <script
+      defer
+      src="/__/firebase/10.9.0/firebase-analytics-compat.js"
+    ></script>
+    <!-- <script defer src="/__/firebase/10.9.0/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/10.9.0/firebase-performance-compat.js"></script> -->
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=false"></script>
+    <script src="./scripts/script.js" type="module"></script>
+  </head>
+  <body>
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-analytics.js";
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
+
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      const firebaseConfig = {
+        apiKey: "AIzaSyC2CwIcLmGi46-VeVBgGuzgjl1rAN_S3IY",
+        authDomain: "red-box-software.firebaseapp.com",
+        projectId: "red-box-software",
+        storageBucket: "red-box-software.appspot.com",
+        messagingSenderId: "94993930256",
+        appId: "1:94993930256:web:b47f330bee30bddffb1295",
+        measurementId: "G-2LX6NFYS1J",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+    </script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const loadEl = document.querySelector("#load");
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        // // The Firebase SDK is initialized and available here!
+        //
+        firebase.auth().onAuthStateChanged((user) => {});
+        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+        firebase
+          .firestore()
+          .doc("/foo/bar")
+          .get()
+          .then(() => {});
+        firebase
+          .functions()
+          .httpsCallable("yourFunction")()
+          .then(() => {});
+        // firebase.messaging().requestPermission().then(() => { });
+        firebase
+          .storage()
+          .ref("/path/to/ref")
+          .getDownloadURL()
+          .then(() => {});
+        firebase.analytics(); // call to activate
+        firebase.analytics().logEvent("tutorial_completed");
+        // firebase.performance(); // call to activate
+        //
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+
+        try {
+          let app = firebase.app();
+          let features = [
+            "auth",
+            "firestore",
+            "functions",
+            "storage",
+            "analytics",
+          ].filter((feature) => typeof app[feature] === "function");
+          loadEl.textContent = `Firebase SDK loaded with ${features.join(
+            ", "
+          )}`;
+        } catch (e) {
+          console.error(e);
+          loadEl.textContent =
+            "Error loading the Firebase SDK, check the console.";
+        }
+      });
+    </script>
+
+    <img
+      draggable="true"
+      id="spaceship"
+      src="./Images/Red Rocket.svg"
+      style="position: fixed; bottom: 50; left: 50%"
+    />
+    <div class="grid-controls">
+      <label for="effect-range">Effect Area:</label>
+      <input type="range" id="effect-range" min="1" max="5" value="1" />
+    </div>
+    <div class="grid"></div>
+    <main>
+      <div id="landingArea">click here to show the rocket</div>
+
+      <div id="shipControls">
+        <img
+          id="dpadImage"
+          src="./Images/D-pad.svg"
+          alt="Directional controls for rocket"
+        />
+        <img
+          id="spaceBarImage"
+          src="./Images/Space.svg"
+          alt="Space bar to shoot lazers"
+        />
+      </div>
+
+      <div class="homeContent">
+        <br />
+        <br />
+        <h1 class="destructible salutations">Hey! ❤️</h1>
+        <div class="destructible salutations">Welcome to Red Box Software</div>
+        <div class="destructible salutations">
+          <!-- creepy -->
+          <!-- <img
+            id="redBoxSupport"
+            src="./Images/Red-Box-Support-image-2-one-toof.png"
+            alt="The Red Box Software Emotional support animal (It's just a slightly creepy cube with eyes and teeth)"
+          /> -->
+        </div>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+
+        <div class="destructible">
+          <p class="intro">
+            We are an NZ based software development company that specializes in
+            creating powerful, user-friendly and beautiful software solutions.
+
+            <br />
+            <br />
+            Or strengths are in web development, app development, and robotic
+            process automation. But we are always looking to expand our
+            horizons. So if you have a project in mind, we would love to hear
+            about it!
+
+            <br />
+            <br />
+          </p>
+        </div>
+        <h2>Our Goals</h2>
+        <div>
+          <ol class="goals">
+            <li>Make software affordable again</li>
+            <li>Make software that is easy to use</li>
+            <li>
+              Keep your data secure by not storing any of your personal or
+              business info! Unless that's what you want 🤙
+              <p>
+                We achieve this by using local storage (your own device storage)
+                and not collecting any personal or unnecessary data.
+              </p>
+            </li>
+          </ol>
+        </div>
+
+        <h2 class="destructible">Our Services</h2>
+
+        <div class="destructible">
+          <ul>
+            <li>
+              We build websites from as little as $1200 and $30 per month for
+              ongoing costs including hosting and maintenance.
+            </li>
+            <br />
+            <li>
+              We build custom apps for Desktop (Windows, Mac or Linux). Prices
+              vary, so contact us with a brief and we can give you a quote.
+            </li>
+            <br />
+
+            <li>
+              We are experienced in graphic design and social media management
+            </li>
+          </ul>
+        </div>
+
+        <h2 class="destructible">Our Products</h2>
+
+        <div class="products destructible">
+          <div class="homeProductCont">
+            <div class="homeProduct">
+              <h4>Recstar</h4>
+              <a href="products.html"
+                ><img
+                  src="./Images/Recstar Main.svg"
+                  alt="Recstar an app for recording your screen and key presses"
+                  width="220"
+                />
+              </a>
+            </div>
+
+            <div class="homeProduct">
+              <h4>RBS ToDo</h4>
+              <a href="products.html">
+                <img
+                  src="./Images/RBS TD white svg text.svg"
+                  alt="A to do list app by Red Box Software. It's an exe so you can download it and run it on your windows machine"
+                  width="200"
+                />
+              </a>
+            </div>
+            <div class="homeProduct">
+              <h4>Portable Home</h4>
+              <p>website example</p>
+              <a href="https://portablehome.co.nz/">
+                <img
+                  src="./Images/Portable home.svg"
+                  alt="A customer website by Red Box Software. It's a Tauranga based business that sells portable cabins with a unique pill design"
+                  width="180"
+                />
+              </a>
+            </div>
+            <div class="homeProduct">
+              <h4>One Page Games</h4>
+              <p>website example</p>
+              <a href="https://onepagegames.net/index.html">
+                <img
+                  src="./Images/OPG.svg"
+                  alt="A personal project by Red Box Software. It's a collection of simple games that can be played in the browser"
+                  width="200"
+                />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="destructible">Design Work</h2>
+        <p class="destructible">click and drag to rotate</p>
+
+        <h4 class="destructible">Portable Home Pamphlet</h4>
+
+        <div class="design-work destructible">
+          <div class="flip-container" data-flipper-id="1">
+            <div class="flipper">
+              <div class="front">
+                <img
+                  src="./Images/Portable home brochure page one.png"
+                  alt="Front of pamphlet"
+                />
+              </div>
+              <div class="back">
+                <img
+                  src="./Images/Portable home brochure page two.png"
+                  alt="Back of pamphlet"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h4 class="destructible">Fresh Grass</h4>
+
+        <div class="design-work destructible">
+          <div class="flip-container" data-flipper-id="2">
+            <div class="flipper">
+              <div class="front">
+                <img
+                  src="./Images/Door Hanger Front 2.png"
+                  alt="Front of pamphlet"
+                />
+              </div>
+              <div class="back">
+                <img
+                  src="./Images/Door Hanger Back 2.png"
+                  alt="Back of pamphlet"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h4 class="destructible">Business Card</h4>
+
+        <div class="design-work destructible">
+          <div class="flip-container" data-flipper-id="3">
+            <div class="flipper">
+              <div class="front">
+                <img
+                  src="./Images/Front 2.png"
+                  alt="Front of Fresh Grass business card"
+                />
+              </div>
+              <div class="back">
+                <img
+                  src="./Images/Back 2.png"
+                  alt="Back of Fresh Grass business card"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="news destructible"></div>
+
+        <h2 class="destructible">Online Utilities</h2>
+        <div class="utilities destructible">
+          <div class="utility">
+            <h4>Clip Path Editor And SVG Designer</h4>
+            <p>
+              Edit clip paths for use in css or download it as an SVG. It
+              supports curves and you can test it with your own image. There are
+              instructions on the clip path editor page. Have fun!
+            </p>
+            <a href="clip_path_editor.html">
+              <img
+                src="./Images/{FEF94D08-D339-463B-AE0A-C1633FBFCD7C}.png"
+                alt="A tool from creating clip paths and svgs"
+                width="200"
+              />
+              ⬅️click here
+            </a>
+          </div>
+          <div class="utility">
+            <h4>Cubic Bezier Editor</h4>
+            <p>
+              This tool makes it easy to design bezier curves for your css
+              animations.
+            </p>
+            <a href="cubic_bezier.html">
+              <img
+                src="./Images/{E2DE47B6-E565-4A73-A78A-7DCDCBC0E9EB}.png"
+                alt="A tool from creating bezier curves for use in css"
+                width="200"
+              />
+              ⬅️click here
+            </a>
+          </div>
+
+          <div class="utility">
+            <h4>Base64 Image Encoder/Decoder</h4>
+            <p>
+              This is for encoding images into base64 strings. It's useful for
+              embedding images or directly into html. You can also decode base64
+              strings back into images.
+            </p>
+            <a href="base64.html">
+              <img
+                src="./Images/stiaan-viljoen-eric-the-red11-copy.png"
+                alt="A base64 Image encoder"
+                width="200"
+              />
+              ⬅️click here
+            </a>
+          </div>
+
+          <div class="utility">
+            <h4>Kanban Task Manager</h4>
+            <p>
+              Manage you tasks with a kanban board. You can create, edit, and
+              share tasks with others. It's a great way to keep track of your
+              projects. Best of all it's free and we don't see your data!
+            </p>
+            <a href="kanban.html">
+              <img
+                src="./Images/Kanban.png"
+                alt="A base64 Image encoder"
+                width="200"
+              />
+              ⬅️click here
+            </a>
+          </div>
+
+          <div class="utility">
+            <h4>QR Code Generator</h4>
+            <p>
+              Generate a QR code for a URL or text. You can customize the size
+              and color 😁
+            </p>
+            <a href="qr_code_generator.html">
+              <img
+                src="./Images/website-qr-code.png"
+                alt="A base64 Image encoder"
+                width="200"
+              />
+              ⬅️click here
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="spacer"></div>
+
+    <div class="horizontalSpacer"></div>
+    <!-- script for flippable card -->
+    <script>
+      class FlipCard {
+        constructor(container) {
+          this.container = container;
+          this.flipper = container.querySelector(".flipper");
+          this.id = container.dataset.flipperId;
+          this.isDragging = false;
+          this.startX = 0;
+          this.rotationSpeed = 0.8;
+          this.currentRotation = 0;
+
+          // Load saved rotation
+          const savedRotation = localStorage.getItem(`cardRotation_${this.id}`);
+          if (savedRotation) {
+            this.currentRotation = parseFloat(savedRotation);
+            this.flipper.style.transform = `rotateY(${this.currentRotation}deg)`;
+          }
+
+          // Mouse events
+          this.container.addEventListener(
+            "mousedown",
+            this.onMouseDown.bind(this)
+          );
+          document.addEventListener("mousemove", this.onMouseMove.bind(this));
+          document.addEventListener("mouseup", this.onMouseUp.bind(this));
+
+          // Touch events
+          this.container.addEventListener(
+            "touchstart",
+            this.onTouchStart.bind(this)
+          );
+          document.addEventListener("touchmove", this.onTouchMove.bind(this));
+          document.addEventListener("touchend", this.onTouchEnd.bind(this));
+
+          this.container.addEventListener("dragstart", (e) =>
+            e.preventDefault()
+          );
+        }
+
+        onTouchStart(e) {
+          e.preventDefault();
+          this.isDragging = true;
+          this.startX = e.touches[0].clientX;
+          this.flipper.style.transition = "none";
+        }
+
+        onTouchMove(e) {
+          if (!this.isDragging) return;
+          e.preventDefault();
+          const deltaX = e.touches[0].clientX - this.startX;
+          const rotation = this.currentRotation + deltaX * this.rotationSpeed;
+          this.flipper.style.transform = `rotateY(${rotation}deg)`;
+        }
+
+        onTouchEnd(e) {
+          if (!this.isDragging) return;
+          e.preventDefault();
+          this.isDragging = false;
+          const deltaX = e.changedTouches[0].clientX - this.startX;
+          this.currentRotation += deltaX * this.rotationSpeed;
+          localStorage.setItem(`cardRotation_${this.id}`, this.currentRotation);
+          this.flipper.style.transform = `rotateY(${this.currentRotation}deg)`;
+        }
+
+        onMouseDown(e) {
+          this.isDragging = true;
+          this.startX = e.clientX;
+          this.flipper.style.transition = "none";
+        }
+
+        onMouseMove(e) {
+          if (!this.isDragging) return;
+          const deltaX = e.clientX - this.startX;
+          const rotation = this.currentRotation + deltaX * this.rotationSpeed;
+          this.flipper.style.transform = `rotateY(${rotation}deg)`;
+        }
+
+        onMouseUp(e) {
+          if (!this.isDragging) return;
+          this.isDragging = false;
+          const deltaX = e.clientX - this.startX;
+          this.currentRotation += deltaX * this.rotationSpeed;
+          localStorage.setItem(`cardRotation_${this.id}`, this.currentRotation);
+          this.flipper.style.transform = `rotateY(${this.currentRotation}deg)`;
+        }
+      }
+
+      // Initialize all flip cards when DOM is loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        const containers = document.querySelectorAll(".flip-container");
+        containers.forEach((container) => new FlipCard(container));
+      });
+    </script>
+
+    <script>
+      const spaceship = document.getElementById("spaceship");
+
+      let spaceshipX = window.innerWidth / 2;
+      let spaceshipY = window.innerHeight / 2;
+      let spaceshipSpeedX = 0;
+      let spaceshipSpeedY = 0;
+      let lasers = [];
+
+      let upPressed = false;
+      let downPressed = false;
+      let rightPressed = false;
+      let leftPressed = false;
+      let landed = true;
+      console.log("Landed: ", landed);
+
+      let currentAngle = 0; // Default angle
+      let lerpFactor = 0.05; // Adjust this value to change the speed of rotation
+
+      // text creation
+      const textContainer = document.getElementById("textContainer");
+
+      let contentXPosition = 0.1;
+      let contentYPositionMod = 0.15;
+
+      // content position aliases
+
+      let cxp = contentXPosition;
+      let cypm = contentYPositionMod;
+
+      const rocketShadow = document.createElement("img");
+      rocketShadow.id = "rocketShadow";
+
+      rocketShadow.src = "./Images/Red Rocket Shadow.png";
+      rocketShadow.style.position = "fixed";
+      rocketShadow.style.zIndex = "9";
+      rocketShadow.style.width = "100px";
+      rocketShadow.style.height = "100px";
+      rocketShadow.style.opacity = "0";
+      rocketShadow.style.zIndex = "8";
+      document.body.appendChild(rocketShadow);
+
+      document.addEventListener("DOMContentLoaded", function () {
+        if (landed) {
+          rocketShadow.style.opacity = "0.5";
+          rocketShadow.style.zIndex = "10";
+          spaceship.style.opacity = "0";
+          spaceship.style.zIndex = "11";
+        } else {
+          rocketShadow.style.opacity = "0";
+          rocketShadow.style.zIndex = "10";
+          spaceship.style.opacity = "1";
+          spaceship.style.zIndex = "11";
+        }
+      });
+      function moveSpaceship() {
+        // Update spaceship speed based on key presses
+        if (upPressed) spaceshipSpeedY += 0.3;
+        if (downPressed) spaceshipSpeedY -= 0.3;
+        if (rightPressed) spaceshipSpeedX += 0.3;
+        if (leftPressed) spaceshipSpeedX -= 0.3;
+
+        // Calculate potential new position
+        let newSpaceshipX = spaceshipX + spaceshipSpeedX;
+        let newSpaceshipY = spaceshipY + spaceshipSpeedY;
+
+        let rect = spaceship.getBoundingClientRect();
+        let spaceshipWidth = rect.width;
+        let spaceshipHeight = rect.height;
+
+        // Check boundaries and adjust speed accordingly
+        if (newSpaceshipX < 0) {
+          spaceshipSpeedX = 0;
+          spaceshipX = 0; // Reset position to the exact left edge
+        } else if (newSpaceshipX + spaceshipWidth > window.innerWidth) {
+          spaceshipSpeedX = 0;
+          spaceshipX = window.innerWidth - spaceshipWidth; // Reset to exact right edge
+        }
+
+        if (newSpaceshipY < 0) {
+          spaceshipSpeedY = 0;
+          spaceshipY = 0; // Reset position to the exact top edge
+        } else if (newSpaceshipY + spaceshipHeight > window.innerHeight) {
+          spaceshipSpeedY = 0;
+          spaceshipY = window.innerHeight - spaceshipHeight; // Reset to exact bottom edge
+        }
+
+        // Update position based on adjusted speeds (unchanged)
+        spaceshipX += spaceshipSpeedX;
+        spaceshipY += spaceshipSpeedY;
+
+        // Calculate target angle based on key presses
+        let targetAngle = currentAngle;
+        if (upPressed && !downPressed && !rightPressed && !leftPressed) {
+          targetAngle = 0;
+        } else if (downPressed && !upPressed && !rightPressed && !leftPressed) {
+          targetAngle = 180;
+        } else if (rightPressed && !leftPressed && !upPressed && !downPressed) {
+          targetAngle = 90;
+        } else if (leftPressed && !rightPressed && !upPressed && !downPressed) {
+          targetAngle = 270;
+        } else if (upPressed && rightPressed && !downPressed && !leftPressed) {
+          targetAngle = 45;
+        } else if (upPressed && leftPressed && !downPressed && !rightPressed) {
+          targetAngle = 315;
+        } else if (downPressed && rightPressed && !upPressed && !leftPressed) {
+          targetAngle = 135;
+        } else if (downPressed && leftPressed && !upPressed && !rightPressed) {
+          targetAngle = 225;
+        }
+
+        // Smoothly rotate spaceship towards target angle
+        let diff = targetAngle - currentAngle;
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        currentAngle += diff * lerpFactor;
+
+        // Apply position and rotation to spaceship element
+        spaceship.style.transform = `rotate(${currentAngle}deg)`;
+        spaceship.style.left = `${spaceshipX}px`;
+        spaceship.style.bottom = `${spaceshipY}px`;
+        rocketShadow.style.transform = `rotate(${currentAngle}deg)`;
+        rocketShadow.style.left = `${spaceshipX}px`;
+        rocketShadow.style.bottom = `${spaceshipY - 20}px`;
+
+        // Update laser positions
+        updateLasers();
+
+        // Apply friction to slow down the spaceship gradually
+        spaceshipSpeedX *= 0.97;
+        spaceshipSpeedY *= 0.97;
+
+        // Continue the animation loop
+        requestAnimationFrame(moveSpaceship);
+      }
+
+      function shootLaser() {
+        let laser = document.createElement("div");
+        laser.id = "laser";
+        laser.style.position = "fixed";
+        laser.style.zIndex = "11"; // Ensure lasers are on top
+
+        // Calculate center of spaceship
+        let laserX = spaceshipX + spaceship.offsetWidth / 2;
+        let laserY = spaceshipY + spaceship.offsetHeight / 2;
+
+        // Calculate offset based on the ship's angle
+        let offsetX = 15 * Math.sin((currentAngle * Math.PI) / 180);
+        let offsetY = -15 * Math.cos((currentAngle * Math.PI) / 180);
+
+        // Prevent scrolling by limiting the initial laser position
+        laserX = Math.max(
+          0,
+          Math.min(laserX, window.innerWidth - laser.offsetWidth)
+        );
+        laserY = Math.max(
+          0,
+          Math.min(laserY, window.innerHeight - laser.offsetHeight)
+        );
+
+        // Apply rotation to the laser to match the ship's angle
+        laser.style.transform = `rotate(${currentAngle}deg)`;
+        laser.style.transformOrigin = "center left"; // Rotate from the center-left point
+
+        laser.style.left = `${laserX}px`;
+        laser.style.bottom = `${laserY}px`;
+        laser.style.width = "2px";
+        laser.style.height = "10px";
+        laser.style.background = "red";
+        document.body.appendChild(laser);
+
+        laser.angle = currentAngle; // Store the current angle for laser movement
+        lasers.push(laser);
+      }
+
+      function updateLasers() {
+        for (let i = 0; i < lasers.length; i++) {
+          let laser = lasers[i];
+          let laserX = parseInt(laser.style.left);
+          let laserY = parseInt(laser.style.bottom);
+
+          // Move laser
+          laserX += 20 * Math.sin((laser.angle * Math.PI) / 180);
+          laserY += 20 * Math.cos((laser.angle * Math.PI) / 180);
+
+          laser.style.left = `${laserX}px`;
+          laser.style.bottom = `${laserY}px`;
+
+          // Remove if outside viewport
+          if (
+            laserX < 0 ||
+            laserX > window.innerWidth ||
+            laserY < 0 ||
+            laserY > window.innerHeight
+          ) {
+            document.body.removeChild(laser);
+            lasers.splice(i, 1);
+            i--;
+            continue;
+          }
+
+          // Check for collisions with destructible elements
+          let laserRect = laser.getBoundingClientRect();
+          let destructibles = document.getElementsByClassName("destructible");
+
+          for (let element of destructibles) {
+            let elementRect = element.getBoundingClientRect();
+
+            if (
+              laserRect.left < elementRect.right &&
+              laserRect.right > elementRect.left &&
+              laserRect.top < elementRect.bottom &&
+              laserRect.bottom > elementRect.top
+            ) {
+              // Collision detected - remove both laser and element
+              element.remove();
+              document.body.removeChild(laser);
+              lasers.splice(i, 1);
+              i--;
+              break;
+            }
+          }
+        }
+      }
+
+      window.addEventListener("keydown", (event) => {
+        switch (event.key) {
+          case "ArrowUp":
+            upPressed = true;
+            break;
+          case "ArrowDown":
+            downPressed = true;
+            break;
+          case "ArrowRight":
+            rightPressed = true;
+            break;
+          case "ArrowLeft":
+            leftPressed = true;
+            break;
+          case " ":
+            event.preventDefault();
+            shootLaser();
+            break;
+        }
+      });
+
+      window.addEventListener("keyup", (event) => {
+        switch (event.key) {
+          case "ArrowUp":
+            upPressed = false;
+            break;
+          case "ArrowDown":
+            downPressed = false;
+            break;
+          case "ArrowRight":
+            rightPressed = false;
+            break;
+          case "ArrowLeft":
+            leftPressed = false;
+            break;
+        }
+      });
+
+      const landingArea = document.getElementById("landingArea");
+
+      function updateLandingText() {
+        landingArea.textContent = landed ? "launch rocket" : "land rocket";
+      }
+
+      // Update text initially
+      updateLandingText();
+
+      landingArea.addEventListener("click", () => {
+        if (landed) {
+          rocketShadow.style.opacity = "0.5";
+          rocketShadow.style.zIndex = "10";
+          spaceship.style.opacity = "1";
+          spaceship.style.zIndex = "11";
+
+          landed = false;
+        } else {
+          rocketShadow.style.opacity = "0";
+          rocketShadow.style.zIndex = "10";
+          spaceship.style.opacity = "0";
+          spaceship.style.zIndex = "11";
+
+          landed = true;
+        }
+        updateLandingText();
+        console.log("Landed: ", landed);
+      });
+
+      moveSpaceship();
+    </script>
+
+    <script>
+      window.addEventListener("load", () => {
+        // Check if it's not a mobile device
+        if (window.innerWidth > 768) {
+          // You can adjust this breakpoint
+          const images = document.querySelectorAll("#shipControls img");
+          const shipControls = document.getElementById("shipControls");
+          images.forEach((img) => {
+            img.style.animation = "bounceIn 1s ease-out";
+            setTimeout(() => {
+              shipControls.classList.add("hidden");
+              shipControls.style.opacity = 0;
+            }, 2000);
+          });
+        } else {
+          // If it's a mobile device, hide controls immediately
+          const shipControls = document.getElementById("shipControls");
+          if (shipControls) {
+            shipControls.style.display = "none";
+          }
+        }
+      });
+    </script>
+
+    <script>
+      // Add touch event handling for mobile
+      document.addEventListener("DOMContentLoaded", function () {
+        // Prevent default touch behaviors
+        document.addEventListener(
+          "touchmove",
+          function (e) {
+            if (e.target.closest(".flip-container")) {
+              e.preventDefault();
+            }
+          },
+          { passive: false }
+        );
+
+        // Disable spaceship and controls on mobile/tablet
+        function disableMobileFeatures() {
+          if (window.innerWidth <= 1024) {
+            const spaceship = document.getElementById("spaceship");
+            const shipControls = document.getElementById("shipControls");
+            const landingArea = document.getElementById("landingArea");
+            const grid = document.querySelector(".grid");
+
+            if (spaceship) spaceship.style.display = "none";
+            if (shipControls) shipControls.style.display = "none";
+            if (landingArea) landingArea.style.display = "none";
+            // if (grid) grid.style.display = "none";
+          }
+        }
+
+        disableMobileFeatures();
+        window.addEventListener("resize", disableMobileFeatures);
+      });
+    </script>
+
+    <script src="./scripts/footer.js"></script>
+    <script src="./scripts/grid.js"></script>
+  </body>
+</html>

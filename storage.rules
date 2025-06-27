@@ -1,0 +1,26 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'stiaan44@gmail.com';
+    }
+    
+    // Rules for executables folder with nested product folders
+    match /executables/{productName}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Rules for logos folder with nested product folders
+    match /logos/{productName}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Default rule - deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

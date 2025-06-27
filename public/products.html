@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Red Box Software | Products</title>
+    <link rel="stylesheet" type="text/css" href="./css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <script src="./scripts/script.js" type="module"></script>
+    <style>
+      .product-container {
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 20px;
+      }
+
+      .product {
+        max-width: 500px;
+      }
+
+      .product details {
+        background: #0f0f0f;
+        border-radius: 8px;
+        margin: 20px;
+        overflow: hidden;
+        max-width: 450px;
+      }
+
+      .product summary {
+        padding: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background: #1f1f1f;
+        max-width: 500px;
+      }
+
+      .product summary:hover {
+        background: #2f2f2f;
+      }
+
+      .product #product-description {
+        white-space: pre-line;
+      }
+
+      .detailsImg {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+        border-bottom: 1px solid #2f2f2f;
+      }
+
+      .app_icon {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+      }
+
+      .bottom {
+        padding: 20px;
+      }
+
+      .bottom h3 {
+        margin-top: 20px;
+        color: #ff2c3c;
+      }
+
+      .bottom hr {
+        border: none;
+        border-top: 1px solid #2f2f2f;
+        margin: 10px 0;
+      }
+
+      .bottom ol {
+        margin-left: 20px;
+        margin-bottom: 20px;
+      }
+
+      .bottom li {
+        margin: 10px 0;
+      }
+
+      .appDownload {
+        display: inline-block;
+        background: linear-gradient(to right, #c3000a, #e52e00);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 4px;
+        text-decoration: none;
+        margin-top: 20px;
+        transition: opacity 0.3s ease;
+      }
+
+      .appDownload:hover {
+        opacity: 0.9;
+      }
+
+      .warning-details {
+        background: #1f1f1f;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 15px 0;
+      }
+
+      .warning-details img {
+        max-width: 100%;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Here you can find the software products we provide</h1>
+      <div class="product-container" id="productContainer">
+        <!-- Products will be loaded here dynamically -->
+        <div id="loading">Loading products...</div>
+      </div>
+    </main>
+
+    <div class="grid"></div>
+
+    <script src="./scripts/footer.js"></script>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        getDocs,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+      import {
+        getStorage,
+        ref,
+        getDownloadURL,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
+
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyC2CwIcLmGi46-VeVBgGuzgjl1rAN_S3IY",
+        authDomain: "red-box-software.firebaseapp.com",
+        projectId: "red-box-software",
+        storageBucket: "red-box-software.appspot.com",
+        messagingSenderId: "94993930256",
+        appId: "1:94993930256:web:b47f330bee30bddffb1295",
+        measurementId: "G-2LX6NFYS1J",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      const CACHE_NAME = "products-cache-v1";
+
+      // Clear cache at the start of each session
+      async function clearCache() {
+        try {
+          const cacheKeys = await caches.keys();
+          await Promise.all(
+            cacheKeys.map((key) => {
+              if (key.startsWith("products-cache")) {
+                return caches.delete(key);
+              }
+            })
+          );
+        } catch (error) {
+          console.error("Error clearing cache:", error);
+        }
+      }
+
+      async function fetchProductsFromFirebase() {
+        const querySnapshot = await getDocs(collection(db, "products"));
+        const products = [];
+        querySnapshot.forEach((doc) => {
+          products.push(doc.data());
+        });
+        return products;
+      }
+
+      function createProductElement(product) {
+        const productDiv = document.createElement("div");
+        productDiv.className = "product";
+
+        productDiv.innerHTML = `
+          <details>
+            <summary>
+              <img
+                class="detailsImg"
+                src="${product.logo.url}"
+                alt="${product.name} logo"
+              />
+              ${product.name} (click to expand)
+            </summary>
+    
+            <div class="top">
+              <img
+                class="app_icon"
+                src="${product.logo.url}"
+                alt="${product.name} logo"
+              />
+              <h2>${product.name}</h2>
+            </div>
+            <div class="bottom">
+              <p id="product-description">${product.description}</p>
+    
+              <h3>How to use</h3>
+              <hr />
+    
+              <ol>
+                <li>Download the app</li>
+                <li>Double click to run the app (${product.executable.name})</li>
+                <li>Follow the app's instructions to get started</li>
+              </ol>
+    
+              <div class="warning-details">
+                <h4>Important Information</h4>
+                <p>This is a Windows application. It may not run as expected on macOS or Linux.</p>
+                <p>
+                  Windows Defender or other antivirus software may flag this app. 
+                  This is normal for executable files from smaller developers. 
+                  We ensure our software is safe and secure.
+                </p>
+                <p>
+                  For your safety, you can verify any file at 
+                  <strong>virustotal.com</strong> before running it.
+                </p>
+              </div>
+    
+              
+                <a class="appDownload"
+                href="${product.executable.url}"
+                download="${product.executable.name}"
+              >Download ${product.name} v${product.version}</a>
+            </div>
+          </details>
+        `;
+
+        return productDiv;
+      }
+
+      async function loadProducts() {
+        const productContainer = document.getElementById("productContainer");
+        const loadingElement = document.getElementById("loading");
+
+        try {
+          // Clear the cache before loading new data
+          await clearCache();
+
+          // Fetch fresh data from Firebase
+          const products = await fetchProductsFromFirebase();
+
+          // Remove loading message
+          if (loadingElement) loadingElement.remove();
+
+          // Render products
+          products.forEach((product) => {
+            const productElement = createProductElement(product);
+            productContainer.appendChild(productElement);
+          });
+        } catch (error) {
+          console.error("Error loading products:", error);
+          if (loadingElement) {
+            loadingElement.textContent =
+              "Error loading products. Please try again later.";
+          }
+        }
+      }
+
+      // Load products when the page loads
+      document.addEventListener("DOMContentLoaded", loadProducts);
+    </script>
+    <script src="./scripts/grid.js"></script>
+    <script src="./scripts/script.js" type="module"></script>
+  </body>
+</html>

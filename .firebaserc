@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "red-box-software"
+  },
+  "targets": {},
+  "etags": {
+    "red-box-software": {
+      "extensionInstances": {}
+    }
+  },
+  "dataconnectEmulatorConfig": {}
+}

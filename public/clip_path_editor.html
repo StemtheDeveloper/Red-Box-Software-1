@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clip Path Editor</title>
+    <link rel="stylesheet" type="text/css" href="./css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+
+    <script src="scripts/script.js" type="module"></script>
+    <style>
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #111;
+        max-width: 95vw;
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 24px;
+        padding: 0 16px;
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #fff;
+        margin: 0;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 8px;
+      }
+
+      .button-group-2 {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        position: absolute;
+        max-width: 40px;
+        margin: 10px;
+        gap: 8px;
+        z-index: 3;
+      }
+
+      .button-group-2 > button {
+        color: white;
+        font-size: 30px;
+        width: 40px;
+        height: 40px;
+      }
+
+      .button {
+        padding: 8px;
+        background-color: #ff2c3c;
+        border-radius: 4px;
+        border: none;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+      }
+
+      .button:hover {
+        background-color: #ff6f2c;
+      }
+
+      .editor-grid {
+        display: grid;
+        grid-template-columns: 1fr 250px;
+        gap: 24px;
+        background-color: #111;
+        width: 100%;
+        max-width: 100vh;
+      }
+
+      .svg-container {
+        position: relative;
+        background-color: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 8px;
+        aspect-ratio: 1;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      }
+
+      .svg-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      #svg1 {
+        width: 100%;
+        height: 100%;
+        cursor: grab;
+      }
+
+      #svg1:active {
+        cursor: grabbing;
+      }
+
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 16px;
+        background-color: #1a1a1a;
+        border-radius: 8px;
+        border: 1px solid #333;
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .input {
+        background-color: #2a2a2a;
+        color: white;
+        border: 1px solid #444;
+        border-radius: 4px;
+        padding: 8px;
+        width: 90%;
+      }
+
+      .input:focus {
+        outline: none;
+        border-color: #ff2c3c;
+      }
+
+      .label {
+        color: #fff;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .code-preview {
+        background-color: #2a2a2a;
+        border-radius: 4px;
+        padding: 12px;
+        font-family: monospace;
+        color: white;
+        font-size: 12px;
+        width: 90%;
+        overflow-x: auto;
+      }
+
+      .zoom-controls {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        display: flex;
+        gap: 8px;
+        background-color: rgba(26, 26, 26, 0.8);
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #333;
+      }
+
+      .zoom-button {
+        background-color: #2a2a2a;
+        color: white;
+        border: 1px solid #444;
+        border-radius: 4px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .zoom-button:hover {
+        background-color: #3a3a3a;
+      }
+
+      .zoom-level {
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 0 8px;
+        font-size: 14px;
+      }
+
+      /* cool shape */
+      /* .previewShape {
+  width: 200px;
+  height: 200px;
+  background-color: #ff2c3c;
+  clip-path: path(
+    "M 100.50104417800904 18.82076416015625 L 51.71788330078125 38.05003051757812L 73.05681457519532 70.95559234619141L 10 90L 100.50104417800904 18.82076416015625Z"
+  );
+} */
+
+      .previewShape {
+        width: 220px;
+        height: 220px;
+
+        background-color: #1a1a1a;
+        border-radius: 8px;
+        border: #ff2c3c 1px solid;
+        position: relative;
+
+        overflow: hidden;
+        display: flex;
+
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+
+      .previewShape > div {
+        width: auto;
+        height: auto;
+        min-width: 90px;
+        min-height: 90px;
+        background: linear-gradient(135deg, #ff2c3c, #ff6f2c);
+        transition: clip-path 0.2s ease;
+        scale: 3;
+        transform: translate(25%, 25%);
+      }
+
+      .previewClip {
+        position: absolute;
+        top: -20px;
+        left: -15px;
+      }
+
+      .bottomSection {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .image-input {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #1a1a1a;
+        border-radius: 8px;
+        margin-top: 20px;
+        padding: 20px;
+      }
+
+      .image-input > input[type="file"] {
+        width: 100%;
+        color: white;
+        background-color: #2a2a2a;
+        border: 1px solid #444;
+        border-radius: 4px;
+        padding: 8px;
+        cursor: pointer;
+      }
+
+      .image-input > input[type="file"]::-webkit-file-upload-button {
+        background-color: #ff2c3c;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .image-input > input[type="file"]::-webkit-file-upload-button:hover {
+        background-color: #ff6f2c;
+      }
+
+      .image-input > label {
+        color: white;
+        font-size: 20px;
+        margin-bottom: 8px;
+      }
+
+      .toolInstructions {
+        display: none;
+        flex-direction: column;
+        position: fixed;
+        background-color: #111;
+        border-radius: 10px;
+        padding: 20px;
+        top: 15%;
+        left: 25%;
+        width: 50%;
+        height: auto;
+        z-index: 100;
+      }
+
+      .toolInstructions .text {
+        color: white;
+        font-size: 16px;
+        margin: 0;
+        padding: 0;
+        line-height: 1.5;
+        white-space: pre-line;
+      }
+
+      .toolInstructions ul li {
+        padding: 4px;
+      }
+
+      #closeInstructions {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 10px;
+        background-color: #ff2c3c;
+        border: none;
+        border-radius: 4px;
+      }
+
+      @media (max-width: 768px) {
+        .editor-grid {
+          grid-template-columns: 1fr;
+        }
+        .svg-container {
+          max-width: 90vw;
+        }
+        .controls {
+          max-width: 85vw;
+        }
+      }
+      .point {
+        fill: #ff2c3c;
+        stroke: white;
+        stroke-width: 0.5;
+        cursor: pointer;
+      }
+
+      .point.selected {
+        fill: #ff6f2c;
+      }
+
+      .handle {
+        fill: #ff2c3c;
+        stroke: white;
+        stroke-width: 0.5;
+        cursor: pointer;
+      }
+
+      .handle-line {
+        stroke: #ff2c3c;
+        stroke-width: 0.5;
+        stroke-dasharray: 2, 2;
+      }
+
+      .preview-shape {
+        width: 200px;
+        height: 200px;
+        background: linear-gradient(135deg, #ff2c3c, #ff6f2c);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1 class="title">Clip Path Editor</h1>
+        <div class="button-group">
+          <button class="button" id="instructionsBtn">Instructions</button>
+          <button class="button" id="downloadSvg">Download SVG</button>
+        </div>
+      </div>
+
+      <div class="editor-grid">
+        <div class="svg-container">
+          <div class="button-group-2">
+            <button class="button" data-shape="square">□</button>
+            <button class="button" data-shape="triangle">△</button>
+            <button class="button" data-shape="hexagon">⬡</button>
+            <button class="button" data-shape="circle">○</button>
+          </div>
+          <div class="svg-wrapper">
+            <svg id="svg1" viewBox="0 0 100 100">
+              <path
+                id="mainPath"
+                fill="rgba(255, 44, 60, 0.5)"
+                stroke="#ff2c3c"
+                stroke-width="1"
+              />
+              <g id="handleLinesGroup"></g>
+              <g id="pointsGroup"></g>
+            </svg>
+          </div>
+          <div class="zoom-controls">
+            <button class="zoom-button" id="zoomOut">-</button>
+            <span class="zoom-level">100%</span>
+            <button class="zoom-button" id="zoomIn">+</button>
+            <button class="zoom-button" id="zoomReset">↺</button>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="control-group">
+            <label class="label">Preview:</label>
+            <div class="previewShape">
+              <div class="previewClip"></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="label">CSS Code:</label>
+            <pre class="code-preview" id="cssCode"></pre>
+            <button class="button" id="copyPath">Copy</button>
+          </div>
+          <div class="control-group">
+            <label class="label">Rotation (degrees):</label>
+            <input type="number" id="rotation" value="0" class="input" />
+          </div>
+          <div class="control-group">
+            <label class="label">Scale (%):</label>
+            <input type="number" id="scale" value="100" class="input" />
+          </div>
+          <div class="image-input">
+            <label>Preview Image:</label>
+            <input type="file" accept="image/*" id="imageInput" />
+          </div>
+        </div>
+      </div>
+
+      <div class="toolInstructions">
+        <button class="button" id="closeInstructions">✕</button>
+        <div class="text">
+          <h2>Instructions</h2>
+          <ul>
+            <li>Click and drag points to move them</li>
+            <li>Hold Shift + Click on path to add new point</li>
+            <li>Hold Alt + Click to toggle curves on points</li>
+            <li>Hold Ctrl + Click to select multiple points</li>
+            <li>Press Delete to remove selected points</li>
+            <li>Ctrl/Cmd + Z to undo</li>
+            <li>Use mouse wheel to zoom in/out</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let instructionsOpen = false;
+      class Point {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.curve = false;
+          this.control1 = null;
+          this.control2 = null;
+        }
+
+        clone() {
+          const p = new Point(this.x, this.y);
+          p.curve = this.curve;
+          if (this.control1)
+            p.control1 = { x: this.control1.x, y: this.control1.y };
+          if (this.control2)
+            p.control2 = { x: this.control2.x, y: this.control2.y };
+          return p;
+        }
+      }
+
+      class ClipPathEditor {
+        constructor() {
+          this.svg = document.getElementById("svg1");
+          this.path = document.getElementById("mainPath");
+          this.handleLinesGroup = document.getElementById("handleLinesGroup");
+          this.pointsGroup = document.getElementById("pointsGroup");
+
+          // Initialize state
+          this.points = [];
+          this.selectedPoints = new Set();
+          this.undoStack = [];
+          this.redoStack = [];
+          this.isDragging = false;
+          this.draggedPoint = null;
+          this.draggedHandle = null;
+          this.zoom = 1;
+          this.viewportPosition = { x: 0, y: 0 };
+          this.rotation = 0;
+          this.scale = 100;
+          this.spacePressed = false;
+          this.shiftPressed = false;
+          this.altPressed = false;
+          this.ctrlPressed = false;
+
+          this.setupEventListeners();
+          this.loadShape("square"); // Default shape
+        }
+
+        setupEventListeners() {
+          // Mouse events
+          this.svg.addEventListener(
+            "mousedown",
+            this.handleMouseDown.bind(this)
+          );
+          document.addEventListener(
+            "mousemove",
+            this.handleMouseMove.bind(this)
+          );
+          document.addEventListener("mouseup", this.handleMouseUp.bind(this));
+          this.svg.addEventListener("wheel", this.handleWheel.bind(this));
+
+          // Keyboard events
+          document.addEventListener("keydown", (e) => {
+            if (e.key === "Shift") this.shiftPressed = true;
+            if (e.key === "Alt") this.altPressed = true;
+            if (e.key === "Control") this.ctrlPressed = true;
+            if (e.key === " ") {
+              e.preventDefault();
+              this.spacePressed = true;
+            }
+
+            // Undo/Redo
+            if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+              if (e.shiftKey) this.redo();
+              else this.undo();
+              e.preventDefault();
+            }
+
+            // Delete
+            if (e.key === "Delete" || e.key === "Backspace") {
+              this.deleteSelectedPoints();
+            }
+          });
+
+          document.addEventListener("keyup", (e) => {
+            if (e.key === "Shift") this.shiftPressed = false;
+            if (e.key === "Alt") this.altPressed = false;
+            if (e.key === "Control") this.ctrlPressed = false;
+            if (e.key === " ") this.spacePressed = false;
+          });
+
+          // Shape buttons
+          document.querySelectorAll("[data-shape]").forEach((button) => {
+            button.addEventListener("click", () =>
+              this.loadShape(button.dataset.shape)
+            );
+          });
+
+          // UI controls
+          document
+            .getElementById("rotation")
+            .addEventListener("change", (e) => {
+              this.rotation = Number(e.target.value);
+              this.updatePath();
+            });
+
+          document.getElementById("scale").addEventListener("change", (e) => {
+            this.scale = Number(e.target.value);
+            this.updatePath();
+          });
+
+          document
+            .getElementById("zoomIn")
+            .addEventListener("click", () => this.adjustZoom(1.1));
+          document
+            .getElementById("zoomOut")
+            .addEventListener("click", () => this.adjustZoom(0.9));
+          document.getElementById("zoomReset").addEventListener("click", () => {
+            this.zoom = 1;
+            this.viewportPosition = { x: 0, y: 0 };
+            this.updateViewBox();
+          });
+
+          document
+            .getElementById("imageInput")
+            .addEventListener("change", this.handleImageUpload.bind(this));
+          document
+            .getElementById("copyPath")
+            .addEventListener("click", this.copyCSSPath.bind(this));
+          document
+            .getElementById("downloadSvg")
+            .addEventListener("click", this.downloadSVG.bind(this));
+          document
+            .getElementById("instructionsBtn")
+            .addEventListener("click", () => {
+              document.querySelector(".toolInstructions").style.display =
+                "flex";
+              instructionsOpen = true;
+            });
+          document
+            .getElementById("closeInstructions")
+            .addEventListener("click", () => {
+              document.querySelector(".toolInstructions").style.display =
+                "none";
+              instructionsOpen = false;
+            });
+
+          document.body.addEventListener("click", (e) => {
+            if (
+              instructionsOpen &&
+              !e.target.closest(".toolInstructions") &&
+              !e.target.closest("#instructionsBtn")
+            ) {
+              document.querySelector(".toolInstructions").style.display =
+                "none";
+              instructionsOpen = false;
+            }
+          });
+        }
+
+        convertToSVGCoordinates(clientX, clientY) {
+          const svg = this.svg;
+          const point = svg.createSVGPoint();
+          point.x = clientX;
+          point.y = clientY;
+
+          // Convert from screen to SVG coordinates
+          const ctm = svg.getScreenCTM();
+          if (!ctm) return point;
+
+          const transformed = point.matrixTransform(ctm.inverse());
+
+          // Reverse the rotation transformation
+          if (this.rotation !== 0) {
+            const radians = (-this.rotation * Math.PI) / 180;
+            const cos = Math.cos(radians);
+            const sin = Math.sin(radians);
+            const dx = transformed.x - 50;
+            const dy = transformed.y - 50;
+            transformed.x = dx * cos - dy * sin + 50;
+            transformed.y = dx * sin + dy * cos + 50;
+          }
+
+          // Reverse the scale transformation
+          if (this.scale !== 100) {
+            transformed.x = ((transformed.x - 50) * 100) / this.scale + 50;
+            transformed.y = ((transformed.y - 50) * 100) / this.scale + 50;
+          }
+
+          return transformed;
+        }
+
+        handleMouseDown(e) {
+          if (e.button !== 0) return; // Only handle left click
+
+          const point = this.convertToSVGCoordinates(e.clientX, e.clientY);
+
+          if (this.spacePressed) {
+            this.isPanning = true;
+            this.panStart = { x: e.clientX, y: e.clientY };
+            return;
+          }
+
+          // Check if clicking on a point or handle
+          const target = e.target;
+          if (target.classList.contains("point")) {
+            const index = parseInt(target.dataset.index);
+            if (this.altPressed) {
+              this.togglePointCurve(index);
+            } else if (this.ctrlPressed) {
+              this.togglePointSelection(index);
+            } else {
+              this.startDraggingPoint(index, point);
+            }
+          } else if (target.classList.contains("handle")) {
+            const [pointIndex, handleType] = target.dataset.handle.split("-");
+            this.startDraggingHandle(parseInt(pointIndex), handleType, point);
+          } else if (this.shiftPressed) {
+            this.addPointOnPath(point);
+          }
+        }
+
+        startDraggingPoint(index, point) {
+          this.isDragging = true;
+          this.draggedPoint = index;
+          if (!this.selectedPoints.has(index)) {
+            this.selectedPoints.clear();
+            this.selectedPoints.add(index);
+          }
+          this.dragStartPosition = point;
+          this.dragStartPoints = this.points.map((p) => p.clone());
+        }
+
+        startDraggingHandle(pointIndex, handleType, point) {
+          this.isDragging = true;
+          this.draggedHandle = { pointIndex, handleType };
+          this.dragStartPosition = point;
+          this.dragStartPoints = this.points.map((p) => p.clone());
+        }
+
+        handleMouseMove(e) {
+          if (!this.isDragging) return;
+
+          const currentPoint = this.convertToSVGCoordinates(
+            e.clientX,
+            e.clientY
+          );
+          const dx = currentPoint.x - this.dragStartPosition.x;
+          const dy = currentPoint.y - this.dragStartPosition.y;
+
+          if (this.draggedPoint !== null) {
+            this.selectedPoints.forEach((index) => {
+              const point = this.points[index];
+              const startPoint = this.dragStartPoints[index];
+              point.x = startPoint.x + dx;
+              point.y = startPoint.y + dy;
+
+              if (point.curve) {
+                if (point.control1) {
+                  point.control1.x = startPoint.control1.x + dx;
+                  point.control1.y = startPoint.control1.y + dy;
+                }
+                if (point.control2) {
+                  point.control2.x = startPoint.control2.x + dx;
+                  point.control2.y = startPoint.control2.y + dy;
+                }
+              }
+            });
+          } else if (this.draggedHandle) {
+            const { pointIndex, handleType } = this.draggedHandle;
+            const point = this.points[pointIndex];
+            const startPoint = this.dragStartPoints[pointIndex];
+
+            if (handleType === "control1") {
+              point.control1 = {
+                x: startPoint.control1.x + dx,
+                y: startPoint.control1.y + dy,
+              };
+            } else {
+              point.control2 = {
+                x: startPoint.control2.x + dx,
+                y: startPoint.control2.y + dy,
+              };
+            }
+          }
+
+          this.updatePath();
+        }
+
+        handleMouseUp() {
+          if (this.isDragging) {
+            this.isDragging = false;
+            this.draggedPoint = null;
+            this.draggedHandle = null;
+            this.saveState();
+          }
+        }
+
+        handleWheel(e) {
+          e.preventDefault();
+          const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+          this.adjustZoom(zoomFactor);
+        }
+
+        adjustZoom(factor) {
+          this.zoom *= factor;
+          this.zoom = Math.max(0.1, Math.min(5, this.zoom));
+          document.querySelector(".zoom-level").textContent = `${Math.round(
+            this.zoom * 100
+          )}%`;
+          this.updateViewBox();
+        }
+
+        updateViewBox() {
+          const centerX = 50;
+          const centerY = 50;
+          const width = 100 / this.zoom;
+          const height = 100 / this.zoom;
+          this.svg.setAttribute(
+            "viewBox",
+            `${centerX - width / 2 + this.viewportPosition.x} ${
+              centerY - height / 2 + this.viewportPosition.y
+            } ${width} ${height}`
+          );
+        }
+
+        togglePointCurve(index) {
+          const point = this.points[index];
+          point.curve = !point.curve;
+
+          if (point.curve) {
+            // Calculate the angle to the previous and next points for better control point placement
+            const prevIndex =
+              (index - 1 + this.points.length) % this.points.length;
+            const nextIndex = (index + 1) % this.points.length;
+            const prevPoint = this.points[prevIndex];
+            const nextPoint = this.points[nextIndex];
+
+            // Calculate angles
+            const angleToPrev = Math.atan2(
+              prevPoint.y - point.y,
+              prevPoint.x - point.x
+            );
+            const angleToNext = Math.atan2(
+              nextPoint.y - point.y,
+              nextPoint.x - point.x
+            );
+
+            // Distance for control points (adjust this value to change curve intensity)
+            const distance = 20;
+
+            // Set control points
+            point.control1 = {
+              x: point.x + Math.cos(angleToPrev) * distance,
+              y: point.y + Math.sin(angleToPrev) * distance,
+            };
+            point.control2 = {
+              x: point.x + Math.cos(angleToNext) * distance,
+              y: point.y + Math.sin(angleToNext) * distance,
+            };
+
+            // Also update neighbor points if they're curved
+            if (this.points[prevIndex].curve) {
+              this.points[prevIndex].control2 = {
+                x: prevPoint.x + Math.cos(angleToNext) * distance,
+                y: prevPoint.y + Math.sin(angleToNext) * distance,
+              };
+            }
+            if (this.points[nextIndex].curve) {
+              this.points[nextIndex].control1 = {
+                x: nextPoint.x + Math.cos(angleToPrev) * distance,
+                y: nextPoint.y + Math.sin(angleToPrev) * distance,
+              };
+            }
+          } else {
+            point.control1 = null;
+            point.control2 = null;
+          }
+
+          this.saveState();
+          this.updatePath();
+        }
+
+        addPointOnPath(clickPoint) {
+          const newPoint = new Point(clickPoint.x, clickPoint.y);
+
+          // Find the closest line segment
+          let minDistance = Infinity;
+          let insertIndex = 0;
+
+          for (let i = 0; i < this.points.length; i++) {
+            const point1 = this.points[i];
+            const point2 = this.points[(i + 1) % this.points.length];
+
+            const distance = this.pointToLineDistance(
+              clickPoint,
+              point1,
+              point2
+            );
+            if (distance < minDistance) {
+              minDistance = distance;
+              insertIndex = i + 1;
+            }
+          }
+
+          // Add control points
+          newPoint.control1 = { x: newPoint.x - 20, y: newPoint.y };
+          newPoint.control2 = { x: newPoint.x + 20, y: newPoint.y };
+
+          // Insert the new point
+          this.points.splice(insertIndex, 0, newPoint);
+          this.selectedPoints.clear();
+          this.selectedPoints.add(insertIndex);
+          this.saveState();
+          this.updatePath();
+        }
+
+        pointToLineDistance(point, lineStart, lineEnd) {
+          const A = point.x - lineStart.x;
+          const B = point.y - lineStart.y;
+          const C = lineEnd.x - lineStart.x;
+          const D = lineEnd.y - lineStart.y;
+
+          const dot = A * C + B * D;
+          const lenSq = C * C + D * D;
+          let param = -1;
+
+          if (lenSq !== 0) param = dot / lenSq;
+
+          let xx, yy;
+
+          if (param < 0) {
+            xx = lineStart.x;
+            yy = lineStart.y;
+          } else if (param > 1) {
+            xx = lineEnd.x;
+            yy = lineEnd.y;
+          } else {
+            xx = lineStart.x + param * C;
+            yy = lineStart.y + param * D;
+          }
+
+          const dx = point.x - xx;
+          const dy = point.y - yy;
+
+          return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        togglePointSelection(index, event) {
+          if (this.selectedPoints.has(index)) {
+            this.selectedPoints.delete(index);
+          } else {
+            this.selectedPoints.add(index);
+          }
+          this.updatePath();
+        }
+
+        deleteSelectedPoints() {
+          if (this.selectedPoints.size === 0 || this.points.length <= 3) return;
+
+          const newPoints = this.points.filter(
+            (_, index) => !this.selectedPoints.has(index)
+          );
+          if (newPoints.length >= 3) {
+            this.points = newPoints;
+            this.selectedPoints.clear();
+            this.saveState();
+            this.updatePath();
+          }
+        }
+
+        loadShape(shapeName) {
+          const size = 40;
+          const center = 50;
+
+          const presetShapes = {
+            square: [
+              { x: center - size / 2, y: center - size / 2, curve: false },
+              { x: center + size / 2, y: center - size / 2, curve: false },
+              { x: center + size / 2, y: center + size / 2, curve: false },
+              { x: center - size / 2, y: center + size / 2, curve: false },
+            ],
+            triangle: [
+              { x: center, y: center - size / 2, curve: false },
+              { x: center + size / 2, y: center + size / 2, curve: false },
+              { x: center - size / 2, y: center + size / 2, curve: false },
+            ],
+            hexagon: [
+              { x: center + size / 2, y: center, curve: false }, // Right point
+              {
+                x: center + (size / 2) * Math.cos(Math.PI / 3),
+                y: center - (size / 2) * Math.sin(Math.PI / 3),
+                curve: false,
+              }, // Upper right
+              {
+                x: center - (size / 2) * Math.cos(Math.PI / 3),
+                y: center - (size / 2) * Math.sin(Math.PI / 3),
+                curve: false,
+              }, // Upper left
+              { x: center - size / 2, y: center, curve: false }, // Left point
+              {
+                x: center - (size / 2) * Math.cos(Math.PI / 3),
+                y: center + (size / 2) * Math.sin(Math.PI / 3),
+                curve: false,
+              }, // Lower left
+              {
+                x: center + (size / 2) * Math.cos(Math.PI / 3),
+                y: center + (size / 2) * Math.sin(Math.PI / 3),
+                curve: false,
+              }, // Lower right
+            ],
+            circle: [
+              {
+                x: center,
+                y: center - size / 2,
+                curve: true,
+                control1: {
+                  x: center - (size / 2) * 0.552,
+                  y: center - size / 2,
+                },
+                control2: {
+                  x: center + (size / 2) * 0.552,
+                  y: center - size / 2,
+                },
+              },
+              {
+                x: center + size / 2,
+                y: center,
+                curve: true,
+                control1: {
+                  x: center + size / 2,
+                  y: center - (size / 2) * 0.552,
+                },
+                control2: {
+                  x: center + size / 2,
+                  y: center + (size / 2) * 0.552,
+                },
+              },
+              {
+                x: center,
+                y: center + size / 2,
+                curve: true,
+                control1: {
+                  x: center + (size / 2) * 0.552,
+                  y: center + size / 2,
+                },
+                control2: {
+                  x: center - (size / 2) * 0.552,
+                  y: center + size / 2,
+                },
+              },
+              {
+                x: center - size / 2,
+                y: center,
+                curve: true,
+                control1: {
+                  x: center - size / 2,
+                  y: center + (size / 2) * 0.552,
+                },
+                control2: {
+                  x: center - size / 2,
+                  y: center - (size / 2) * 0.552,
+                },
+              },
+            ],
+          };
+
+          if (presetShapes[shapeName]) {
+            // Convert the preset data into Point instances
+            this.points = presetShapes[shapeName].map((data) => {
+              const point = new Point(data.x, data.y);
+              point.curve = data.curve;
+              if (data.control1) point.control1 = { ...data.control1 };
+              if (data.control2) point.control2 = { ...data.control2 };
+              return point;
+            });
+
+            this.selectedPoints.clear();
+            this.saveState();
+            this.updatePath();
+            this.renderPoints();
+          }
+        }
+
+        updatePath() {
+          // Generate path data
+          let d = "";
+          this.points.forEach((point, i) => {
+            const transformedPoint = this.transformPoint(point);
+            if (i === 0) {
+              d += `M ${transformedPoint.x} ${transformedPoint.y}`;
+            } else {
+              const prevPoint = this.points[i - 1];
+              const transformedPrev = this.transformPoint(prevPoint);
+              if (point.curve && prevPoint.control2 && point.control1) {
+                const transformedControl1 = this.transformPoint(point.control1);
+                const transformedControl2 = this.transformPoint(
+                  prevPoint.control2
+                );
+                d += ` C ${transformedControl2.x} ${transformedControl2.y}, ${transformedControl1.x} ${transformedControl1.y}, ${transformedPoint.x} ${transformedPoint.y}`;
+              } else {
+                d += ` L ${transformedPoint.x} ${transformedPoint.y}`;
+              }
+            }
+          });
+
+          // Close the path
+          if (
+            this.points[0].curve &&
+            this.points[this.points.length - 1].control2 &&
+            this.points[0].control1
+          ) {
+            const lastPoint = this.points[this.points.length - 1];
+            const firstPoint = this.points[0];
+            const transformedLast = this.transformPoint(lastPoint);
+            const transformedFirst = this.transformPoint(firstPoint);
+            const transformedControl1 = this.transformPoint(
+              firstPoint.control1
+            );
+            const transformedControl2 = this.transformPoint(lastPoint.control2);
+            d += ` C ${transformedControl2.x} ${transformedControl2.y}, ${transformedControl1.x} ${transformedControl1.y}, ${transformedFirst.x} ${transformedFirst.y}`;
+          } else {
+            d += " Z";
+          }
+
+          this.path.setAttribute("d", d);
+          this.updatePreview(d);
+          this.renderPoints();
+        }
+
+        renderPoints() {
+          this.handleLinesGroup.innerHTML = "";
+          this.pointsGroup.innerHTML = "";
+
+          this.points.forEach((point, i) => {
+            const transformedPoint = this.transformPoint(point);
+
+            if (point.curve) {
+              if (point.control1) {
+                const transformedControl1 = this.transformPoint(point.control1);
+                const line1 = document.createElementNS(
+                  "http://www.w3.org/2000/svg",
+                  "line"
+                );
+                line1.setAttribute("class", "handle-line");
+                line1.setAttribute("x1", transformedPoint.x);
+                line1.setAttribute("y1", transformedPoint.y);
+                line1.setAttribute("x2", transformedControl1.x);
+                line1.setAttribute("y2", transformedControl1.y);
+                this.handleLinesGroup.appendChild(line1);
+              }
+
+              if (point.control2) {
+                const transformedControl2 = this.transformPoint(point.control2);
+                const line2 = document.createElementNS(
+                  "http://www.w3.org/2000/svg",
+                  "line"
+                );
+                line2.setAttribute("class", "handle-line");
+                line2.setAttribute("x1", transformedPoint.x);
+                line2.setAttribute("y1", transformedPoint.y);
+                line2.setAttribute("x2", transformedControl2.x);
+                line2.setAttribute("y2", transformedControl2.y);
+                this.handleLinesGroup.appendChild(line2);
+              }
+            }
+
+            // Main point
+            const circle = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "circle"
+            );
+            circle.setAttribute(
+              "class",
+              `point${this.selectedPoints.has(i) ? " selected" : ""}`
+            );
+            circle.setAttribute("cx", transformedPoint.x);
+            circle.setAttribute("cy", transformedPoint.y);
+            circle.setAttribute("r", 2);
+            circle.dataset.index = i;
+            this.pointsGroup.appendChild(circle);
+
+            // Control points if curved
+            if (point.curve) {
+              if (point.control1) {
+                const transformedControl1 = this.transformPoint(point.control1);
+                const control1 = document.createElementNS(
+                  "http://www.w3.org/2000/svg",
+                  "circle"
+                );
+                control1.setAttribute("class", "handle");
+                control1.setAttribute("cx", transformedControl1.x);
+                control1.setAttribute("cy", transformedControl1.y);
+                control1.setAttribute("r", 1.5);
+                control1.dataset.handle = `${i}-control1`;
+                this.pointsGroup.appendChild(control1);
+              }
+
+              if (point.control2) {
+                const transformedControl2 = this.transformPoint(point.control2);
+                const control2 = document.createElementNS(
+                  "http://www.w3.org/2000/svg",
+                  "circle"
+                );
+                control2.setAttribute("class", "handle");
+                control2.setAttribute("cx", transformedControl2.x);
+                control2.setAttribute("cy", transformedControl2.y);
+                control2.setAttribute("r", 1.5);
+                control2.dataset.handle = `${i}-control2`;
+                this.pointsGroup.appendChild(control2);
+              }
+            }
+          });
+        }
+
+        transformPoint(point) {
+          if (!point) return null;
+
+          const center = 50;
+
+          // Make a copy of the point
+          let x = point.x;
+          let y = point.y;
+
+          // Apply scale
+          x = ((x - center) * this.scale) / 100 + center;
+          y = ((y - center) * this.scale) / 100 + center;
+
+          // Apply rotation
+          if (this.rotation !== 0) {
+            const radians = (this.rotation * Math.PI) / 180;
+            const cos = Math.cos(radians);
+            const sin = Math.sin(radians);
+            const dx = x - center;
+            const dy = y - center;
+            x = dx * cos - dy * sin + center;
+            y = dx * sin + dy * cos + center;
+          }
+
+          return { x, y };
+        }
+
+        updatePreview(pathData) {
+          const previewClip = document.querySelector(".previewClip");
+          const cssPath = `path('${pathData}')`;
+          previewClip.style.clipPath = cssPath;
+          document.getElementById(
+            "cssCode"
+          ).textContent = `clip-path: ${cssPath};`;
+        }
+
+        transformPoint(point) {
+          if (!point) return null;
+
+          // Apply scale
+          const scaledX = ((point.x - 50) * this.scale) / 100 + 50;
+          const scaledY = ((point.y - 50) * this.scale) / 100 + 50;
+
+          // Apply rotation
+          if (this.rotation !== 0) {
+            const radians = (this.rotation * Math.PI) / 180;
+            const cos = Math.cos(radians);
+            const sin = Math.sin(radians);
+            const dx = scaledX - 50;
+            const dy = scaledY - 50;
+
+            return {
+              x: dx * cos - dy * sin + 50,
+              y: dx * sin + dy * cos + 50,
+            };
+          }
+
+          return { x: scaledX, y: scaledY };
+        }
+
+        saveState() {
+          const state = this.points.map((p) => p.clone());
+          this.undoStack.push(state);
+          this.redoStack = [];
+          if (this.undoStack.length > 50) this.undoStack.shift();
+        }
+
+        undo() {
+          if (this.undoStack.length === 0) return;
+
+          const currentState = this.points.map((p) => p.clone());
+          this.redoStack.push(currentState);
+
+          this.points = this.undoStack.pop();
+          this.selectedPoints.clear();
+          this.updatePath();
+        }
+
+        redo() {
+          if (this.redoStack.length === 0) return;
+
+          const currentState = this.points.map((p) => p.clone());
+          this.undoStack.push(currentState);
+
+          this.points = this.redoStack.pop();
+          this.selectedPoints.clear();
+          this.updatePath();
+        }
+
+        handleImageUpload(e) {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const previewClip = document.querySelector(".previewClip");
+              previewClip.style.backgroundImage = `url(${event.target.result})`;
+              previewClip.style.backgroundSize = "cover";
+              previewClip.style.backgroundPosition = "center";
+            };
+            reader.readAsDataURL(file);
+          }
+        }
+
+        downloadSVG() {
+          const svgData = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+              <path d="${this.path.getAttribute("d")}" fill="currentColor"/>
+            </svg>`;
+
+          const blob = new Blob([svgData], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "clippath.svg";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+
+        copyCSSPath() {
+          const cssCode = document.getElementById("cssCode").textContent;
+          navigator.clipboard
+            .writeText(cssCode)
+            .then(() => alert("CSS code copied to clipboard!"))
+            .catch((err) => console.error("Failed to copy CSS code:", err));
+        }
+      }
+
+      // Initialize the editor when the page loads
+      window.addEventListener("load", () => {
+        const editor = new ClipPathEditor();
+      });
+    </script>
+
+    <script src="./scripts/footer.js"></script>
+    <script src="./scripts/grid.js"></script>
+  </body>
+</html>

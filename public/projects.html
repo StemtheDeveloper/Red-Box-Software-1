@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Red Box Software | Projects</title>
+    <!-- <link rel="stylesheet" type="text/css" href="./css/style.css" /> -->
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <script src="./scripts/script.js" type="module"></script>
+    <style>
+      * {
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        color: #fff;
+        width: 100vw;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+
+        background: no-repeat linear-gradient(to bottom, #000000, #280303);
+      }
+
+      #webNav {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        width: 100vw;
+        list-style: none;
+      }
+      ul {
+        padding: 0;
+        margin: 0;
+        height: auto;
+        width: auto;
+      }
+
+      .burger {
+        display: none;
+      }
+
+      .dropdown-content {
+        display: none;
+        z-index: 10;
+      }
+
+      .nav-links {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        width: 50%;
+        list-style: none;
+        column-gap: 20px;
+        padding: 10px;
+        margin: 0;
+        gap: 10px;
+      }
+
+      .tools-dropdown {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .tools-dropdown li {
+        text-wrap: nowrap;
+      }
+
+      .tools-dropdown-content {
+        display: none;
+        position: absolute;
+        top: 100%;
+
+        background-color: #0f0f0f;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 11;
+      }
+
+      .tools-dropdown:hover .tools-dropdown-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .tools-dropdown-content a {
+        display: flex;
+        padding: 12px 16px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+      }
+
+      .tools-dropdown-content a:hover {
+        background-color: #ff2c3c;
+      }
+
+      @media (max-width: 800px) {
+        .tools-dropdown-content {
+          position: relative;
+          box-shadow: 11;
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 970px) {
+        .burger {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-around;
+          position: absolute;
+          right: 20px;
+          row-gap: 5px;
+          gap: 5px;
+          width: 30px;
+          height: 30px;
+          padding: 20px;
+          margin: 0;
+          transition: all 0.5s cubic-bezier(0.52, -0.29, 0.53, 1.46);
+        }
+
+        .burger:hover {
+          background-color: #000;
+        }
+
+        #shadow.show {
+          display: block;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5);
+
+          backdrop-filter: blur(5px);
+        }
+
+        .dropdown-content.show {
+          display: flex;
+          flex-direction: column;
+          position: fixed;
+          background-color: #ff2c3c;
+
+          top: 150px;
+          right: 25%;
+          left: 25%;
+
+          width: 100%;
+          height: auto;
+        }
+
+        /* .dropdown-content {
+    position: sticky;
+  } */
+
+        .nav-links {
+          display: flex;
+          flex-direction: column;
+          position: absolute;
+          align-items: center;
+          background-color: #ff2c3c;
+        }
+
+        #webNav {
+          display: none;
+        }
+      }
+
+      .line {
+        width: 30px;
+        height: 10px;
+        background-color: #ff2c3c;
+      }
+
+      nav {
+        background-color: #0f0f0f;
+        color: #fff;
+        display: flex;
+        height: 190px;
+        justify-content: space-between;
+        align-self: center;
+        align-items: center;
+        width: 100vw;
+        z-index: 10;
+      }
+
+      nav .navBtnsCont {
+        display: flex;
+        list-style: none;
+      }
+
+      a {
+        color: #fff;
+        text-decoration: none;
+      }
+
+      nav a {
+        color: #fff;
+        text-decoration: none;
+        width: auto;
+        height: auto;
+      }
+      nav li {
+        display: inline-block;
+        border: 1px solid #1f1f1f;
+        column-gap: 20px;
+        padding: 10px;
+        width: auto;
+        height: auto;
+        transition: all 0.3s ease;
+      }
+
+      nav li:hover:not(.active) {
+        border: 1px solid #ff2c3c;
+        width: auto;
+        height: auto;
+        /* transform: translateY(-5px) scale(1.1); */
+      }
+
+      nav a.active {
+        /* border: 1px solid #fff; */
+
+        width: auto;
+        height: auto;
+        background-color: #ff2c3c;
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100vw;
+        min-height: 100vh;
+        overflow: hidden; /* Enable scrolling */
+        z-index: 2;
+      }
+
+      #projectsMain {
+        gap: 20px;
+        width: 100vw;
+        height: auto;
+        overflow: hidden;
+      }
+
+      @keyframes highlight {
+        0% {
+          background-position: 0% 0%;
+        }
+        100% {
+          background-position: 100% 0%;
+        }
+      }
+
+      .site-footer {
+        background-color: #333;
+        color: #fff;
+        padding: 2rem 0;
+        position: relative;
+      }
+
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        padding: 0 1rem;
+      }
+
+      .footer-section {
+        margin-bottom: 1rem;
+      }
+
+      .footer-section h3 {
+        color: #fff;
+        margin-bottom: 1rem;
+      }
+
+      .social-links a {
+        color: #fff;
+        text-decoration: none;
+        margin-right: 1rem;
+      }
+
+      .footer-section a:hover {
+        color: rgb(80, 12, 18);
+      }
+
+      .social-links a:hover {
+        color: rgb(80, 12, 18);
+      }
+
+      .footer-bottom {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #555;
+      }
+
+      #back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: rgba(255, 44, 62, 0);
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        font-size: 50px;
+        cursor: pointer;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        align-items: center;
+
+        transition: all 0.3s;
+      }
+
+      #back-to-top:hover {
+        transform: translateY(-5px);
+      }
+
+      footer {
+        background: linear-gradient(to right, #c3000a, #e52e00);
+        color: #ffffff;
+        width: 100%;
+        text-align: center;
+
+        left: 0;
+        animation: highlight 2s linear infinite;
+        z-index: 10;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        color: #ff2c3c;
+        padding: 10px;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: black;
+
+        padding: 30px;
+      }
+
+      label {
+        font-weight: bold;
+        margin: 10px 0;
+      }
+
+      input,
+      textarea {
+        border: 1px solid #ccc;
+
+        padding: 10px;
+        margin-bottom: 20px;
+      }
+
+      button {
+        background-color: #ff2c3c;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        padding: 10px 20px;
+      }
+
+      button[type="submit"] {
+        background-color: #222;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        padding: 10px 20px;
+      }
+
+      button[type="submit"]:hover {
+        background-color: #444;
+      }
+
+      #logo {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        width: 200px;
+        height: 200px;
+
+        margin: 40px;
+        row-gap: 10px;
+        color: #ff2c3c;
+        gap: 20px;
+      }
+
+      #AHKdescription {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        left: 50%;
+        bottom: 40%;
+        transform: translateX(-50%);
+        width: 500px;
+        height: auto;
+        min-height: 300px;
+        z-index: 10;
+        cursor: pointer;
+        transition: all 1.3s ease;
+        backdrop-filter: blur(5px); /* Apply blur to the background */
+      }
+
+      #AHKdescription.closed {
+        display: none;
+      }
+
+      #AHKdescription.open {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #000000b3;
+        color: #fff;
+        padding: 10px;
+        border-radius: 10px;
+        z-index: 10;
+        max-width: 90%;
+      }
+
+      #closeDescription {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        background-color: #ff2c3edd;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 5px;
+      }
+
+      #escapeNote {
+        position: absolute;
+        top: 3px;
+        right: 50px;
+        color: #ff2c3edd;
+      }
+
+      .ring {
+        position: fixed;
+        top: 40%;
+        left: 40%;
+
+        width: 200px;
+        height: 200px;
+        transform-style: preserve-3d;
+        cursor: grab;
+        transform: rotateX(0deg) rotateY(0deg);
+        scale: 0.15;
+        pointer-events: none; /* Prevent ring from capturing clicks */
+      }
+
+      @media screen and (max-width: 600px) {
+        .ring {
+          scale: 0.19;
+          left: 25%;
+          top: 25%;
+        }
+      }
+
+      .ritem {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        text-align: center;
+        background-color: #ff6347;
+        color: white;
+        font-size: 20px;
+        border-radius: 10px;
+        zoom: 10;
+        pointer-events: auto; /* Re-enable pointer events on items */
+      }
+
+      .ritem button {
+        position: relative;
+        z-index: 5;
+
+        margin: 10px 0;
+        background-color: #ff2c3c;
+        border: none;
+
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .ritem button:active {
+        background-color: #d71f2d;
+      }
+
+      .ritem a {
+        display: block;
+        width: 100%;
+        height: 100%;
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      /* Mobile-specific adjustments */
+      @media (max-width: 768px) {
+        .ritem button {
+          padding: 20px 25px; /* Even larger touch target on mobile */
+          font-size: 18px;
+        }
+
+        .ritem {
+          touch-action: none; /* Prevent default touch actions on items */
+        }
+      }
+
+      .rotateText {
+        font-size: 8px;
+      }
+
+      .textBlock {
+        background-color: #000;
+        width: 104%;
+        height: 1050px;
+      }
+
+      iframe {
+        width: 1000px;
+        height: 1000px;
+        min-height: 1000px;
+        overflow: hidden; /* Hide scroll bars */
+        border: 0;
+        zoom: 0.1;
+      }
+
+      button:hover {
+        background-color: #ff6347;
+      }
+      /*  */
+
+      /* Hide scroll bars for WebKit browsers (Chrome, Safari) */
+      iframe::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* Hide scroll bars for Firefox */
+      iframe {
+        scrollbar-width: none; /* Firefox */
+      }
+
+      .ritem img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 10px;
+      }
+
+      .ritem #ahk {
+        border-radius: 15px;
+      }
+
+      /* 3D Ring Formation */
+      .ring .ritem:nth-child(1) {
+        transform: rotateY(0deg) translateZ(300px);
+      }
+      .ring .ritem:nth-child(2) {
+        transform: rotateY(36deg) translateZ(300px);
+      }
+      .ring .ritem:nth-child(3) {
+        transform: rotateY(72deg) translateZ(300px);
+      }
+      .ring .ritem:nth-child(4) {
+        transform: rotateY(108deg) translateZ(300px);
+      }
+      .ring .ritem:nth-child(5) {
+        transform: rotateY(144deg) translateZ(300px);
+      }
+      .ring .ritem:nth-child(6) {
+        transform: rotateY(180deg) translateZ(300px);
+      }
+      .ring .ritem:nth-child(7) {
+        transform: rotateY(216deg) translateZ(300px);
+      }
+      .ring .ritem:nth-child(8) {
+        transform: rotateY(252deg) translateZ(300px);
+      }
+      .ring .ritem:nth-child(9) {
+        transform: rotateY(288deg) translateZ(300px);
+      }
+      .ring .ritem:nth-child(10) {
+        transform: rotateY(324deg) translateZ(300px);
+      }
+
+      @media screen and (max-width: 600px) {
+        .hide-on-small-screen {
+          display: none;
+        }
+      }
+
+      /* background */
+      .item {
+        width: 40px;
+        height: 40px;
+        transition: transform 0.9s ease-in-out, filter 0.9s ease-in-out;
+      }
+
+      .list {
+        transform-style: preserve-3d;
+        transform: perspective(2000px) rotate(45deg) skew(15deg, 15deg)
+          scale(300%);
+      }
+
+      .list .item {
+        background-color: #f00;
+        transition: 1.9s;
+        filter: brightness(0);
+      }
+
+      /* .list .item:hover {
+  filter: brightness(1);
+  transform: translateZ(100px);
+} */
+
+      .grid {
+        position: fixed;
+
+        width: 100vw;
+        height: 100vh;
+        display: grid;
+        gap: 1px;
+        z-index: 1;
+      }
+
+      .grid-controls {
+        display: none;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        color: #fff;
+        z-index: 9;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="AHKdescription" class="closed">
+      <button id="closeDescription">X</button>
+      <p id="escapeNote">press ESC</p>
+      AHK (AutoHotkey) is a versatile scripting language for Windows designed to
+      automate tasks and create custom tools. It enhances productivity by
+      reducing repetitive tasks and can even be used for computer robotics. We
+      leverage AHK to develop systems that interact with other programs,
+      improving efficiency and minimizing the need for human intervention. We
+      have already helped clients automate tasks such as data entry, file
+      processing, advertising and more. If you have a task that you think could
+      be automated, get in touch with us to see how we can help. The sky is the
+      limit with AHK!
+    </div>
+    <main>
+      <h1 style="color: #ff2c3c">Our Projects</h1>
+      <p style="width: 80%" class="hide-on-small-screen">
+        You can interact with the example websites from here. click, scroll and
+        have a play. It's a little hard to see everything, so you can click the
+        red button under the example to visit the website.
+      </p>
+
+      <p class="hide-on-small-screen">
+        Click and drag to orbit the wheel or scroll
+      </p>
+
+      <div id="projectsMain">
+        <div class="ring">
+          <div class="ritem">
+            <iframe
+              id="opb"
+              src="https://the-one-page-bible-22.firebaseapp.com/index.html"
+              scrolling="no"
+            ></iframe>
+            <button title="click to visit">
+              <a
+                href="https://the-one-page-bible-22.firebaseapp.com/index.html"
+                target="_blank"
+                >The One Page Bible</a
+              >
+            </button>
+            <div class="textBlock">
+              <p class="rotateText">The Bible on one page!</p>
+              <p class="rotateText">scroll to zoom in/out</p>
+              <p class="rotateText" style="color: gold">
+                <strong>click here to visit</strong>
+              </p>
+            </div>
+          </div>
+          <div class="ritem">
+            <iframe
+              id="portableHome"
+              src="https://portablehome.co.nz/"
+            ></iframe>
+            <button title="click to visit">
+              <a href="https://portablehome.co.nz/" target="_blank"
+                >Portable Home</a
+              >
+            </button>
+            <div class="textBlock">
+              <p class="rotateText">Created with react</p>
+              <p class="rotateText">Has built in CMS system</p>
+              <p class="rotateText" style="color: gold">
+                <strong>click here to visit</strong>
+              </p>
+            </div>
+          </div>
+          <div class="ritem">
+            <iframe
+              id="opg"
+              src="https://one-page-games.firebaseapp.com/index.html"
+            ></iframe>
+            <button title="click to visit">
+              <a
+                href="https://one-page-games.firebaseapp.com/index.html"
+                target="_blank"
+                >One Page Games</a
+              >
+            </button>
+            <div class="textBlock">
+              <p class="rotateText">
+                A website for hosting and uploading games
+              </p>
+              <p class="rotateText">You can play them here!</p>
+              <p class="rotateText" style="color: gold">
+                <strong>click here to visit</strong>
+              </p>
+            </div>
+          </div>
+          <div class="ritem">
+            <iframe
+              class="itemIframe"
+              id="myIframe"
+              src="BlokzV4.html"
+              scrolling="yes"
+              allowfullscreen
+            ></iframe>
+            <button onclick="openFullscreen()" title="click to visit">
+              Open full screen
+            </button>
+            <div class="textBlock">
+              <p class="rotateText">A physics game</p>
+              <p class="rotateText">Right click to create</p>
+              <p class="rotateText">Left click to drag</p>
+              <p class="rotateText" style="color: gold">
+                <strong>click here to visit</strong>
+              </p>
+            </div>
+          </div>
+          <div class="ritem">
+            <iframe
+              src="https://tga-flooring-3cd26.web.app/"
+              class="itemIframe"
+            ></iframe>
+            <button title="click to visit">
+              <a href="https://tga-flooring-3cd26.web.app/" target="_blank"
+                >TGA Flooring</a
+              >
+            </button>
+            <div class="textBlock">
+              <p class="rotateText">A copy and paste of portable home</p>
+              <p class="rotateText">If it ain't broke...</p>
+              <p class="rotateText" style="color: gold">
+                <strong>click here to visit</strong>
+              </p>
+            </div>
+          </div>
+          <div class="ritem" style="background-color: #00000000">
+            <img
+              style="width: 120px; height: 120px"
+              src="./Images/Red-Box-Support-image-2-one-toof.png"
+              alt="The RBS Support Logo and our mascot"
+            />
+          </div>
+          <div class="ritem" style="background-color: #00000000">
+            <img
+              src="./Images/Logos-gif.gif"
+              alt="A GIF displaying some of the logos we have created"
+            />
+          </div>
+          <div
+            class="ritem"
+            id="ahk"
+            style="
+              background-color: #000000;
+              border-radius: 0px;
+              border: 2px solid black;
+              cursor: pointer;
+            "
+          >
+            <img
+              src="./Images/AHK main icon.png"
+              alt="AHK logo, I don't own this"
+            />
+
+            <div class="textBlock">
+              <p class="rotateText">
+                <strong style="font-size: large">AHK</strong>
+              </p>
+              <p class="rotateText">
+                Computer robotics, automation and productivity enhancements
+              </p>
+            </div>
+          </div>
+          <div class="ritem">
+            <iframe
+              class="itemIframe"
+              id="boxel"
+              src="boxel.html"
+              scrolling="yes"
+              allowfullscreen
+            ></iframe>
+            <button onclick="openFullscreenBoxel()" title="click to visit">
+              Open full screen
+            </button>
+            <div class="textBlock">
+              <p class="rotateText">Boxel is a simple pixel art program</p>
+              <p class="rotateText">
+                Built using javascript; it allows for file saving and download
+                of your designs as either jpg or png
+              </p>
+
+              <p class="rotateText" style="color: gold">
+                <strong>click here to visit</strong>
+              </p>
+            </div>
+          </div>
+          <div class="ritem" style="border-radius: 0px">
+            <p style="font-size: small">
+              If you have a project in mind, contact us today!
+            </p>
+            <button title="click to visit">
+              <a href="https://red-box-software.firebaseapp.com/contact.html"
+                >Contact us</a
+              >
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="./scripts/footer.js"></script>
+
+    <script>
+      function openFullscreen() {
+        var iframe = document.getElementById("myIframe");
+        if (iframe.requestFullscreen) {
+          iframe.requestFullscreen();
+        } else if (iframe.mozRequestFullScreen) {
+          // Firefox
+          iframe.mozRequestFullScreen();
+        } else if (iframe.webkitRequestFullscreen) {
+          // Chrome, Safari, and Opera
+          iframe.webkitRequestFullscreen();
+        } else if (iframe.msRequestFullscreen) {
+          // IE/Edge
+          iframe.msRequestFullscreen();
+        }
+      }
+
+      openFullscreenBoxel = () => {
+        var iframe = document.getElementById("boxel");
+        if (iframe.requestFullscreen) {
+          iframe.requestFullscreen();
+        } else if (iframe.mozRequestFullScreen) {
+          // Firefox
+          iframe.mozRequestFullScreen();
+        } else if (iframe.webkitRequestFullscreen) {
+          // Chrome, Safari, and Opera
+          iframe.webkitRequestFullscreen();
+        } else if (iframe.msRequestFullscreen) {
+          // IE/Edge
+          iframe.msRequestFullscreen();
+        }
+      };
+    </script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const ring = document.querySelector(".ring");
+        let isDragging = false;
+        let lastX = 0;
+        let lastY = 0;
+        let rotationX = 0;
+        let rotationY = 0;
+        let touchStartTime = 0;
+        const CLICK_THRESHOLD = 200; // ms - time threshold to distinguish between click and drag
+
+        // AHK description handling
+        const ahkDescription = document.getElementById("AHKdescription");
+        let isDescriptionOpen = false;
+        const ahkImage = document.getElementById("ahk");
+        const closeDescription = document.getElementById("closeDescription");
+
+        // Handle AHK description
+        ahkImage.addEventListener("click", (e) => {
+          e.preventDefault();
+          toggleDescription();
+        });
+
+        closeDescription.addEventListener("click", (e) => {
+          e.preventDefault();
+          closeAHKDescription();
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            closeAHKDescription();
+          }
+        });
+
+        function toggleDescription() {
+          if (isDescriptionOpen) {
+            closeAHKDescription();
+          } else {
+            openAHKDescription();
+          }
+        }
+
+        function closeAHKDescription() {
+          ahkDescription.classList.add("closed");
+          ahkDescription.classList.remove("open");
+          isDescriptionOpen = false;
+        }
+
+        function openAHKDescription() {
+          ahkDescription.classList.remove("closed");
+          ahkDescription.classList.add("open");
+          isDescriptionOpen = true;
+        }
+
+        // Touch event handlers
+        ring.addEventListener("touchstart", (e) => {
+          touchStartTime = Date.now();
+          isDragging = true;
+          lastX = e.touches[0].clientX;
+          lastY = e.touches[0].clientY;
+        });
+
+        ring.addEventListener("touchmove", (e) => {
+          if (!isDragging) return;
+
+          const deltaX = e.touches[0].clientX - lastX;
+          const deltaY = e.touches[0].clientY - lastY;
+          rotationX -= deltaY * 0.2;
+          rotationY += deltaX * 0.2;
+
+          ring.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+
+          lastX = e.touches[0].clientX;
+          lastY = e.touches[0].clientY;
+        });
+
+        ring.addEventListener("touchend", (e) => {
+          const touchEndTime = Date.now();
+          const touchDuration = touchEndTime - touchStartTime;
+
+          // If touch duration is short, treat it as a click
+          if (touchDuration < CLICK_THRESHOLD) {
+            // Find if the touch ended on a button or link
+            const touch = e.changedTouches[0];
+            const element = document.elementFromPoint(
+              touch.clientX,
+              touch.clientY
+            );
+
+            // If the element is a button or link, trigger the click
+            if (
+              element &&
+              (element.tagName === "BUTTON" || element.tagName === "A")
+            ) {
+              e.preventDefault();
+              element.click();
+            }
+          }
+
+          isDragging = false;
+        });
+
+        // Mouse event handlers
+        ring.addEventListener("mousedown", (e) => {
+          isDragging = true;
+          lastX = e.clientX;
+          lastY = e.clientY;
+          ring.style.cursor = "grabbing";
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!isDragging) return;
+
+          const deltaX = e.clientX - lastX;
+          const deltaY = e.clientY - lastY;
+          rotationX -= deltaY * 0.2;
+          rotationY += deltaX * 0.2;
+
+          ring.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+
+          lastX = e.clientX;
+          lastY = e.clientY;
+        });
+
+        document.addEventListener("mouseup", () => {
+          isDragging = false;
+          ring.style.cursor = "grab";
+        });
+
+        // Wheel event handler
+        document.addEventListener("wheel", (e) => {
+          rotationY += e.deltaY * 0.1;
+          ring.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+        });
+      });
+    </script>
+    <div class="grid"></div>
+    <script src="./scripts/grid.js"></script>
+    <script src="./scripts/script.js" type="module"></script>
+  </body>
+</html>

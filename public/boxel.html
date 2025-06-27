@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <title>Boxel</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: row;
+        font-family: "Press Start 2P", cursive;
+        font-weight: 800;
+        font-size: 0.8rem;
+        background-image: linear-gradient(
+          60deg,
+          #ec6922 25%,
+          #ec2222 25%,
+          #ec2222 50%,
+          #ec6922 50%,
+          #ec6922 75%,
+          #ec2222 75%,
+          #ec2222 100%
+        );
+        min-height: 100vh;
+        height: auto;
+        margin: 0;
+        padding: 0;
+      }
+
+      #saved-drawings {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        padding: 10px;
+        width: 200px;
+        overflow-y: auto;
+        display: none;
+        flex-shrink: 0;
+      }
+
+      #main-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-grow: 1;
+      }
+
+      #logo {
+        width: 200px;
+        margin-top: 100px;
+      }
+
+      #controls {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        background-color: rgb(14, 14, 14);
+        color: #fff;
+        padding: 20px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      #controls > div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 10px;
+      }
+
+      #controls button,
+      #controls input,
+      #controls select {
+        margin: 5px;
+        min-height: 40px;
+      }
+
+      #container {
+        display: grid;
+        gap: 1px;
+        margin: 40px 0 90px 0;
+      }
+
+      .pixel {
+        border: 1px solid #ccc;
+        background-color: rgb(255, 255, 255);
+        width: 20px;
+        height: 20px;
+      }
+
+      button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.5rem;
+        border: 3px solid #ffffff;
+        font-family: "Press Start 2P", cursive;
+        background-color: #ec6922;
+        height: 40px;
+        width: 60px;
+      }
+
+      #swatches {
+        margin-bottom: 10px;
+      }
+
+      #swatch-container {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .swatch {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #000;
+        cursor: pointer;
+      }
+
+      .drawing {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px;
+        margin-bottom: 5px;
+        border: 2px solid #000000;
+        cursor: pointer;
+        width: 100%;
+        height: auto;
+      }
+
+      .drawing span {
+        flex-grow: 1;
+        max-width: 120px;
+        height: auto;
+        overflow: scroll;
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+      }
+
+      .delete-btn {
+        background-color: red;
+        color: white;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+      }
+
+      #toggle-drawings {
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        background-color: #ffffff;
+        color: #000000;
+        border: none;
+        cursor: pointer;
+        padding: 40px;
+      }
+
+      .btnCont {
+        background-color: #ffffff;
+        width: auto;
+        height: auto;
+      }
+
+      /* Responsive styles */
+      @media (max-width: 768px) {
+        #controls {
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+          padding: 10px;
+        }
+
+        #controls > div {
+          flex-direction: row;
+          margin-bottom: 10px;
+          width: 100%;
+        }
+
+        #controls button,
+        #controls input,
+        #controls select {
+          margin: 5px 0;
+          width: 20%;
+          min-height: 40px;
+        }
+
+        #swatch-container {
+          justify-content: center;
+        }
+
+        #logo {
+          width: 150px;
+          margin-top: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="btnCont">
+      <button id="toggle-drawings">My Drawings</button>
+    </div>
+    <div id="saved-drawings"></div>
+    <div id="main-content">
+      <img
+        id="logo"
+        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAKACAYAAAAMzckjAAAAAXNSR0IArs4c6QAAIABJREFUeF7t3NF1HVlyLFCMD2NBeyeL5F1bIB/mLWq9Dw3ZrQsiI6Gom1u/RB1m7Th1KlDs0T8+/B8BAgQIECBAgMApgX+culs3S4AAAQIECBAg8KEA2gQECBAgQIAAgWMCCuCxwN0uAQIECBAgQEABtAcIECBAgAABAscEFMBjgbtdAgQIECBAgIACaA8QIECAAAECBI4JKIDHAne7BAgQIECAAAEF0B4gQIAAAQIECBwTUACPBe52CRAgQIAAAQIKoD1AgAABAgQIEDgmoAAeC9ztEiBAgAABAgQUQHuAAAECBAgQIHBMQAE8FrjbJUCAAAECBAgogPYAAQIECBAgQOCYgAJ4LHC3S4AAAQIECBBQAO0BAgQIECBAgMAxAQXwWOBulwABAgQIECCgANoDBAgQIECAAIFjAgrgscDdLgECBAgQIEBAAbQHCBAgQIAAAQLHBBTAY4G7XQIECBAgQICAAmgPECBAgAABAgSOCSiAxwJ3uwQIECBAgAABBdAeIECAAAECBAgcE1AAjwXudgkQIECAAAECCqA9QIAAAQIECBA4JqAAHgvc7RIgQIAAAQIEFEB7gAABAgQIECBwTEABPBa42yVAgAABAgQIKID2AAECBAgQIEDgmIACeCxwt0uAAAECBAgQUADtAQIECBAgQIDAMQEF8FjgbpcAAQIECBAgoADaAwQIECBAgACBYwIK4LHA3S4BAgQIECBAQAG0BwgQIECAAAECxwQUwGOBu10CBAgQIECAgAJoDxAgQIAAAQIEjgkogMcCd7sECBAgQIAAAQXQHiBAgAABAgQIHBNQAI8F7nYJECBAgAABAgqgPUCAAAECBAgQOCagAB4L3O0SIECAAAECBBRAe4AAAQIECBAgcExAATwWuNslQIAAAQIECCiA9gABAgQIECBA4JiAAngscLdLgAABAgQIEFAA7QECBAgQIECAwDEBBfBY4G6XAAECBAgQIKAA2gMECBAgQIAAgWMCCuCxwN0uAQIECBAgQEABtAcIECBAgAABAscEFMBjgbtdAgQIECBAgIACaA8QIECAAAECBI4JKIDHAne7BAgQIECAAAEF0B4gQIAAAQIECBwTUACPBe52CRAgQIAAAQIKoD1AgAABAgQIEDgmoAAeC9ztEiBAgAABAgQUQHuAAAECBAgQIHBMQAE8FrjbJUCAAAECBAgogPYAAQIECBAgQOCYgAJ4LHC3S4AAAQIECBBQAO0BAgQIECBAgMAxAQXwWOBulwABAgQIECCgANoDBAgQIECAAIFjAgrgscDdLgECBAgQIEBAAbQHCBAgQIAAAQLHBBTAY4G7XQIECBAgQICAAmgPECBAgAABAgSOCSiAxwJ3uwQIECBAgAABBdAeIECAAAECBAgcE1AAjwXudgkQIECAAAECCqA9QIAAAQIECBA4JqAAHgvc7RIgQIAAAQIEFEB7gAABAgQIECBwTEABPBa42yVAgAABAgQIKID2AAECBAgQIEDgmIACeCxwt0uAAAECBAgQUADtAQIECBAgQIDAMQEF8FjgbpcAAQIECBAgoADaAwQIECBAgACBYwIK4LHA3S4BAgQIECBAQAG0BwgQIECAAAECxwQUwGOBu10CBAgQIECAgAJoDxAgQIAAAQIEjgkogMcCd7sECBAgQIAAAQXQHiBAgAABAgQIHBNQAI8F7nYJECBAgAABAgqgPUCAAAECBAgQOCagAB4L3O0SIECAAAECBBRAe4AAAQIECBAgcExAATwWuNslQIAAAQIECCiA9gABAgQIECBA4JiAAngscLdLgAABAgQIEFAA7QECBAgQIECAwDEBBfBY4G6XAAECBAgQIKAA2gMECBAgQIAAgWMCCuCxwN0uAQIECBAgQEABtAcIECBAgAABAscEFMBjgbtdAgQIECBAgIACaA8QIECAAAECBI4JKIDHAne7BAgQIECAAAEF0B4gQIAAAQIECBwTUACPBe52CRAgQIAAAQIKoD1AgAABAgQIEDgmoAAeC9ztEiBAgAABAgQUQHuAAAECBAgQIHBMQAE8FrjbJUCAAAECBAgogPYAAQIECBAgQOCYgAJ4LHC3S4AAAQIECBBQAO0BAgQIECBAgMAxAQXwWOBulwABAgQIECCgANoDBAgQIECAAIFjAgrgscDdLgECBAgQIEBAAbQHCBAgQIAAAQLHBBTAY4G7XQIECBAgQICAAmgPECBAgAABAgSOCSiAxwJ3uwQIECBAgAABBdAeIPBsgX+Fx3cmhEGHy8l3COhyAgT+WsBhb2cQeLaAgvDs/F5NL99XQv6cAIEvCSiAX2JzEYEaAQWhJoqVQeS7wmpRAgQUQHuAwLMFFIRn5/dqevm+EvLnBAh8SUAB/BKbiwjUCCgINVGsDCLfFVaLEiCgANoDBJ4toCA8O79X08v3lZA/J0DgSwIK4JfYXESgRkBBqIliZRD5rrBalAABBdAeIPBsAQXh2fm9ml6+r4T8OQECXxJQAL/E5iICNQIKQk0UK4PId4XVogQIKID2AIFnCygIz87v1fTyfSXkzwkQ+JKAAvglNhcRqBFQEGqiWBlEviusFiVAQAG0Bwg8W0BBeHZ+r6aX7yshf06AwJcEFMAvsbmIQI2AglATxcog8l1htSgBAgqgPUDg2QIKwrPzezW9fF8J+XMCBL4koAB+ic1FBGoEFISaKFYGke8Kq0UJEFAA7QECzxZQEJ6d36vp5ftKyJ8TIPAlAQXwS2wuIlAjoCDURLEyiHxXWC1KgIACaA8QeLaAgvDs/F5NL99XQv6cAIEvCSiAX2JzEYEaAQWhJoqVQeS7wmpRAgQUQHuAwLMFFIRn5/dqevm+EvLnBAh8SUAB/BKbiwjUCKQLQvrGrp0x8kjvIOsRILAicO1wXkG0KIH/QwGF4/8Q/y/+anl05WEaAgT+RkABtDUIPFtA4ejKTx5deZiGAAEF0B4g8JYCCkdXrPLoysM0BAgogPYAgbcUUDi6YpVHVx6mIUBAAbQHCLylgMLRFas8uvIwDQECCqA9QOAtBRSOrljl0ZWHaQgQUADtAQJvKaBwdMUqj648TEOAgAJoDxB4SwGFoytWeXTlYRoCBBRAe4DAWwooHF2xyqMrD9MQIKAA2gME3lJA4eiKVR5deZiGAAEF0B4g8JYCCkdXrPLoysM0BAgogPYAgbcUUDi6YpVHVx6mIUBAAbQHCLylgMLRFas8uvIwDQECCqA9QOAtBRSOrljl0ZWHaQgQUADtAQJvKaBwdMUqj648TEOAgAJoDxB4SwGFoytWeXTlYRoCBBRAe4DAWwooHF2xyqMrD9MQIKAA2gME3lJA4eiKVR5deZiGAAEF0B4g8JYCCkdXrPLoysM0BAj8LwWw/cC6Ft4/ym/YfikP6M3HSz8f9vObb5jy22vfz+n5yuO4Nd6PcB2AXZm3P3D2S9d+uTZN+vmwn6/toK77bd/P6fm69I9PowD2bYD2B84Ls2/PXJoo/XzYz5d2T9+9tu/n9Hx9CRyeSAHsC7/9gfPC7NszlyZKPx/286Xd03ev7fs5PV9fAocnUgD7wm9/4Lww+/bMpYnSz4f9fGn39N1r+35Oz9eXwOGJFMC+8NsfOC/Mvj1zaaL082E/X9o9fffavp/T8/UlcHgiBbAv/PYHzguzb89cmij9fNjPl3ZP37227+f0fH0JHJ5IAewLv/2B88Ls2zOXJko/H/bzpd3Td6/t+zk9X18ChydSAPvCb3/gvDD79sylidLPh/18aff03Wv7fk7P15fA4YkUwL7w2x84L8y+PXNpovTzYT9f2j1999q+n9Pz9SVweCIFsC/89gfOC7Nvz1yaKP182M+Xdk/fvbbv5/R8fQkcnkgB7Au//YHzwuzbM5cmSj8f9vOl3dN3r+37OT1fXwKHJ1IA+8Jvf+C8MPv2zKWJ0s+H/Xxp9/Tda/t+Ts/Xl8DhiRTAvvDbHzgvzL49c2mi9PNhP1/aPX332r6f0/P1JXB4IgWwL/z2B84Ls2/PXJoo/XzYz5d2T9+9tu/n9Hx9CRyeSAHsC7/9gfPC7NszlyZKPx/286Xd03ev7fs5PV9fAocnUgD7wm9/4Lww+/bMpYnSz4f9fGn39N1r+35Oz9eXwOGJFMC+8NsfOC/Mvj1zaaL082E/X9o9fffavp/T8/UlcHgiBbAv/PYHzguzb89cmij9fNjPl3ZP37227+f0fH0JHJ5IAewLv/2B88Ls2zOXJko/H/bzpd3Td6/t+zk9X18ChyeKF8D/+uOPw5zzW//nn3/OF1lcQb6LuF9YOr1f0vmm5/sC0bde0u6Xnu9bcd/wL0s/H+l80/N9fHwolEX7WAEsCuPHKAsPXPQO0wdMdLiDi6X3Szrf9HztEbf7pedrz6N9vvTzkc43PZ8C2LUjFcCuPBTAsjzax0kf0A94gVRH0u6Xnq86jAcMd/D59QWwaF8qgEVh+AJYFsYDxjn4AqlOJV2w2vOtDuMBw7Xnm57PF8CuTakAduXhC2BZHu3jpA/o9gLTnke7X3q+9jza5zv4/PoCWLQpFcCiMHwBLAvjAeMcfIFUp5IuWO35VofxgOHa803P5wtg16ZUALvy8AWwLI/2cdIHdHuBac+j3S89X3se7fMdfH59ASzalApgURi+AJaF8YBxDr5AqlNJF6z2fKvDeMBw7fmm5/MFsGtTKoBdefgCWJZH+zjpA7q9wLTn0e6Xnq89j/b5Dj6/vgAWbUoFsCgMXwDLwnjAOAdfINWppAtWe77VYTxguPZ80/P5Ati1KRXArjx8ASzLo32c9AHdXmDa82j3S8/Xnkf7fAefX18AizalAlgUhi+AZWE8YJyDL5DqVNIFqz3f6jAeMFx7vun5fAHs2pQKYFcevgCW5dE+TvqAbi8w7Xm0+6Xna8+jfb6Dz68vgEWbUgEsCsMXwLIwHjDOwRdIdSrpgtWeb3UYDxiuPd/0fL4Adm1KBbArD18Ay/JoHyd9QLcXmPY82v3S87Xn0T7fwefXF8CiTakAFoXhC2BZGA8Y5+ALpDqVdMFqz7c6jAcM155vej5fALs2pQLYlYcvgGV5tI+TPqDbC0x7Hu1+6fna82if7+Dz6wtg0aZUAIvC8AWwLIwHjHPwBVKdSrpgtedbHcYDhmvPNz2fL4Bdm1IB7MrDF8CyPNrHSR/Q7QWmPY92v/R87Xm0z3fw+fUFsGhTKoBFYfgCWBbGA8Y5+AKpTiVdsNrzrQ7jAcO155uezxfArk1ZXwAXNmBXAj9Nc+0FIt/Zdkz7te+/mdb+1e1+7fPtJ/Tef8MD8vUFsGgLKoBFYfwYpf0Bbp+vLM5fxmn3a59PvjMB+c782q9+QL4KYNEmUgCLwlAAy8JYGKf9gG6fbyGS6JLtfu3zRcM4uNgD8lUAi/alAlgUhgJYFsbCOO0HdPt8C5FEl2z3a58vGsbBxR6QrwJYtC8VwKIwFMCyMBbGaT+g2+dbiCS6ZLtf+3zRMA4u9oB8FcCifakAFoWhAJaFsTBO+wHdPt9CJNEl2/3a54uGcXCxB+SrABbtSwWwKAwFsCyMhXHaD+j2+RYiiS7Z7tc+XzSMg4s9IF8FsGhfKoBFYSiAZWEsjNN+QLfPtxBJdMl2v/b5omEcXOwB+SqARftSASwKQwEsC2NhnPYDun2+hUiiS7b7tc8XDePgYg/IVwEs2pcKYFEYCmBZGAvjtB/Q7fMtRBJdst2vfb5oGAcXe0C+CmDRvlQAi8JQAMvCWBin/YBun28hkuiS7X7t80XDOLjYA/JVAIv2pQJYFIYCWBbGwjjtB3T7fAuRRJds92ufLxrGwcUekK8CWLQvFcCiMBTAsjAWxmk/oNvnW4gkumS7X/t80TAOLvaAfBXAon2pABaFoQCWhbEwTvsB3T7fQiTRJdv92ueLhnFwsQfkqwAW7UsFsCgMBbAsjIVx2g/o9vkWIoku2e7XPl80jIOLPSBfBbBoXyqARWEogGVhLIzTfkC3z7cQSXTJdr/2+aJhHFzsAfkqgEX7UgEsCkMBLAtjYZz2A7p9voVIoku2+7XPFw3j4GIPyFcBLNqXCmBRGApgWRgL47Qf0O3zLUQSXbLdr32+aBgHF3tAvgpg0b5UAIvCUADLwlgYp/2Abp9vIZLoku1+7fNFwzi42APyVQCL9qUCWBSGAlgWxsI47Qd0+3wLkUSXbPdrny8axsHFHpCvAli0L88VwP/6jz+i/P/8zz+j67U/wPXzyTe6H6eL1e+XP8LnwZ/Z82Dq//P19XmEn9+0X3q9a++Pj48PBTC9iQbrKYADvB+XXnuAr71AruU7fBx+ubx+vyiAo8j/GS686V/QRzf3DRcfPF8UwG/YV5/9KxTAz0r9zc9de4DrX+jhLwjX8h0+DgpguBCdyyP8/Kb90usdPF8UwPQmGqynAA7wfAEc4v34ghp+Yaa/IBw8oOeh/o8V6n9h8AVwlHf78zu6uW+4+OD5ogB+w7767F+hAH5WyhfA/xaof6GHvyAcPKCHT8S/X16/XxTAUd4K4Ijv3H9C5L8BnO2X9NUK4FD0WkGof6ErgMMdnb28fr8ogKPAFcARnwI443P1UEABHAIqgDPA9hfItXxnaf56tQKYFp2tV59H+Be4mdb+1QfPF/8EvL+tPv03KICfpvrrH7z2AF97gVzLd/g4/HJ5/X7xBXAUefsvcKOb+4aLD54vCuA37KvP/hUK4Gel/ubnrj3A9S/08BeEa/kOHwcFMPw/ajqXR/j5Tful1zt4viiA6U00WE8BHOD9uPTaA6wAzjZMu9/s7vwTcPqL2Lk8FMBR5A84XxTAUcLZixXAoacCOANMvzD9v4GZ5ZG+uv2F1D7fuTwUwFHkD9jPCuAo4ezFCuDQUwGcASqAXX6zaXwBTO/nc3kogKPIFcAR37mLFcBh5ArgDDD9wvQFcJZH+ur2F1L7fOfyUABHkT9gP/sCOEo4e7ECOPRUAGeACmCX32waXwDT+/lcHgrgKHIFcMR37mIFcBi5AjgDTL8wfQGc5ZG+uv2F1D7fuTwUwFHkD9jPvgCOEs5erAAOPRXAGaAC2OU3m8YXwPR+PpeHAjiKXAEc8Z27WAEcRq4AzgDTL0xfAGd5pK9ufyG1z3cuDwVwFPkD9rMvgKOEsxcrgENPBXAGqAB2+c2m8QUwvZ/P5aEAjiJXAEd85y5WAIeRK4AzwPQL0xfAWR7pq9tfSO3znctDARxF/oD97AvgKOHsxQrg0FMBnAEqgF1+s2l8AUzv53N5KICjyBXAEd+5i88VwPaE2x/g+vnCL5BrBT/9fNTvlz/+iN6yAhjlHC+W/heB8UA/LXDwfPEFML2JBuspgAO8jUu9MGeq6QP/4AE9C+Cnq+3nKOd4sfY8xjf48/4L/0KYnu/g+aIApjfRYD0FcIC3cWn7AV0/X/jAP3hAR7d1/X7xBXCUd/0Xz/B5MML6i4sPni8KYHoTDdZTAAd4G5d6Yc5UfQGc+aWvtp/TorP12vOY3d2vV6fPg/R8CmBa1Hq/I6AA/o7WN/xs+wFdP1/4N/6DB3R0l9fvF18AR3n7Ajji+zh4vvgCONsy0asVwCjnfDEvzJlh+jf+gwf0LICfrrafo5zjxdrzGN/gz/sv/Ather6D54sCmN5Eg/UUwAHexqXtB3T9fOED/+ABHd3W9fvFF8BR3r4Ajvh8AZzxuXoooAAOAdOXe2HORH0BnPmlr7af06Kz9drzmN3dr1enz4P0fAd/wfQFML2JBuspgAO8jUvbD+j6+XwB3NiWX16zfr/4AvjlbH9c6AvgiM8XwBmfq4cCCuAQMH25F+ZMNP0b/8Hf0GcB/HS1/RzlHC/Wnsf4Bn/ef+FfCNPzHTxffAFMb6LBegrgAG/j0vYDun6+8IF/8ICObuv6/eIL4ChvXwBHfL4AzvhcPRRQAIeA6cu9MGeivgDO/NJX289p0dl67XnM7u7Xq9PnQXq+g79g+gKY3kSD9RTAAd7Gpe0HdP18vgBubMsvr1m/X3wB/HK2Py70BXDE5wvgjM/VQwEFcAiYvtwLcyaa/o3/4G/oswB+utp+jnKOF2vPY3yDP++/8C+E6fkOni++AKY30WA9BXCAt3Fp+wFdP1/4wD94QEe3df1+8QVwlLcvgCM+XwBnfK4eCiiAQ8D05V6YM1FfAGd+6avt57TobL32PGZ39+vV6fMgPd/BXzB9AUxvosF6CuAAb+PS9gO6fj5fADe25ZfXrN8vvgB+OdsfF/oCOOLzBXDG5+qhgAI4BExf7oU5E03/xn/wN/RZAD9dbT9HOceLtecxvsGf91/4F8L0fAfPF18A05tosJ4COMDbuLT9gK6fL3zgHzygo9u6fr/4AjjK2xfAEZ8vgDM+Vw8FFMAhYPpyL8yZqC+AM7/01fZzWnS2Xnses7v79er0eZCe7+AvmL4ApjfRYL36Aji4t0deWv8bdfkXk/SBf/CArn5urhWYdBhpv/R86fXS56nzZZyQAjgmzC2gAOYsIyulD6zIUP9jkfQLJH2/Duh04l3rte+/Lq2/+CIW/gWu/X6dL7OE0n4fHx8K4CyS6NUKYJRzvtjCAzcfSgGMGSowM0p+XX6zafavTp+nfsEcZ6YAjglzCyiAOcvISukDKzKUAhhjVGBmlPy6/GbT7F+dPk8VwHFmCuCYMLeAApizjKyUPrAiQymAMUYFZkbJr8tvNs3+1enzVAEcZ6YAjglzCyiAOcvISukDKzKUAhhjVGBmlPy6/GbT7F+dPk8VwHFmCuCYMLeAApizjKyUPrAiQymAMUYFZkbJr8tvNs3+1enzVAEcZ6YAjglzCyiAOcvISukDKzKUAhhjVGBmlPy6/GbT7F+dPk8VwHFmCuCYMLeAApizjKyUPrAiQymAMUYFZkbJr8tvNs3+1enzVAEcZ6YAjglzCyiAOcvISukDKzKUAhhjVGBmlPy6/GbT7F+dPk8VwHFmCuCYMLeAApizjKyUPrAiQymAMUYFZkbJr8tvNs3+1enzVAEcZ6YAjglzCyiAOcvISukDKzKUAhhjVGBmlPy6/GbT7F+dPk8VwHFmCuCYMLeAApizjKyUPrAiQymAMUYFZkbJr8tvNs3+1enzVAEcZ6YAjglzCyiAOcvISukDKzKUAhhjVGBmlPy6/GbT7F+dPk8VwHFmCuCYMLeAApizjKyUPrAiQymAMUYFZkbJr8tvNs3+1enzVAEcZ6YAjglzCyiAOcvISukDKzKUAhhjVGBmlPy6/GbT7F+dPk8VwHFmCuCYMLeAApizjKyUPrAiQymAMUYFZkbJr8tvNs3+1enzVAEcZ6YAjglzCyiAOcvISukDKzKUAhhjVGBmlPy6/GbT7F+dPk8VwHFmCuCYMLeAApizjKyUPrAiQymAMUYFZkbJr8tvNs3+1enzVAEcZ6YAjglzCyiAOcvISukDKzKUAhhjVGBmlPy6/GbT7F+dPk8VwHFmCuCYMLdAfQFMP8A5up2V2l9w9fP9xx/RYP75n39G12v3i97sx8dH+/22z3ctj/j9hs+D9HwHzxcFML2JBuspgAO8jUvbX0j184UP/IMHdHRb1++XP8K/MPyZ/YUhGsYDCnn8fsPnQXq+g+eLApjeRIP1FMAB3salXpgzVf9EM/NLX20/p0Vn67XnMbu7X69Onwfp+RTAtKj1fkdAAfwdrW/42fYDun6+8G/8Bw/o6C6v3y++AI7ybv9PdBTAUbwfC/n6AjiLJHq1AhjlnC/mhTkzTB/4CuAwj/KC1f68zfT/4otYeR7x+w3/Qpie7+D5ogCmN9FgPQVwgLdxafsLqX6+8IF/8ICObuv6/XKtEF273/B5EH04Pj4+Dp4vCmB6Ew3WUwAHeBuXemHOVH0BnPmlr7af06Kz9drzmN3dX3zxVABHpP4JeMRXf7ECWBZR+wFdP1/4wD/4G3r0iajfL9e+iF273/B5EH04fAFMc1rvNwUUwN8E2/5xL8yZsC+AM7/01fZzWnS2Xnses7vzBfAB+fon4PQmH6ynAA7wNi5tf4Dr5wv/xu8L4GyX1++Xa1/Ert1v+DyYPQ2/Xn3wfFEA05tosJ4COMDbuNQLc6bqC+DML321/ZwWna3Xnsfs7nwBfEC+CmB6kw/WUwAHeBuXtj/A9fOFf+M/+Bt6dFvX75drX8Su3W/4PIg+HP4bwDSn9X5TQAH8TbDtH/fCnAn7AjjzS19tP6dFZ+u15zG7O18AH5CvL4DpTT5YTwEc4G1c2v4A188X/o3fF8DZLq/fL9e+iF273/B5MHsafr364PmiAKY30WA9BXCAt3GpF+ZM1RfAmV/6avs5LTpbrz2P2d35AviAfBXA9CYfrKcADvA2Lm1/gOvnC//Gf/A39Oi2rt8v176IXbvf8HkQfTj8N4BpTuv9poAC+Jtg2z/uhTkT9gVw5pe+2n5Oi87Wa89jdne+AD4gX18A05t8sJ4COMDbuLT9Aa6fL/wbvy+As11ev1+ufRG7dr/h82D2NPx69cHzRQFMb6LBegrgAG/jUi/MmaovgDO/9NX2c1p0tl57HrO78wXwAfkqgOlNPlhPARzgbVza/gDXzxf+jf/gb+jRbV2/X659Ebt2v+HzIPpw+G8A05zW+02BcwXQF6Lf3CE//Xj9Cz184CuAb75frhWi8vtNn8+z3bt/9cHzxRfA/W316b9BAfw01V//4LUHWAGcbZh2v9nd/cU/wbUXjvL5zuUR/gUu7Zde79r74+PjQwFMb6LBegrgAO/Hpdce4PYCk/6CcC3f4ePwy+X1+0UBHEX+zz//HF3/88Xp5zc63MJiB88XBXBhH311SQXwq3L//7prD3D9Cz38BeFavsPHQQEMF6JzeYSf37Rfer2D54sCmN5Eg/UUwAGeL4BDvB9fUMMvzPQXhIMH9DzU/7FC/S8MvgCO8m5/fkc39w0XHzxfFMBv2Fef/SsUwM9K/c3PXXuA61/o4S8I1/IdPg5XvmnlAAAcPklEQVS+AIZ/oTmXR/j5Tful1zt4viiA6U00WE8BHOD5AjjE8wVwDJj+AjMe6KcF6n9h8AVwFHl6/6W/4I9u7hsuVgC/Adlf8bcCCuBwc1x7gOtf6OEvCNfyHT4OvgD6AjjaQgrgiO+j/Xz2vwKe5Zu+WgEcil4rCO0HTPoFci3f4eOgACqAoy2Ufn5Hw3zDxQfPF/8E/A376rN/hQL4Wam/+blrD7ACONsw7X6zu/v16vb7bZ/vXB7hL/hpv/R6194fvgCmd9BsPQVw5uf/D+DUL/zFJP0F4eABPUz03y9vL1jt80XD+Pio/yfC9POb9kuvd/B88QUwvYkG6ymAA7wfl157gNtfmOkXyLV8h4+DfwIO/0JzLg9fAEeRt5/PvgCO4o1frAAOSa8VhPYDRgEcbujw5fX7xf8KeJS4/xXwiO/cBwQFcLZf0lcrgENRBXAG2P4CuZbvLM1fr1YA06Kz9erz8AVwFHB7vgrgKN74xQrgkPRaQWg/YHwBHG7o8OX1+8UXwFHi7b/AjW7uGy6+9v5QAL9hU/3GX6EA/gbWX/3otQe4/oUe/oJwLd/h4+C/AfTfAI62UPoXuNEw33DxwfPF/wjkG/bVZ/8KBfCzUn/zc9ceYAVwtmHa/WZ355+A01/EzuUR/gUu7Zde79r7wxfA9A6aracAzvzO/Ue87QUm/QXh4AE9fCL+/fL6/eKfgEd5pwtv+vkd3dw3XHzwfPEF8Bv21Wf/CgXws1K+AP63QP0LPfwF4eABPXwiFMAoYHixa89vmC++3MHzRQGM76KvL6gAft3uv6+89gBfe4Fcy3f4OPxyef1+8QVwFLkvgCO+c+8P/wQ82y/pq88VwDRgej0vzLRo13ry7cojPY1806LW+x2B9v33O/fyJj9b/cVTASzbZe0PcPt8ZXH6Ilb+v4pN75f256N9vnQe19aTb13iCuAkkvQ/MUxm+Y5r2x/g9vm+I6PJ39Hu1z7fxP47rm33a5/vOzJ6579DvnXpKoCTSBTAid7HR9rPATPLo92vfb6Z/v7V7X7t8+0n9N5/g3zr8lUAJ5GkC8xklu+4tv0Bbp/vOzKa/B3tfu3zTey/49p2v/b5viOjd/475FuXrgI4iUQBnOj5AjjTy1/dfkC3z5dPJLtiu1/7fNk07q0m37rMFcBJJArgRE8BnOnlr24/oNvnyyeSXbHdr32+bBr3VpNvXeYK4CQSBXCipwDO9PJXtx/Q7fPlE8mu2O7XPl82jXurybcucwVwEokCONFTAGd6+avbD+j2+fKJZFds92ufL5vGvdXkW5e5AjiJRAGc6CmAM7381e0HdPt8+USyK7b7tc+XTePeavKty1wBnESiAE70FMCZXv7q9gO6fb58ItkV2/3a58umcW81+dZlrgBOIlEAJ3oK4Ewvf3X7Ad0+Xz6R7Irtfu3zZdO4t5p86zJXACeRKIATPQVwppe/uv2Abp8vn0h2xXa/9vmyadxbTb51mSuAk0gUwImeAjjTy1/dfkC3z5dPJLtiu1/7fNk07q0m37rMFcBJJArgRE8BnOnlr24/oNvnyyeSXbHdr32+bBr3VpNvXeYK4CQSBXCipwDO9PJXtx/Q7fPlE8mu2O7XPl82jXurybcucwVwEokCONFTAGd6+avbD+j2+fKJZFds92ufL5vGvdXkW5e5AjiJRAGc6CmAM7381e0HdPt8+USyK7b7tc+XTePeavKty1wBnESiAE70FMCZXv7q9gO6fb58ItkV2/3a58umcW81+dZlrgBOIlEAJ3oK4Ewvf3X7Ad0+Xz6R7Irtfu3zZdO4t5p86zJXAOsiKR6ovfCmD5jiKB4xWnq/pPNNz9ceSrtfer72PNrnSz8f8u1KPJ3vx8dHtFD+WOxfSTIbcKa5sGFmA/10tXyjnOPF0vslnW96vjHY8gLtfun5ljnffvn08yHfri2TzlcB7Mo3Ps3ChonO6ICJco4XS++XdL7p+cZgywu0+6XnW+Z8++XTz4d8u7ZMOl8FsCvf+DQLGyY6owMmyjleLL1f0vmm5xuDLS/Q7peeb5nz7ZdPPx/y7doy6XwVwK5849MsbJjojA6YKOd4sfR+Seebnm8MtrxAu196vmXOt18+/XzIt2vLpPNVALvyjU+zsGGiMzpgopzjxdL7JZ1ver4x2PIC7X7p+ZY533759PMh364tk85XAezKNz7NwoaJzuiAiXKOF0vvl3S+6fnGYMsLtPul51vmfPvl08+HfLu2TDpfBbAr3/g0CxsmOqMDJso5Xiy9X9L5pucbgy0v0O6Xnm+Z8+2XTz8f8u3aMul8FcCufOPTLGyY6IwOmCjneLH0fknnm55vDLa8QLtfer5lzrdfPv18yLdry6TzVQC78o1Ps7BhojM6YKKc48XS+yWdb3q+MdjyAu1+6fmWOd9++fTzId+uLZPOVwHsyjc+zcKGic7ogIlyjhdL75d0vun5xmDLC7T7pedb5nz75dPPh3y7tkw6XwWwK9/4NAsbJjqjAybKOV4svV/S+abnG4MtL9Dul55vmfPtl08/H/Lt2jLpfBXArnzj0yxsmOiMDpgo53ix9H5J55uebwy2vEC7X3q+Zc63Xz79fMi3a8uk81UAu/KNT7OwYaIzOmCinOPF0vslnW96vjHY8gLtfun5ljnffvn08yHfri2TzlcB7Mo3Ps3ChonO6ICJco4XS++XdL7p+cZgywu0+6XnW+Z8++XTz4d8u7ZMOl8FsCvf+DQLGyY6owMmyjleLL1f0vmm5xuDLS/Q7peeb5nz7ZdPPx/y7doy6XwVwK5849MsbJjojA6YKOd4sfR+Seebnm8MtrxAu196vmXOt18+/XzIt2vLpPNVALvyjU+zsGGiMzpgopzjxdL7JZ1ver4x2PIC7X7p+ZY533759PMh364tk85XAezKNz7NwoaJzuiAiXKOF0vvl3S+6fnGYMsLtPul51vmfPvl08+HfLu2TDpfBbAr3/g0CxsmOqMDJso5Xiy9X9L5pucbgy0v0O6Xnm+Z8+2XTz8f8u3aMul8NwpgWuxf6QWPrfeP8vuVb3lAbz5e+vmwn998w5Tfnv1cHtBwvHS+w3H+/fKN4Ryos4g2MplN9O9Xyzepaa3fFUg/H/bz7ybg55MC9nNSs2+tdL7RO9wYzoE6i2gjk9lECmDSz1ozgfTz4bya5eHqmYD9PPNrvzqdb/R+N4ZzoM4i2shkNpECmPSz1kwg/Xw4r2Z5uHomYD/P/NqvTucbvd+N4Ryos4g2MplNpAAm/aw1E0g/H86rWR6ungnYzzO/9qvT+Ubvd2M4B+osoo1MZhMpgEk/a80E0s+H82qWh6tnAvbzzK/96nS+0fvdGM6BOotoI5PZRApg0s9aM4H08+G8muXh6pmA/Tzza786nW/0fjeGc6DOItrIZDaRApj0s9ZMIP18OK9mebh6JmA/z/zar07nG73fjeEcqLOINjKZTaQAJv2sNRNIPx/Oq1kerp4J2M8zv/ar0/lG73djOAfqLKKNTGYTKYBJP2vNBNLPh/NqloerZwL288yv/ep0vtH73RjOgTqLaCOT2UQKYNLPWjOB9PPhvJrl4eqZgP0882u/Op1v9H43hnOgziLayGQ2kQKY9LPWTCD9fDivZnm4eiZgP8/82q9O5xu9343hHKiziDYymU2kACb9rDUTSD8fzqtZHq6eCdjPM7/2q9P5Ru93YzgH6iyijUxmEymAST9rzQTSz4fzapaHq2cC9vPMr/3qdL7R+90YzoE6i2gjk9lECmDSz1ozgfTz4bya5eHqmYD9PPNrvzqdb/R+N4ZzoM4i2shkNpECmPSz1kwg/Xw4r2Z5uHomYD/P/NqvTucbvd+N4Ryos4g2MplNpAAm/aw1E0g/H86rWR6ungnYzzO/9qvT+Ubvd2M4B+osoo1MZhMpgEk/a80E0s+H82qWh6tnAvbzzK/96nS+0fvdGM6BOotoI5PZRApg0s9aM4H08+G8muXh6pmA/Tzza786nW/0fjeGc6DOItrIZDaRApj0s9ZMIP18OK9mebh6JmA/z/zar07nG73f6uGid2oxAu8p0F5grp0x8njP58xdEXg7gWuH89sF6IbOCygcXVtAHl15mIYAgb8RUABtDQLPFlA4uvKTR1cepiFAQAG0Bwi8pYDC0RWrPLryMA0BAgqgPUDgLQUUjq5Y5dGVh2kIEFAA7QECbymgcHTFKo+uPExDgIACaA8QeEsBhaMrVnl05WEaAgQUQHuAwFsKKBxdscqjKw/TECCgANoDBN5SQOHoilUeXXmYhgABBdAeIPCWAgpHV6zy6MrDNAQIKID2AIG3FFA4umKVR1cepiFAQAG0Bwi8pYDC0RWrPLryMA0BAgqgPUDgLQUUjq5Y5dGVh2kIEFAA7QECbymgcHTFKo+uPExDgIACaA8QeEsBhaMrVnl05WEaAgQUQHuAwFsKKBxdscqjKw/TECCgANoDBN5SQOHoilUeXXmYhgABBdAeIPCWAgpHV6zy6MrDNAQIKID2AIG3FFA4umKVR1cepiFAQAG0Bwi8pYDC0RWrPLryMA0BAgqgPUDgLQXSheMfb6n03JuS73OzMzmBagGHfXU8hiPwUkBBeEn06B+Q76PjMzyBXgEFsDcbkxH4jICC8Bml5/6MfJ+bnckJVAsogNXxGI7ASwEF4SXRo39Avo+Oz/AEegUUwN5sTEbgMwIKwmeUnvsz8n1udiYnUC2gAFbHYzgCLwUUhJdEj/4B+T46PsMT6BVQAHuzMRmBzwgoCJ9Reu7PyPe52ZmcQLWAAlgdj+EIvBRQEF4SPfoH5Pvo+AxPoFdAAezNxmQEPiOgIHxG6bk/I9/nZmdyAtUCCmB1PIYj8FJAQXhJ9OgfkO+j4zM8gV4BBbA3G5MR+IyAgvAZpef+jHyfm53JCVQLKIDV8RiOwEsBBeEl0aN/QL6Pjs/wBHoFFMDebExG4DMCCsJnlJ77M/J9bnYmJ1AtoABWx2M4Ai8FFISXRI/+Afk+Oj7DE+gVUAB7szEZgc8IKAifUXruz8j3udmZnEC1gAJYHY/hCLwUUBBeEj36B+T76PgMT6BXQAHszcZkBD4joCB8Rum5PyPf52ZncgLVAgpgdTyGI/BSQEF4SfToH5Dvo+MzPIFeAQWwNxuTEfiMgILwGaXn/ox8n5udyQlUCyiA1fEYjsBLAQXhJdGjf0C+j47P8AR6BRTA3mxMRoAAAQIECBBYEVAAV1gtSoAAAQIECBDoFVAAe7MxGQECBAgQIEBgRUABXGG1KAECBAgQIECgV0AB7M3GZAQIECBAgACBFQEFcIXVogQIECBAgACBXgEFsDcbkxEgQIAAAQIEVgQUwBVWixIgQIAAAQIEegUUwN5sTEaAAAECBAgQWBFQAFdYLUqAAAECBAgQ6BVQAHuzMRkBAgQIECBAYEVAAVxhtSgBAgQIECBAoFdAAezNxmQECBAgQIAAgRUBBXCF1aIECBAgQIAAgV4BBbA3G5MRIECAAAECBFYEFMAVVosSIECAAAECBHoFFMDebExGgAABAgQIEFgRUABXWC1KgAABAgQIEOgVUAB7szEZAQIECBAgQGBFQAFcYbUoAQIECBAgQKBXQAHszcZkBAgQIECAAIEVAQVwhdWiBAgQIECAAIFeAQWwNxuTESBAgAABAgRWBBTAFVaLEiBAgAABAgR6BRTA3mxMRoAAAQIECBBYEVAAV1gtSoAAAQIECBDoFVAAe7MxGQECBAgQIEBgRUABXGG1KAECBAgQIECgV0AB7M3GZAQIECBAgACBFQEFcIXVogQIECBAgACBXgEFsDcbkxEgQIAAAQIEVgQUwBVWixIgQIAAAQIEegUUwN5sTEaAAAECBAgQWBFQAFdYLUqAAAECBAgQ6BVQAHuzMRkBAgQIECBAYEVAAVxhtSgBAgQIECBAoFdAAezNxmQECBAgQIAAgRUBBXCF1aIECBAgQIAAgV4BBbA3G5MRIECAAAECBFYEFMAVVosSIECAAAECBHoFFMDebExGgAABAgQIEFgRUABXWC1KgAABAgQIEOgVUAB7szEZAQIECBAgQGBFQAFcYbUoAQIECBAgQKBXQAHszcZkBAgQIECAAIEVAQVwhdWiBAgQIECAAIFeAQWwNxuTESBAgAABAgRWBBTAFVaLEiBAgAABAgR6BRTA3mxMRoAAAQIECBBYEVAAV1gtSoAAAQIECBDoFVAAe7MxGQECBAgQIEBgRUABXGG1KAECBAgQIECgV0AB7M3GZAQIECBAgACBFQEFcIXVogQIECBAgACBXgEFsDcbkxEgQIAAAQIEVgQUwBVWixIgQIAAAQIEegUUwN5sTEaAAAECBAgQWBFQAFdYLUqAAAECBAgQ6BVQAHuzMRkBAgQIECBAYEVAAVxhtSgBAgQIECBAoFdAAezNxmQECBAgQIAAgRUBBXCF1aIECBAgQIAAgV4BBbA3G5MRIECAAAECBFYEFMAVVosSIECAAAECBHoFFMDebExGgAABAgQIEFgRUABXWC1KgAABAgQIEOgVUAB7szEZAQIECBAgQGBFQAFcYbUoAQIECBAgQKBXQAHszcZkBAgQIECAAIEVAQVwhdWiBAgQIECAAIFeAQWwNxuTESBAgAABAgRWBBTAFVaLEiBAgAABAgR6BRTA3mxMRoAAAQIECBBYEVAAV1gtSoAAAQIECBDoFVAAe7MxGQECBAgQIEBgRUABXGG1KAECBAgQIECgV0AB7M3GZAQIECBAgACBFQEFcIXVogQIECBAgACBXgEFsDcbkxEgQIAAAQIEVgQUwBVWixIgQIAAAQIEegUUwN5sTEaAAAECBAgQWBFQAFdYLUqAAAECBAgQ6BVQAHuzMRkBAgQIECBAYEVAAVxhtSgBAgQIECBAoFdAAezNxmQECBAgQIAAgRUBBXCF1aIECBAgQIAAgV4BBbA3G5MRIECAAAECBFYEFMAVVosSIECAAAECBHoFFMDebExGgAABAgQIEFgRUABXWC1KgAABAgQIEOgVUAB7szEZAQIECBAgQGBFQAFcYbUoAQIECBAgQKBXQAHszcZkBAgQIECAAIEVAQVwhdWiBAgQIECAAIFeAQWwNxuTESBAgAABAgRWBBTAFVaLEiBAgAABAgR6BRTA3mxMRoAAAQIECBBYEVAAV1gtSoAAAQIECBDoFVAAe7MxGQECBAgQIEBgRUABXGG1KAECBAgQIECgV0AB7M3GZAQIECBAgACBFQEFcIXVogQIECBAgACBXgEFsDcbkxEgQIAAAQIEVgQUwBVWixIgQIAAAQIEegUUwN5sTEaAAAECBAgQWBFQAFdYLUqAAAECBAgQ6BVQAHuzMRkBAgQIECBAYEVAAVxhtSgBAgQIECBAoFdAAezNxmQECBAgQIAAgRUBBXCF1aIECBAgQIAAgV4BBbA3G5MRIECAAAECBFYEFMAVVosSIECAAAECBHoFFMDebExGgAABAgQIEFgRUABXWC1KgAABAgQIEOgVUAB7szEZAQIECBAgQGBFQAFcYbUoAQIECBAgQKBXQAHszcZkBAgQIECAAIEVAQVwhdWiBAgQIECAAIFeAQWwNxuTESBAgAABAgRWBBTAFVaLEiBAgAABAgR6BRTA3mxMRoAAAQIECBBYEVAAV1gtSoAAAQIECBDoFVAAe7MxGQECBAgQIEBgRUABXGG1KAECBAgQIECgV0AB7M3GZAQIECBAgACBFQEFcIXVogQIECBAgACBXgEFsDcbkxEgQIAAAQIEVgQUwBVWixIgQIAAAQIEegUUwN5sTEaAAAECBAgQWBFQAFdYLUqAAAECBAgQ6BVQAHuzMRkBAgQIECBAYEVAAVxhtSgBAgQIECBAoFdAAezNxmQECBAgQIAAgRUBBXCF1aIECBAgQIAAgV4BBbA3G5MRIECAAAECBFYEFMAVVosSIECAAAECBHoFFMDebExGgAABAgQIEFgRUABXWC1KgAABAgQIEOgVUAB7szEZAQIECBAgQGBFQAFcYbUoAQIECBAgQKBXQAHszcZkBAgQIECAAIEVAQVwhdWiBAgQIECAAIFeAQWwNxuTESBAgAABAgRWBBTAFVaLEiBAgAABAgR6BRTA3mxMRoAAAQIECBBYEVAAV1gtSoAAAQIECBDoFVAAe7MxGQECBAgQIEBgRUABXGG1KAECBAgQIECgV0AB7M3GZAQIECBAgACBFQEFcIXVogQIECBAgACBXgEFsDcbkxEgQIAAAQIEVgQUwBVWixIgQIAAAQIEegUUwN5sTEaAAAECBAgQWBFQAFdYLUqAAAECBAgQ6BVQAHuzMRkBAgQIECBAYEVAAVxhtSgBAgQIECBAoFdAAezNxmQECBAgQIAAgRUBBXCF1aIECBAgQIAAgV4BBbA3G5MRIECAAAECBFYEFMAVVosSIECAAAECBHoFFMDebExGgAABAgQIEFgRUABXWC1KgAABAgQIEOgVUAB7szEZAQIECBAgQGBFQAFcYbUoAQIECBAgQKBXQAHszcZkBAgQIECAAIEVAQVwhdWiBAgQIECAAIFeAQWwNxuTESBAgAABAgRWBBTAFVaLEiBAgAABAgR6BRTA3mxMRoAAAQIECBBYEVAAV1gtSoAAAQIECBDoFVAAe7MxGQECBAgQIEBgRUABXGG1KAECBAgQIECgV0AB7M3GZAQIECBAgACBFQEFcIXVogQIECBAgACBXgEFsDcbkxEgQIAAAQIEVgQUwBVWixIgQIAAAQIEegUUwN5sTEaAAAECBAgQWBFQAFdYLUqAAAECBAgQ6BVQAHuzMRkBAgQIECBAYEVAAVxhtSgBAgQIECBAoFdAAezNxmQECBAgQIAAgRUBBXCF1aIECBAgQIAAgV4BBbA3G5MRIECAAAECBFYEFMAVVosSIECAAAECBHoFFMDebExGgAABAgQIEFgRUABXWC1KgAABAgQIEOgVUAB7szEZAQIECBAgQGBFQAFcYbUoAQIECBAgQKBXQAHszcZkBAgQIECAAIEVAQVwhdWiBAgQIECAAIFeAQWwNxuTESBAgAABAgRWBBTAFVaLEiBAgAABAgR6BRTA3mxMRoAAAQIECBBYEVAAV1gtSoAAAQIECBDoFVAAe7MxGQECBAgQIEBgRUABXGG1KAECBAgQIECgV0AB7M3GZAQIECBAgACBFQEFcIXVogQIECBAgACBXgEFsDcbkxEgQIAAAQIEVgQUwBVWixIgQIAAAQIEegUUwN5sTEaAAAECBAgQWBFQAFdYLUqAAAECBAgQ6BVQAHuzMRkBAgQIECBAYEVAAVxhtSgBAgQIECBAoFdAAezNxmQECBAgQIAAgRUBBXCF1aIECBAgQIAAgV4BBbA3G5MRIECAAAECBFYEFMAVVosSIECAAAECBHoFFMDebExGgAABAgQIEFgRUABXWC1KgAABAgQIEOgVUAB7szEZAQIECBAgQGBFQAFcYbUoAQIECBAgQKBXQAHszcZkBAgQIECAAIEVAQVwhdWiBAgQIECAAIFeAQWwNxuTESBAgAABAgRWBBTAFVaLEiBAgAABAgR6BRTA3mxMRoAAAQIECBBYEVAAV1gtSoAAAQIECBDoFVAAe7MxGQECBAgQIEBgRUABXGG1KAECBAgQIECgV+D/ASc4P63sUKbiAAAAAElFTkSuQmCC"
+        alt="Boxel logo"
+      />
+      <div id="controls">
+        <div id="color-picker">
+          <label for="color">Choose Color:</label>
+          <input type="color" id="color" value="#000000" />
+          <button id="save-color">Save Color</button>
+        </div>
+        <div id="grid-size">
+          <label for="size">Grid Size:</label>
+          <input type="number" id="size" value="0" min="1" max="100" />
+          <button id="apply-size">Apply</button>
+        </div>
+        <div id="brush-size">
+          <label for="brush">Brush Size:</label>
+          <input type="number" id="brush" value="1" min="1" max="10" />
+        </div>
+        <button id="clear">Clear</button>
+        <h5>toggle drawing / erasing ></h5>
+        <button id="eraser">Eraser</button>
+        <h5>toggle filler ></h5>
+        <button id="fill">Fill</button>
+
+        <div id="image-format">
+          <label for="format">Image Format:</label>
+          <select id="format">
+            <option value="png">PNG</option>
+            <option value="jpeg">JPEG</option>
+          </select>
+        </div>
+        <input type="text" id="drawing-name" placeholder="Drawing Name" />
+        <button id="save">Save Image</button>
+        <button id="save-drawing">Save Drawing</button>
+
+        <!-- New fill button -->
+      </div>
+      <div id="swatches">
+        <h2>Saved Swatches</h2>
+        <div id="swatch-container"></div>
+      </div>
+      <div id="container"></div>
+      <canvas id="canvas" style="display: none"></canvas>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const container = document.getElementById("container");
+        const colorPicker = document.getElementById("color");
+        const clearButton = document.getElementById("clear");
+        const sizeInput = document.getElementById("size");
+        const applySizeButton = document.getElementById("apply-size");
+        const saveColorButton = document.getElementById("save-color");
+        const swatchContainer = document.getElementById("swatch-container");
+        const eraserButton = document.getElementById("eraser");
+        const brushSizeInput = document.getElementById("brush");
+        const saveButton = document.getElementById("save");
+        const saveDrawingButton = document.getElementById("save-drawing");
+        const savedDrawingsContainer =
+          document.getElementById("saved-drawings");
+        const toggleDrawingsButton = document.getElementById("toggle-drawings");
+        const drawingNameInput = document.getElementById("drawing-name");
+        const fillButton = document.getElementById("fill");
+        let isDrawing = false;
+        let isErasing = false;
+        let isFilling = false;
+        let brushSize = 1;
+        let size = sizeInput.value;
+
+        const undoStack = [];
+        const redoStack = [];
+
+        function saveState() {
+          const currentState = Array.from(container.children).map(
+            (pixel) => pixel.style.backgroundColor
+          );
+          undoStack.push(currentState);
+          if (undoStack.length > 100) {
+            undoStack.shift();
+          }
+        }
+
+        function applyState(state) {
+          const pixels = Array.from(container.children);
+          state.forEach((color, index) => {
+            pixels[index].style.backgroundColor = color;
+          });
+        }
+
+        function undo() {
+          if (undoStack.length > 0) {
+            const currentState = Array.from(container.children).map(
+              (pixel) => pixel.style.backgroundColor
+            );
+            redoStack.push(currentState);
+            applyState(undoStack.pop());
+          }
+        }
+
+        function redo() {
+          if (redoStack.length > 0) {
+            const currentState = Array.from(container.children).map(
+              (pixel) => pixel.style.backgroundColor
+            );
+            undoStack.push(currentState);
+            applyState(redoStack.pop());
+          }
+        }
+
+        function createGrid(size) {
+          container.innerHTML = "";
+          container.style.gridTemplateColumns = `repeat(${size}, 20px)`;
+          container.style.gridTemplateRows = `repeat(${size}, 20px)`;
+
+          for (let i = 0; i < size * size; i++) {
+            const pixel = document.createElement("div");
+            pixel.classList.add("pixel");
+            pixel.style.width = "20px";
+            pixel.style.height = "20px";
+
+            pixel.addEventListener("dragstart", (e) => {
+              e.preventDefault();
+            });
+
+            container.appendChild(pixel);
+          }
+
+          container.addEventListener("mousedown", (e) => {
+            if (e.target.classList.contains("pixel")) {
+              saveState();
+              if (isFilling) {
+                fillArea(e.target);
+              } else {
+                paintPixels(e.target);
+              }
+              isDrawing = true;
+            }
+          });
+
+          container.addEventListener("mousemove", (e) => {
+            if (isDrawing && e.target.classList.contains("pixel")) {
+              paintPixels(e.target);
+            }
+          });
+
+          container.addEventListener("mouseup", () => {
+            isDrawing = false;
+          });
+
+          container.addEventListener("mouseleave", () => {
+            isDrawing = false;
+          });
+        }
+
+        function paintPixels(pixel) {
+          const color = isErasing ? "" : colorPicker.value;
+          const index = Array.from(container.children).indexOf(pixel);
+          const pixelsToPaint = getPixelsToPaint(index);
+
+          pixelsToPaint.forEach((p) => {
+            p.style.backgroundColor = color;
+          });
+        }
+
+        function getPixelsToPaint(index) {
+          const pixels = Array.from(container.children);
+          const size = Math.sqrt(pixels.length);
+          const pixelsToPaint = [];
+
+          for (let i = 0; i < brushSize; i++) {
+            for (let j = 0; j < brushSize; j++) {
+              const row = Math.floor(index / size) + i;
+              const col = (index % size) + j;
+              if (row < size && col < size) {
+                pixelsToPaint.push(pixels[row * size + col]);
+              }
+            }
+          }
+
+          return pixelsToPaint;
+        }
+
+        function fillArea(startPixel) {
+          const targetColor = startPixel.style.backgroundColor;
+          const fillColor = colorPicker.value;
+          if (targetColor === fillColor) return;
+
+          const pixels = Array.from(container.children);
+          const size = Math.sqrt(pixels.length);
+          const startPixelIndex = pixels.indexOf(startPixel);
+          const queue = [startPixelIndex];
+          const visited = new Set();
+
+          while (queue.length > 0) {
+            const index = queue.shift();
+            const pixel = pixels[index];
+
+            if (
+              !visited.has(index) &&
+              pixel.style.backgroundColor === targetColor
+            ) {
+              pixel.style.backgroundColor = fillColor;
+              visited.add(index);
+
+              const [x, y] = [index % size, Math.floor(index / size)];
+              if (x > 0) queue.push(index - 1);
+              if (x < size - 1) queue.push(index + 1);
+              if (y > 0) queue.push(index - size);
+              if (y < size - 1) queue.push(index + size);
+            }
+          }
+        }
+
+        function loadSwatches() {
+          const swatches = JSON.parse(localStorage.getItem("swatches")) || [];
+          swatchContainer.innerHTML = "";
+
+          swatches.forEach((color) => {
+            const swatch = document.createElement("div");
+            swatch.classList.add("swatch");
+            swatch.style.backgroundColor = color;
+            swatch.addEventListener("click", () => {
+              colorPicker.value = color;
+            });
+            swatchContainer.appendChild(swatch);
+          });
+        }
+
+        function saveCurrentColor() {
+          const swatches = JSON.parse(localStorage.getItem("swatches")) || [];
+          const currentColor = colorPicker.value;
+          if (!swatches.includes(currentColor)) {
+            swatches.push(currentColor);
+            localStorage.setItem("swatches", JSON.stringify(swatches));
+            loadSwatches();
+          }
+        }
+
+        function saveDrawing() {
+          const canvas = document.getElementById("canvas");
+          const context = canvas.getContext("2d");
+          const drawingName = drawingNameInput.value || "pixel-art";
+          canvas.width = size * 20;
+          canvas.height = size * 20;
+
+          const pixels = Array.from(container.children);
+          pixels.forEach((pixel, index) => {
+            const x = (index % size) * 20;
+            const y = Math.floor(index / size) * 20;
+            const color = pixel.style.backgroundColor || "white";
+
+            if (color !== "white" && color !== "#ffffff") {
+              context.fillStyle = color;
+              context.fillRect(x, y, 20, 20);
+            }
+          });
+
+          const format = document.getElementById("format").value;
+          const dataURL =
+            format === "png"
+              ? canvas.toDataURL("image/png")
+              : canvas.toDataURL("image/jpeg", 1.0);
+          const link = document.createElement("a");
+          link.href = dataURL;
+          link.download = `${drawingName}.${format}`;
+          link.click();
+        }
+
+        function saveDrawingToLocalStorage() {
+          const drawing = [];
+          document.querySelectorAll(".pixel").forEach((pixel) => {
+            drawing.push(pixel.style.backgroundColor);
+          });
+          const drawingName = drawingNameInput.value || `Drawing ${Date.now()}`;
+          const drawings = JSON.parse(localStorage.getItem("drawings")) || [];
+          drawings.push({ name: drawingName, pixels: drawing, size: size });
+          localStorage.setItem("drawings", JSON.stringify(drawings));
+          loadDrawingsList();
+        }
+
+        function loadDrawing(drawing) {
+          size = drawing.size;
+          sizeInput.value = size;
+          createGrid(size);
+
+          document.querySelectorAll(".pixel").forEach((pixel, index) => {
+            pixel.style.backgroundColor = drawing.pixels[index];
+          });
+        }
+
+        function deleteDrawing(index) {
+          const drawings = JSON.parse(localStorage.getItem("drawings")) || [];
+          drawings.splice(index, 1);
+          localStorage.setItem("drawings", JSON.stringify(drawings));
+          loadDrawingsList();
+        }
+
+        function loadDrawingsList() {
+          const drawings = JSON.parse(localStorage.getItem("drawings")) || [];
+          savedDrawingsContainer.innerHTML = "";
+          drawings.forEach((drawing, index) => {
+            const drawingElement = document.createElement("div");
+            drawingElement.classList.add("drawing");
+            drawingElement.innerHTML = `
+              <span>${drawing.name}</span>
+              <button class="delete-btn" data-index="${index}">Delete</button>
+            `;
+            drawingElement.addEventListener("click", (e) => {
+              if (e.target.tagName !== "BUTTON") {
+                loadDrawing(drawing);
+              }
+            });
+            drawingElement
+              .querySelector(".delete-btn")
+              .addEventListener("click", (e) => {
+                e.stopPropagation();
+                deleteDrawing(index);
+              });
+            savedDrawingsContainer.appendChild(drawingElement);
+          });
+        }
+
+        toggleDrawingsButton.addEventListener("click", () => {
+          savedDrawingsContainer.style.display =
+            savedDrawingsContainer.style.display === "none" ? "flex" : "none";
+        });
+
+        sizeInput.addEventListener("change", () => {
+          localStorage.setItem("size", sizeInput.value);
+        });
+
+        brushSizeInput.addEventListener("change", () => {
+          brushSize = parseInt(brushSizeInput.value);
+        });
+
+        eraserButton.addEventListener("click", () => {
+          isErasing = !isErasing;
+          eraserButton.textContent = isErasing ? "Drawing" : "Eraser";
+        });
+
+        saveButton.addEventListener("click", saveDrawing);
+
+        saveDrawingButton.addEventListener("click", saveDrawingToLocalStorage);
+
+        fillButton.addEventListener("click", () => {
+          isFilling = !isFilling;
+          fillButton.textContent = isFilling ? "Filling" : "Fill";
+        });
+
+        size = localStorage.getItem("size") || 16;
+
+        createGrid(size);
+        loadSwatches();
+        loadDrawingsList();
+
+        applySizeButton.addEventListener("click", () => {
+          const newSize = sizeInput.value;
+          if (newSize > 500) {
+            alert("Grid size cannot exceed 500");
+          } else if (newSize < 1) {
+            alert("Grid size cannot be less than 1");
+          } else if (newSize === 16) {
+            createGrid(newSize);
+          } else {
+            createGrid(newSize);
+          }
+          location.reload();
+        });
+
+        clearButton.addEventListener("click", () => {
+          saveState();
+          document.querySelectorAll(".pixel").forEach((pixel) => {
+            pixel.style.backgroundColor = "";
+          });
+        });
+
+        saveColorButton.addEventListener("click", saveCurrentColor);
+
+        document.addEventListener("keydown", (e) => {
+          if (e.ctrlKey) {
+            if (e.key === "z") {
+              e.preventDefault();
+              undo();
+            } else if (e.key === "y") {
+              e.preventDefault();
+              redo();
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <title>Admin Dashboard - Red Box Software</title>
+
+    <script src="scripts/script.js" type="module"></script>
+    <style></style>
+  </head>
+  <body>
+    <div class="admin-container">
+      <div id="loginSection">
+        <h2>Admin Login</h2>
+        <div class="form-group">
+          <input type="email" id="emailInput" placeholder="Email" />
+          <input type="password" id="passwordInput" placeholder="Password" />
+          <button onclick="login()">Login</button>
+          <button onclick="signInWithGoogle()">Sign in with Google</button>
+        </div>
+      </div>
+
+      <div id="adminSection" style="display: none">
+        <div class="tab-buttons">
+          <button class="tab-button active" onclick="switchTab('upload')">
+            Upload New Product
+          </button>
+          <button class="tab-button" onclick="switchTab('manage')">
+            Manage Products
+          </button>
+          <button class="tab-button" onclick="switchTab('articles')">Articles</button>
+        </div>
+
+        <div id="uploadTab">
+          <h2>Upload New Product</h2>
+          <div class="form-group">
+            <label>Product Name:</label>
+            <input
+              type="text"
+              id="productName"
+              placeholder="e.g., Recstar"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Product Description:</label>
+            <textarea id="productDescription" rows="4" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Application File (.exe):</label>
+            <input
+              type="file"
+              id="mainExecutable"
+              accept=".exe"
+              class="file-input"
+              required
+            />
+            <div id="exeProgress" class="progress-bar" style="display: none">
+              <div class="progress"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Product Logo:</label>
+            <input
+              type="file"
+              id="logoFile"
+              accept="image/*"
+              class="file-input"
+              required
+            />
+            <img id="logoPreview" class="preview-image" style="display: none" />
+            <div id="logoProgress" class="progress-bar" style="display: none">
+              <div class="progress"></div>
+            </div>
+          </div>
+
+          <div id="messageArea"></div>
+
+          <button onclick="uploadFiles()">Upload Files</button>
+        </div>
+
+        <div id="manageTab" style="display: none">
+          <h2>Manage Products</h2>
+          <div id="productsList" class="products-list">Loading products...</div>
+        </div>
+
+        <div id="articlesTab" style="display: none">
+          <h2>Manage Articles</h2>
+          <div id="articlesList">Loading articles...</div>
+
+          <hr />
+          <h3>Create New Article</h3>
+          <div class="form-group">
+            <input type="text" id="articleTitle" placeholder="Title" />
+            <input type="date" id="articleDate" />
+            <div id="articleSections"></div>
+            <button onclick="addTextSection()">Add Text Section</button>
+            <button onclick="addImageSection()">Add Image Section</button>
+          </div>
+          <button onclick="createArticle()">Publish Article</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import {
+        getAuth,
+        signInWithEmailAndPassword,
+        signInWithPopup,
+        GoogleAuthProvider,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+      import {
+        getStorage,
+        ref,
+        uploadBytesResumable,
+        getDownloadURL,
+        deleteObject,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        getDocs,
+        doc,
+        updateDoc,
+        deleteDoc,
+        getDoc,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyC2CwIcLmGi46-VeVBgGuzgjl1rAN_S3IY",
+        authDomain: "red-box-software.firebaseapp.com",
+        projectId: "red-box-software",
+        storageBucket: "red-box-software.appspot.com",
+        messagingSenderId: "94993930256",
+        appId: "1:94993930256:web:b47f330bee30bddffb1295",
+        measurementId: "G-2LX6NFYS1J",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const storage = getStorage(app);
+      const db = getFirestore(app);
+      const provider = new GoogleAuthProvider();
+
+      // Make functions globally available
+      window.login = async function () {
+        const email = document.getElementById("emailInput").value;
+        const password = document.getElementById("passwordInput").value;
+
+        try {
+          if (email !== "stiaan44@gmail.com") {
+            throw new Error("Unauthorized email address");
+          }
+          await signInWithEmailAndPassword(auth, email, password);
+          showMessage("Login successful!", "success");
+          document.getElementById("loginSection").style.display = "none";
+          document.getElementById("adminSection").style.display = "block";
+        } catch (error) {
+          showMessage(error.message, "error");
+        }
+      };
+
+      window.signInWithGoogle = async function () {
+        try {
+          const result = await signInWithPopup(auth, provider);
+          if (result.user.email !== "stiaan44@gmail.com") {
+            await auth.signOut();
+            throw new Error("Unauthorized email address");
+          }
+          showMessage("Login successful!", "success");
+          document.getElementById("loginSection").style.display = "none";
+          document.getElementById("adminSection").style.display = "block";
+        } catch (error) {
+          showMessage(error.message, "error");
+        }
+      };
+
+      window.uploadFiles = async function () {
+        const productName = document.getElementById("productName").value;
+        const productDescription =
+          document.getElementById("productDescription").value;
+        const exeFile = document.getElementById("mainExecutable").files[0];
+        const logoFile = document.getElementById("logoFile").files[0];
+
+        if (!productName || !productDescription || !exeFile || !logoFile) {
+          showMessage("Please fill in all required fields", "error");
+          return;
+        }
+
+        try {
+          showMessage("Starting upload...", "success");
+
+          // Upload executable
+          const exeRef = ref(
+            storage,
+            `executables/${productName}/${exeFile.name}`
+          );
+          const exeUpload = uploadBytesResumable(exeRef, exeFile);
+
+          exeUpload.on("state_changed", (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            document.getElementById("exeProgress").style.display = "block";
+            document.querySelector("#exeProgress .progress").style.width =
+              progress + "%";
+          });
+
+          // Upload logo
+          const logoRef = ref(storage, `logos/${productName}/${logoFile.name}`);
+          const logoUpload = uploadBytesResumable(logoRef, logoFile);
+
+          logoUpload.on("state_changed", (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            document.getElementById("logoProgress").style.display = "block";
+            document.querySelector("#logoProgress .progress").style.width =
+              progress + "%";
+          });
+
+          // Wait for both uploads to complete
+          await Promise.all([
+            new Promise((resolve, reject) => {
+              exeUpload.on("state_changed", null, reject, resolve);
+            }),
+            new Promise((resolve, reject) => {
+              logoUpload.on("state_changed", null, reject, resolve);
+            }),
+          ]);
+
+          // Get download URLs
+          const exeUrl = await getDownloadURL(exeRef);
+          const logoUrl = await getDownloadURL(logoRef);
+
+          // Save to Firestore with additional metadata
+          await addDoc(collection(db, "products"), {
+            name: productName,
+            description: productDescription,
+            executable: {
+              name: exeFile.name,
+              url: exeUrl,
+              size: exeFile.size,
+              lastModified: new Date(exeFile.lastModified),
+              type: exeFile.type,
+            },
+            logo: {
+              name: logoFile.name,
+              url: logoUrl,
+              size: logoFile.size,
+              lastModified: new Date(logoFile.lastModified),
+              type: logoFile.type,
+            },
+            uploadDate: new Date(),
+            status: "active",
+            downloads: 0,
+            version: "1.0",
+            uploadedBy: auth.currentUser.email,
+          });
+
+          showMessage("Upload completed successfully!", "success");
+          resetForm();
+        } catch (error) {
+          showMessage("Upload failed: " + error.message, "error");
+        }
+      };
+      function showMessage(message, type) {
+        const messageArea = document.getElementById("messageArea");
+        messageArea.textContent = message;
+        messageArea.className = type;
+      }
+
+      function resetForm() {
+        document.getElementById("productName").value = "";
+        document.getElementById("productDescription").value = "";
+        document.getElementById("mainExecutable").value = "";
+        document.getElementById("logoFile").value = "";
+        document.getElementById("logoPreview").style.display = "none";
+        document.getElementById("exeProgress").style.display = "none";
+        document.getElementById("logoProgress").style.display = "none";
+        document.querySelector("#exeProgress .progress").style.width = "0%";
+        document.querySelector("#logoProgress .progress").style.width = "0%";
+      }
+
+      // Preview logo image
+      document
+        .getElementById("logoFile")
+        .addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              const preview = document.getElementById("logoPreview");
+              preview.src = e.target.result;
+              preview.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+
+      window.switchTab = function (tabName) {
+        const uploadTab = document.getElementById("uploadTab");
+        const manageTab = document.getElementById("manageTab");
+        const articlesTab = document.getElementById("articlesTab");
+        const uploadButton = document.querySelector(
+          ".tab-button[onclick=\"switchTab('upload')\"]"
+        );
+        const manageButton = document.querySelector(
+          ".tab-button[onclick=\"switchTab('manage')\"]"
+        );
+        const articlesButton = document.querySelector(
+          ".tab-button[onclick=\"switchTab('articles')\"]"
+        );
+
+        if (tabName === "upload") {
+          uploadTab.style.display = "block";
+          manageTab.style.display = "none";
+          articlesTab.style.display = "none";
+          uploadButton.classList.add("active");
+          manageButton.classList.remove("active");
+          articlesButton.classList.remove("active");
+        } else if (tabName === "manage") {
+          uploadTab.style.display = "none";
+          manageTab.style.display = "block";
+          articlesTab.style.display = "none";
+          uploadButton.classList.remove("active");
+          manageButton.classList.add("active");
+          articlesButton.classList.remove("active");
+        } else if (tabName === "articles") {
+          uploadTab.style.display = "none";
+          manageTab.style.display = "none";
+          articlesTab.style.display = "block";
+          uploadButton.classList.remove("active");
+          manageButton.classList.remove("active");
+          articlesButton.classList.add("active");
+          loadArticles();
+        }
+      };
+
+      async function loadProducts() {
+        const productsList = document.getElementById("productsList");
+        productsList.innerHTML = "Loading products...";
+
+        try {
+          const querySnapshot = await getDocs(collection(db, "products"));
+          productsList.innerHTML = "";
+
+          querySnapshot.forEach((doc) => {
+            const product = doc.data();
+            const productItem = document.createElement("div");
+            productItem.className = "product-item";
+            productItem.innerHTML = `
+        <div class="product-header">
+          <img src="${product.logo.url}" class="product-logo" alt="${
+              product.name
+            } Logo" />
+          <div>
+            <h3>${product.name}</h3>
+            <p>${product.description}</p>
+            <small>Current version: ${product.version || "1.0"}</small>
+          </div>
+        </div>
+        <button onclick="toggleEditForm('${doc.id}')">Edit</button>
+        <button class="delete-button" onclick="deleteProduct('${
+          doc.id
+        }')">Delete</button>
+        <div id="editForm-${doc.id}" class="edit-form">
+          <div class="form-group">
+            <label>Product Name:</label>
+            <input type="text" id="editName-${doc.id}" value="${
+              product.name
+            }" />
+          </div>
+          <div class="form-group">
+            <label>Product Description:</label>
+            <textarea id="editDescription-${doc.id}" rows="4">${
+              product.description
+            }</textarea>
+          </div>
+          <div class="form-group">
+            <label>Version:</label>
+            <input type="text" id="editVersion-${doc.id}" value="${
+              product.version || "1.0"
+            }" />
+          </div>
+          <div class="form-group">
+            <label>Update Executable (.exe):</label>
+            <input type="file" id="editExe-${
+              doc.id
+            }" accept=".exe" class="file-input" />
+            <div id="editExeProgress-${
+              doc.id
+            }" class="progress-bar" style="display: none">
+              <div class="progress"></div>
+            </div>
+            <small>Current: ${product.executable.name}</small>
+          </div>
+          <div class="form-group">
+            <label>Update Logo:</label>
+            <input type="file" id="editLogo-${
+              doc.id
+            }" accept="image/*" class="file-input" />
+            <div id="editLogoProgress-${
+              doc.id
+            }" class="progress-bar" style="display: none">
+              <div class="progress"></div>
+            </div>
+            <img id="editLogoPreview-${
+              doc.id
+            }" class="preview-image" style="display: none" />
+          </div>
+          <button onclick="updateProduct('${doc.id}')">Save Changes</button>
+        </div>
+      `;
+            productsList.appendChild(productItem);
+
+            // Add logo preview functionality
+            const logoInput = document.getElementById(`editLogo-${doc.id}`);
+            logoInput.addEventListener("change", function (e) {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                  const preview = document.getElementById(
+                    `editLogoPreview-${doc.id}`
+                  );
+                  preview.src = e.target.result;
+                  preview.style.display = "block";
+                };
+                reader.readAsDataURL(file);
+              }
+            });
+          });
+        } catch (error) {
+          productsList.innerHTML = "Failed to load products: " + error.message;
+        }
+      }
+      window.toggleEditForm = function (productId) {
+        const editForm = document.getElementById(`editForm-${productId}`);
+        if (
+          editForm.style.display === "none" ||
+          editForm.style.display === ""
+        ) {
+          editForm.style.display = "block";
+        } else {
+          editForm.style.display = "none";
+        }
+      };
+
+      window.updateProduct = async function (productId) {
+        try {
+          const productRef = doc(db, "products", productId);
+          const productDoc = await getDoc(productRef);
+          const currentProduct = productDoc.data();
+
+          const updates = {
+            name: document.getElementById(`editName-${productId}`).value,
+            description: document.getElementById(`editDescription-${productId}`)
+              .value,
+            version: document.getElementById(`editVersion-${productId}`).value,
+          };
+
+          // Handle executable update
+          const exeFile = document.getElementById(`editExe-${productId}`)
+            .files[0];
+          if (exeFile) {
+            // Delete old exe file if it exists
+            try {
+              const oldExeRef = ref(
+                storage,
+                `executables/${currentProduct.name}/${currentProduct.executable.name}`
+              );
+              await deleteObject(oldExeRef);
+            } catch (error) {
+              console.log("No old exe file to delete or error:", error);
+            }
+
+            // Upload new exe file
+            const exeRef = ref(
+              storage,
+              `executables/${updates.name}/${exeFile.name}`
+            );
+            const exeUpload = uploadBytesResumable(exeRef, exeFile);
+
+            exeUpload.on("state_changed", (snapshot) => {
+              const progress =
+                (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              const progressBar = document.getElementById(
+                `editExeProgress-${productId}`
+              );
+              progressBar.style.display = "block";
+              progressBar.querySelector(".progress").style.width =
+                progress + "%";
+            });
+
+            await new Promise((resolve, reject) => {
+              exeUpload.on("state_changed", null, reject, resolve);
+            });
+
+            updates.executable = {
+              name: exeFile.name,
+              url: await getDownloadURL(exeRef),
+              size: exeFile.size,
+              lastModified: new Date(exeFile.lastModified),
+              type: exeFile.type,
+            };
+          }
+
+          // Handle logo update
+          const logoFile = document.getElementById(`editLogo-${productId}`)
+            .files[0];
+          if (logoFile) {
+            // Delete old logo if it exists
+            try {
+              const oldLogoRef = ref(
+                storage,
+                `logos/${currentProduct.name}/${currentProduct.logo.name}`
+              );
+              await deleteObject(oldLogoRef);
+            } catch (error) {
+              console.log("No old logo to delete or error:", error);
+            }
+
+            // Upload new logo
+            const logoRef = ref(
+              storage,
+              `logos/${updates.name}/${logoFile.name}`
+            );
+            const logoUpload = uploadBytesResumable(logoRef, logoFile);
+
+            logoUpload.on("state_changed", (snapshot) => {
+              const progress =
+                (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              const progressBar = document.getElementById(
+                `editLogoProgress-${productId}`
+              );
+              progressBar.style.display = "block";
+              progressBar.querySelector(".progress").style.width =
+                progress + "%";
+            });
+
+            await new Promise((resolve, reject) => {
+              logoUpload.on("state_changed", null, reject, resolve);
+            });
+
+            updates.logo = {
+              name: logoFile.name,
+              url: await getDownloadURL(logoRef),
+              size: logoFile.size,
+              lastModified: new Date(logoFile.lastModified),
+              type: logoFile.type,
+            };
+          }
+
+          await updateDoc(productRef, updates);
+          showMessage("Product updated successfully!", "success");
+          loadProducts(); // Reload the products list
+        } catch (error) {
+          showMessage("Failed to update product: " + error.message, "error");
+        }
+      };
+
+      window.deleteProduct = async function (productId) {
+        try {
+          const productRef = doc(db, "products", productId);
+          const productDoc = await getDoc(productRef);
+          const product = productDoc.data();
+
+          // Delete files from storage
+          const exeRef = ref(
+            storage,
+            `executables/${product.name}/${product.executable.name}`
+          );
+          const logoRef = ref(
+            storage,
+            `logos/${product.name}/${product.logo.name}`
+          );
+          await deleteObject(exeRef);
+          await deleteObject(logoRef);
+
+          // Delete document from Firestore
+          await deleteDoc(productRef);
+          showMessage("Product deleted successfully!", "success");
+          loadProducts();
+        } catch (error) {
+          showMessage("Failed to delete product: " + error.message, "error");
+        }
+      };
+
+      async function loadArticles() {
+        const articlesList = document.getElementById("articlesList");
+        articlesList.textContent = "Loading articles...";
+        try {
+          const articlesSnapshot = await getDocs(collection(db, "articles"));
+          articlesList.innerHTML = "";
+          articlesSnapshot.forEach(docSnap => {
+            const article = docSnap.data();
+            const articleDiv = document.createElement("div");
+            articleDiv.innerHTML = `
+              <h4>${article.title}</h4>
+              <p>${article.date}</p>
+              <div>${article.content.map(section => {
+                if (section.type === "text") {
+                  return `<p>${section.content}</p>`;
+                } else if (section.type === "image") {
+                  return `<img src="${section.content}" alt="Article Image" />`;
+                }
+                return '';
+              }).join('')}</div>
+              <button onclick="editArticle('${docSnap.id}')">Edit</button>
+              <button onclick="deleteArticle('${docSnap.id}')">Delete</button>
+              <hr />
+            `;
+            articlesList.appendChild(articleDiv);
+          });
+        } catch (error) {
+          articlesList.textContent = "Failed to load articles: " + error.message;
+        }
+      }
+
+      window.createArticle = async function () {
+        try {
+          const title = document.getElementById("articleTitle").value;
+          const date = document.getElementById("articleDate").value;
+          const sections = document.getElementById("articleSections").children;
+
+          if (!title || !date || sections.length === 0) {
+            showMessage("Please fill in all article fields", "error");
+            return;
+          }
+
+          showMessage("Publishing article...", "success");
+
+          const articleContent = [];
+          for (const section of sections) {
+            if (section.querySelector("textarea")) {
+              articleContent.push({
+                type: "text",
+                content: section.querySelector("textarea").value,
+              });
+            } else if (section.querySelector("input[type='file']")) {
+              const file = section.querySelector("input[type='file']").files[0];
+              if (file) {
+                const imgRef = ref(storage, `articles/${title}/${file.name}`);
+                const imgUpload = uploadBytesResumable(imgRef, file);
+                await new Promise((resolve, reject) => {
+                  imgUpload.on("state_changed", null, reject, resolve);
+                });
+                const imgUrl = await getDownloadURL(imgRef);
+                articleContent.push({
+                  type: "image",
+                  content: imgUrl,
+                });
+              }
+            }
+          }
+
+          await addDoc(collection(db, "articles"), {
+            title,
+            date,
+            content: articleContent,
+            createdBy: auth.currentUser.email,
+            createdAt: new Date(),
+          });
+
+          showMessage("Article published!", "success");
+          loadArticles();
+        } catch (error) {
+          showMessage("Failed to publish article: " + error.message, "error");
+        }
+      };
+
+      window.addTextSection = function () {
+        const section = document.createElement("div");
+        section.classList.add("form-group");
+        section.innerHTML = `
+          <textarea placeholder="Text section..."></textarea>
+          <button onclick="removeSection(this)">Remove</button>
+        `;
+        document.getElementById("articleSections").appendChild(section);
+      };
+
+      window.addImageSection = function () {
+        const section = document.createElement("div");
+        section.classList.add("form-group");
+        section.innerHTML = `
+          <input type="file" accept="image/*" />
+          <button onclick="removeSection(this)">Remove</button>
+        `;
+        document.getElementById("articleSections").appendChild(section);
+      };
+
+      window.removeSection = function (button) {
+        button.parentElement.remove();
+      };
+
+      window.editArticle = function (articleId) {
+        // Minimal example: fetch article data, prompt user for changes, then call updateDoc(...)
+      };
+
+      window.deleteArticle = async function (articleId) {
+        try {
+          await deleteDoc(doc(db, "articles", articleId));
+          showMessage("Article deleted!", "success");
+          loadArticles();
+        } catch (error) {
+          showMessage("Failed to delete article: " + error.message, "error");
+        }
+      };
+
+      // Check auth state
+      onAuthStateChanged(auth, (user) => {
+        if (user && user.email === "stiaan44@gmail.com") {
+          document.getElementById("loginSection").style.display = "none";
+          document.getElementById("adminSection").style.display = "block";
+          loadProducts(); // Load products when admin logs in
+        } else {
+          document.getElementById("loginSection").style.display = "block";
+          document.getElementById("adminSection").style.display = "none";
+        }
+      });
+    </script>
+    <script src="./scripts/grid.js"></script>
+  </body>
+</html>

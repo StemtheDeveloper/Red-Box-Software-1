@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 329 89">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: #ff2c3c;
+      }
+
+      .cls-3 {
+        fill: #ff7866;
+      }
+
+      .cls-2 {
+        font-family: Blocked, Blocked;
+        font-size: 30.03px;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer_1">
+    <g>
+      <g>
+        <polygon class="cls-1" points="329 89 0 89 8 0 321 0 329 89"/>
+        <polygon class="cls-3" points="322 56 7 56 12.1 4 316.9 4 322 56"/>
+      </g>
+      <text class="cls-2" transform="translate(108.03 42.26) scale(1.02 1)"><tspan x="0" y="0">Shoot</tspan></text>
+    </g>
+  </g>
+</svg>

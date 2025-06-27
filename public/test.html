@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <title>Red Box Software</title>
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/10.9.0/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/10.9.0/firebase-auth-compat.js"></script>
+    <!-- <script defer src="/__/firebase/10.9.0/firebase-database-compat.js"></script> -->
+    <script
+      defer
+      src="/__/firebase/10.9.0/firebase-firestore-compat.js"
+    ></script>
+    <script
+      defer
+      src="/__/firebase/10.9.0/firebase-functions-compat.js"
+    ></script>
+    <!-- <script defer src="/__/firebase/10.9.0/firebase-messaging-compat.js"></script> -->
+    <script defer src="/__/firebase/10.9.0/firebase-storage-compat.js"></script>
+    <script
+      defer
+      src="/__/firebase/10.9.0/firebase-analytics-compat.js"
+    ></script>
+    <!-- <script defer src="/__/firebase/10.9.0/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/10.9.0/firebase-performance-compat.js"></script> -->
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=false"></script>
+    <script src="./scripts/script.js" type="module"></script>
+  </head>
+  <body>
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-analytics.js";
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
+
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      const firebaseConfig = {
+        apiKey: "AIzaSyC2CwIcLmGi46-VeVBgGuzgjl1rAN_S3IY",
+        authDomain: "red-box-software.firebaseapp.com",
+        projectId: "red-box-software",
+        storageBucket: "red-box-software.appspot.com",
+        messagingSenderId: "94993930256",
+        appId: "1:94993930256:web:b47f330bee30bddffb1295",
+        measurementId: "G-2LX6NFYS1J",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+    </script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const loadEl = document.querySelector("#load");
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        // // The Firebase SDK is initialized and available here!
+        //
+        firebase.auth().onAuthStateChanged((user) => {});
+        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+        firebase
+          .firestore()
+          .doc("/foo/bar")
+          .get()
+          .then(() => {});
+        firebase
+          .functions()
+          .httpsCallable("yourFunction")()
+          .then(() => {});
+        // firebase.messaging().requestPermission().then(() => { });
+        firebase
+          .storage()
+          .ref("/path/to/ref")
+          .getDownloadURL()
+          .then(() => {});
+        firebase.analytics(); // call to activate
+        firebase.analytics().logEvent("tutorial_completed");
+        // firebase.performance(); // call to activate
+        //
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+
+        try {
+          let app = firebase.app();
+          let features = [
+            "auth",
+            "firestore",
+            "functions",
+            "storage",
+            "analytics",
+          ].filter((feature) => typeof app[feature] === "function");
+          loadEl.textContent = `Firebase SDK loaded with ${features.join(
+            ", "
+          )}`;
+        } catch (e) {
+          console.error(e);
+          loadEl.textContent =
+            "Error loading the Firebase SDK, check the console.";
+        }
+      });
+    </script>
+
+    <nav></nav>
+    <div class="grid-controls">
+      <label for="effect-range">Effect Area:</label>
+      <input type="range" id="effect-range" min="1" max="5" value="1" />
+    </div>
+    <div class="grid"></div>
+    <main>
+      <div id="landingArea">click here to show the rocket</div>
+
+      <img
+        draggable="true"
+        id="spaceship"
+        src="./Images/Red Rocket.svg"
+        style="position: fixed; bottom: 50; left: 50%"
+      />
+
+      <div id="shipControls">
+        <img
+          id="dpadImage"
+          src="./Images/D-pad.svg"
+          alt="Directional controls for rocket"
+        />
+        <img
+          id="spaceBarImage"
+          src="./Images/Space.svg"
+          alt="Space bar to shoot lazers"
+        />
+      </div>
+
+      <div class="homeContent">
+        <br />
+        <br />
+        <h1 class="destructible salutations">Hey! ❤️</h1>
+        <div class="destructible salutations">Welcome to Red Box Software</div>
+        <div class="destructible salutations">
+          <!-- creepy -->
+          <!-- <img
+            id="redBoxSupport"
+            src="./Images/Red-Box-Support-image-2-one-toof.png"
+            alt="The Red Box Software Emotional support animal (It's just a slightly creepy cube with eyes and teeth)"
+          /> -->
+        </div>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+
+        <div class="destructible">
+          <p class="intro">
+            We are an NZ based software development company that specializes in
+            creating powerful, user-friendly and beautiful software solutions.
+
+            <br />
+            <br />
+            Or strengths are in web development, app development, and robotic
+            process automation. But we are always looking to expand our
+            horizons. So if you have a project in mind, we would love to hear
+            about it!
+
+            <br />
+            <br />
+          </p>
+        </div>
+        <h2 class="destructible">Our Products</h2>
+        <div class="products destructible">
+          <div class="homeProductCont">
+            <div class="homeProduct">
+              <h4>Recstar</h4>
+              <a href="products.html"
+                ><img
+                  src="./Images/Recstar Main.svg"
+                  alt="Recstar an app for recording your screen and key presses"
+                  width="220"
+                />
+              </a>
+            </div>
+
+            <div class="homeProduct">
+              <h4>RBS ToDo</h4>
+              <a href="products.html">
+                <img
+                  src="./Images/RBS TD white.svg"
+                  alt="A to do list app by Red Box Software. It's an exe so you can download it and run it on your windows machine"
+                  width="200"
+                />
+              </a>
+            </div>
+            <div class="homeProduct">
+              <h4>Portable Home</h4>
+              <p>website example</p>
+              <a href="https://portablehome.co.nz/">
+                <img
+                  src="./Images/Portable home.svg"
+                  alt="A customer website by Red Box Software. It's a Tauranga based business that sells portable cabins with a unique pill design"
+                  width="180"
+                />
+              </a>
+            </div>
+            <div class="homeProduct">
+              <h4>One Page Games</h4>
+              <p>website example</p>
+              <a href="https://onepagegames.net/index.html">
+                <img
+                  src="./Images/OPG.svg"
+                  alt="A personal project by Red Box Software. It's a collection of simple games that can be played in the browser"
+                  width="200"
+                />
+              </a>
+            </div>
+          </div>
+        </div>
+        <h2>Design Work</h2>
+        <h4>Portable Home Pamphlet</h4>
+        <p>click and drag to rotate</p>
+        <div class="design-work">
+          <!-- First Card -->
+          <div class="flip-container" data-flipper-id="1">
+            <div class="flipper">
+              <div class="front">
+                <img
+                  src="./Images/Portable home brochure page one.png"
+                  alt="Front of pamphlet"
+                />
+              </div>
+              <div class="back">
+                <img
+                  src="./Images/Portable home brochure page two.png"
+                  alt="Back of pamphlet"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Second Card -->
+          <div class="flip-container" data-flipper-id="2">
+            <div class="flipper">
+              <div class="front">
+                <img
+                  src="./Images/another-front-image.png"
+                  alt="Front of second pamphlet"
+                />
+              </div>
+              <div class="back">
+                <img
+                  src="./Images/another-back-image.png"
+                  alt="Back of second pamphlet"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="news destructible"></div>
+      </div>
+    </main>
+
+    <div class="spacer"></div>
+
+    <div class="horizontalSpacer"></div>
+    <!-- script for flippable card -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        let isDragging = false;
+        let startX;
+        let rotationSpeed = 0.8;
+        let currentRotation = 0;
+        const flipper = document.getElementsByClassName("flipper");
+        const container = document.getElementsByClassName("flipContainer");
+
+        // Apply any saved rotation on page load
+        if (localStorage.getItem("cardRotation")) {
+          currentRotation = parseFloat(localStorage.getItem("cardRotation"));
+          flipper.style.transform = `rotateY(${currentRotation}deg)`;
+        }
+
+        container.addEventListener("mousedown", (e) => {
+          isDragging = true;
+          startX = e.clientX;
+          flipper.style.transition = "none";
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!isDragging) return;
+          const deltaX = e.clientX - startX;
+          const rotation = currentRotation + deltaX * rotationSpeed;
+          flipper.style.transform = `rotateY(${rotation}deg)`;
+        });
+
+        document.addEventListener("mouseup", (e) => {
+          if (!isDragging) return;
+          isDragging = false;
+          const deltaX = e.clientX - startX;
+          currentRotation += deltaX * rotationSpeed;
+          localStorage.setItem("cardRotation", currentRotation);
+          flipper.style.transform = `rotateY(${currentRotation}deg)`;
+        });
+
+        container.addEventListener("dragstart", (e) => {
+          e.preventDefault();
+        });
+      });
+    </script>
+
+    <script>
+      const spaceship = document.getElementById("spaceship");
+
+      let spaceshipX = window.innerWidth / 2;
+      let spaceshipY = window.innerHeight / 2;
+      let spaceshipSpeedX = 0;
+      let spaceshipSpeedY = 0;
+      let lasers = [];
+
+      let upPressed = false;
+      let downPressed = false;
+      let rightPressed = false;
+      let leftPressed = false;
+      let landed = true;
+      console.log("Landed: ", landed);
+
+      let currentAngle = 0; // Default angle
+      let lerpFactor = 0.05; // Adjust this value to change the speed of rotation
+
+      let isDragging = false;
+      let startX;
+      let rotationSpeed = 0.8; // Increased rotation sensitivity
+      let currentRotation = 0;
+      const flipper = document.getElementById("flipper");
+      const container = document.getElementById("flipContainer");
+
+      // Apply any saved rotation on page load
+      if (localStorage.getItem("cardRotation")) {
+        currentRotation = parseFloat(localStorage.getItem("cardRotation"));
+        flipper.style.transform = `rotateY(${currentRotation}deg)`;
+      }
+
+      container.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        flipper.style.transition = "none"; // Remove transition during drag
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+
+        const deltaX = e.clientX - startX;
+        const rotation = currentRotation + deltaX * rotationSpeed;
+
+        flipper.style.transform = `rotateY(${rotation}deg)`;
+      });
+
+      document.addEventListener("mouseup", (e) => {
+        if (!isDragging) return;
+
+        isDragging = false;
+        const deltaX = e.clientX - startX;
+        currentRotation += deltaX * rotationSpeed;
+
+        // Save the rotation state
+        localStorage.setItem("cardRotation", currentRotation);
+
+        flipper.style.transform = `rotateY(${currentRotation}deg)`;
+      });
+
+      // Prevent dragging from selecting text
+      container.addEventListener("dragstart", (e) => {
+        e.preventDefault();
+      });
+
+      // text creation
+      const textContainer = document.getElementById("textContainer");
+
+      const rocketShadow = document.createElement("img");
+      rocketShadow.src = "./Images/Red Rocket Shadow.png";
+      rocketShadow.style.position = "fixed";
+      rocketShadow.style.zIndex = "9";
+      rocketShadow.style.width = "100px";
+      rocketShadow.style.height = "100px";
+      rocketShadow.style.opacity = "0.5";
+      document.body.appendChild(rocketShadow);
+
+      let contentXPosition = 0.1;
+      let contentYPositionMod = 0.15;
+
+      // content positon aliases
+
+      let cxp = contentXPosition;
+      let cypm = contentYPositionMod;
+
+      document.addEventListener("DOMContentLoaded", function () {
+        if (landed) {
+          rocketShadow.style.opacity = "0";
+          spaceship.style.opacity = "0";
+        } else {
+          spaceship.style.opacity = "1";
+          rocketShadow.style.opacity = "0.5";
+        }
+      });
+
+      function moveSpaceship() {
+        // Update spaceship speed based on key presses
+        if (upPressed) spaceshipSpeedY += 0.3;
+        if (downPressed) spaceshipSpeedY -= 0.3;
+        if (rightPressed) spaceshipSpeedX += 0.3;
+        if (leftPressed) spaceshipSpeedX -= 0.3;
+
+        // Calculate potential new position
+        let newSpaceshipX = spaceshipX + spaceshipSpeedX;
+        let newSpaceshipY = spaceshipY + spaceshipSpeedY;
+
+        let rect = spaceship.getBoundingClientRect();
+        let spaceshipWidth = rect.width;
+        let spaceshipHeight = rect.height;
+
+        // Check boundaries and adjust speed accordingly
+        if (newSpaceshipX < 0) {
+          spaceshipSpeedX = 0;
+          spaceshipX = 0; // Reset position to the exact left edge
+        } else if (newSpaceshipX + spaceshipWidth > window.innerWidth) {
+          spaceshipSpeedX = 0;
+          spaceshipX = window.innerWidth - spaceshipWidth; // Reset to exact right edge
+        }
+
+        if (newSpaceshipY < 0) {
+          spaceshipSpeedY = 0;
+          spaceshipY = 0; // Reset position to the exact top edge
+        } else if (newSpaceshipY + spaceshipHeight > window.innerHeight) {
+          spaceshipSpeedY = 0;
+          spaceshipY = window.innerHeight - spaceshipHeight; // Reset to exact bottom edge
+        }
+
+        // Update position based on adjusted speeds (unchanged)
+        spaceshipX += spaceshipSpeedX;
+        spaceshipY += spaceshipSpeedY;
+
+        // Calculate target angle based on key presses
+        let targetAngle = currentAngle;
+        if (upPressed && !downPressed && !rightPressed && !leftPressed) {
+          targetAngle = 0;
+        } else if (downPressed && !upPressed && !rightPressed && !leftPressed) {
+          targetAngle = 180;
+        } else if (rightPressed && !leftPressed && !upPressed && !downPressed) {
+          targetAngle = 90;
+        } else if (leftPressed && !rightPressed && !upPressed && !downPressed) {
+          targetAngle = 270;
+        } else if (upPressed && rightPressed && !downPressed && !leftPressed) {
+          targetAngle = 45;
+        } else if (upPressed && leftPressed && !downPressed && !rightPressed) {
+          targetAngle = 315;
+        } else if (downPressed && rightPressed && !upPressed && !leftPressed) {
+          targetAngle = 135;
+        } else if (downPressed && leftPressed && !upPressed && !rightPressed) {
+          targetAngle = 225;
+        }
+
+        // Smoothly rotate spaceship towards target angle
+        let diff = targetAngle - currentAngle;
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        currentAngle += diff * lerpFactor;
+
+        // Apply position and rotation to spaceship element
+        spaceship.style.transform = `rotate(${currentAngle}deg)`;
+        spaceship.style.left = `${spaceshipX}px`;
+        spaceship.style.bottom = `${spaceshipY}px`;
+        rocketShadow.style.transform = `rotate(${currentAngle}deg)`;
+        rocketShadow.style.left = `${spaceshipX}px`;
+        rocketShadow.style.bottom = `${spaceshipY - 20}px`;
+
+        // Update laser positions
+        updateLasers();
+
+        // Apply friction to slow down the spaceship gradually
+        spaceshipSpeedX *= 0.97;
+        spaceshipSpeedY *= 0.97;
+
+        // Continue the animation loop
+        requestAnimationFrame(moveSpaceship);
+      }
+
+      function shootLaser() {
+        let laser = document.createElement("div");
+        laser.id = "laser";
+        laser.style.position = "fixed";
+        laser.style.zIndex = "10"; // Ensure lasers are on top
+
+        // Calculate center of spaceship
+        let laserX = spaceshipX + spaceship.offsetWidth / 2;
+        let laserY = spaceshipY + spaceship.offsetHeight / 2;
+
+        // Calculate offset based on the ship's angle
+        let offsetX = 15 * Math.sin((currentAngle * Math.PI) / 180);
+        let offsetY = -15 * Math.cos((currentAngle * Math.PI) / 180);
+
+        // Prevent scrolling by limiting the initial laser position
+        laserX = Math.max(
+          0,
+          Math.min(laserX, window.innerWidth - laser.offsetWidth)
+        );
+        laserY = Math.max(
+          0,
+          Math.min(laserY, window.innerHeight - laser.offsetHeight)
+        );
+
+        // Apply rotation to the laser to match the ship's angle
+        laser.style.transform = `rotate(${currentAngle}deg)`;
+        laser.style.transformOrigin = "center left"; // Rotate from the center-left point
+
+        laser.style.left = `${laserX}px`;
+        laser.style.bottom = `${laserY}px`;
+        laser.style.width = "2px";
+        laser.style.height = "10px";
+        laser.style.background = "red";
+        document.body.appendChild(laser);
+
+        laser.angle = currentAngle; // Store the current angle for laser movement
+        lasers.push(laser);
+      }
+
+      function updateLasers() {
+        for (let i = 0; i < lasers.length; i++) {
+          let laser = lasers[i];
+          let laserX = parseInt(laser.style.left);
+          let laserY = parseInt(laser.style.bottom);
+
+          // Move laser
+          laserX += 20 * Math.sin((laser.angle * Math.PI) / 180);
+          laserY += 20 * Math.cos((laser.angle * Math.PI) / 180);
+
+          laser.style.left = `${laserX}px`;
+          laser.style.bottom = `${laserY}px`;
+
+          // Remove if outside viewport
+          if (
+            laserX < 0 ||
+            laserX > window.innerWidth ||
+            laserY < 0 ||
+            laserY > window.innerHeight
+          ) {
+            document.body.removeChild(laser);
+            lasers.splice(i, 1);
+            i--;
+            continue;
+          }
+
+          // Check for collisions with destructible elements
+          let laserRect = laser.getBoundingClientRect();
+          let destructibles = document.getElementsByClassName("destructible");
+
+          for (let element of destructibles) {
+            let elementRect = element.getBoundingClientRect();
+
+            if (
+              laserRect.left < elementRect.right &&
+              laserRect.right > elementRect.left &&
+              laserRect.top < elementRect.bottom &&
+              laserRect.bottom > elementRect.top
+            ) {
+              // Collision detected - remove both laser and element
+              element.remove();
+              document.body.removeChild(laser);
+              lasers.splice(i, 1);
+              i--;
+              break;
+            }
+          }
+        }
+      }
+
+      window.addEventListener("keydown", (event) => {
+        switch (event.key) {
+          case "ArrowUp":
+            upPressed = true;
+            break;
+          case "ArrowDown":
+            downPressed = true;
+            break;
+          case "ArrowRight":
+            rightPressed = true;
+            break;
+          case "ArrowLeft":
+            leftPressed = true;
+            break;
+          case " ":
+            event.preventDefault();
+            shootLaser();
+            break;
+        }
+      });
+
+      window.addEventListener("keyup", (event) => {
+        switch (event.key) {
+          case "ArrowUp":
+            upPressed = false;
+            break;
+          case "ArrowDown":
+            downPressed = false;
+            break;
+          case "ArrowRight":
+            rightPressed = false;
+            break;
+          case "ArrowLeft":
+            leftPressed = false;
+            break;
+        }
+      });
+
+      const landingArea = document.getElementById("landingArea");
+
+      function updateLandingText() {
+        landingArea.textContent = landed ? "launch rocket" : "land rocket";
+      }
+
+      // Update text initially
+      updateLandingText();
+
+      landingArea.addEventListener("click", () => {
+        if (landed) {
+          spaceship.style.opacity = "1";
+          rocketShadow.style.opacity = "0.5";
+          landed = false;
+        } else {
+          spaceship.style.opacity = "0";
+          rocketShadow.style.opacity = "0";
+          landed = true;
+        }
+        updateLandingText();
+        console.log("Landed: ", landed);
+      });
+
+      moveSpaceship();
+    </script>
+
+    <script>
+      window.addEventListener("load", () => {
+        const images = document.querySelectorAll("#shipControls img");
+        const shipControls = document.getElementById("shipControls");
+        images.forEach((img) => {
+          img.style.animation = "bounceIn 1s ease-out";
+          setTimeout(() => {
+            shipControls.classList.add("hidden");
+            shipControls.style.opacity = 0;
+          }, 2000); // Delay to ensure the animation completes
+        });
+      });
+    </script>
+
+    <script>
+      const grid = document.querySelector(".grid");
+      const itemSize = 40; // Size of each item in pixels
+      const columns = Math.floor(window.innerWidth / (itemSize + 3)); // 3px gap
+      const rows = Math.floor(window.innerHeight / (itemSize + 3));
+      const itemsCount = columns * rows;
+
+      grid.style.gridTemplateColumns = `repeat(${columns}, ${itemSize}px)`;
+      grid.style.gridTemplateRows = `repeat(${rows}, ${itemSize}px)`;
+
+      grid.classList.add("list");
+
+      for (let i = 0; i < itemsCount; i++) {
+        const div = document.createElement("div");
+        div.style.backgroundColor = "rgb(209, 29, 29)";
+        div.classList.add("item");
+        grid.appendChild(div);
+      }
+
+      const listItems = document.querySelectorAll(".item");
+      let effectArea = 1;
+
+      document
+        .getElementById("effect-range")
+        .addEventListener("input", (event) => {
+          effectArea = parseInt(event.target.value);
+        });
+
+      listItems.forEach((item, index) => {
+        item.addEventListener("mouseover", () => {
+          item.style.filter = "brightness(1)";
+          item.style.transform = "translateZ(100px)";
+
+          for (let i = -effectArea; i <= effectArea; i++) {
+            for (let j = -effectArea; j <= effectArea; j++) {
+              const currentIndex = index + i * columns + j;
+              if (
+                currentIndex >= 0 &&
+                currentIndex < listItems.length &&
+                Math.floor(currentIndex / columns) ===
+                  Math.floor((index + i * columns) / columns)
+              ) {
+                if (i === 0 && j === 0) continue; // Skip the hovered item
+                listItems[currentIndex].style.filter = "brightness(0.6)";
+                listItems[
+                  currentIndex
+                ].style.transform = `translateZ(75px) rotateY(${
+                  40 * j
+                }deg) rotateX(${40 * i}deg)`;
+              }
+            }
+          }
+        });
+
+        item.addEventListener("mouseout", () => {
+          item.style.filter = "brightness(0)";
+          item.style.transform = "none";
+
+          for (let i = -effectArea; i <= effectArea; i++) {
+            for (let j = -effectArea; j <= effectArea; j++) {
+              const currentIndex = index + i * columns + j;
+              if (
+                currentIndex >= 0 &&
+                currentIndex < listItems.length &&
+                Math.floor(currentIndex / columns) ===
+                  Math.floor((index + i * columns) / columns)
+              ) {
+                if (i === 0 && j === 0) continue; // Skip the hovered item
+                listItems[currentIndex].style.filter = "brightness(0)";
+                listItems[currentIndex].style.transform = "none";
+              }
+            }
+          }
+        });
+      });
+
+      // Adjust grid on window resize
+      window.addEventListener("resize", () => {
+        location.reload();
+      });
+    </script>
+
+    <script src="./scripts/footer.js"></script>
+  </body>
+</html>

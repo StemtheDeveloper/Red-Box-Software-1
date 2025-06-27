@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      * {
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+      .flip-container {
+        perspective: 1000px;
+        width: 300px;
+        height: 400px;
+        margin: 50px auto;
+        cursor: grab;
+      }
+
+      .flip-container:active {
+        cursor: grabbing;
+      }
+
+      .flipper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        transition: transform 0.3s;
+      }
+
+      .front,
+      .back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .front {
+        background: #fff;
+        z-index: 2;
+      }
+
+      .back {
+        background: #f8f8f8;
+        transform: rotateY(180deg);
+      }
+
+      /* Images fill their container */
+      .front img,
+      .back img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flip-container" id="flipContainer">
+      <div class="flipper" id="flipper">
+        <div class="front">
+          <img
+            src="./Images/Portable home brochure page one.png"
+            alt="Front of pamphlet"
+          />
+        </div>
+        <div class="back">
+          <img
+            src="./Images/Portable home brochure page two.png"
+            alt="Back of pamphlet"
+          />
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let isDragging = false;
+      let startX;
+      let rotationSpeed = 0.8; // Increased rotation sensitivity
+      let currentRotation = 0;
+      const flipper = document.getElementById("flipper");
+      const container = document.getElementById("flipContainer");
+
+      // Apply any saved rotation on page load
+      if (localStorage.getItem("cardRotation")) {
+        currentRotation = parseFloat(localStorage.getItem("cardRotation"));
+        flipper.style.transform = `rotateY(${currentRotation}deg)`;
+      }
+
+      container.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        flipper.style.transition = "none";
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+
+        const deltaX = e.clientX - startX;
+        const rotation = currentRotation + deltaX * rotationSpeed;
+
+        flipper.style.transform = `rotateY(${rotation}deg)`;
+      });
+
+      document.addEventListener("mouseup", (e) => {
+        if (!isDragging) return;
+
+        isDragging = false;
+        const deltaX = e.clientX - startX;
+        currentRotation += deltaX * rotationSpeed;
+
+        // Save the rotation state
+        localStorage.setItem("cardRotation", currentRotation);
+
+        flipper.style.transform = `rotateY(${currentRotation}deg)`;
+      });
+
+      // Prevent dragging from selecting text
+      container.addEventListener("dragstart", (e) => {
+        e.preventDefault();
+      });
+    </script>
+  </body>
+</html>

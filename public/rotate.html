@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Ring Rotation</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      * {
+        user-select: none;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        perspective: 7000px;
+        background-color: #333;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .ring {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        transform-style: preserve-3d;
+        cursor: grab;
+        transform: rotateX(0deg) rotateY(0deg);
+        scale: 0.1;
+      }
+
+      .item {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        /* line-height: 100px; */
+        text-align: center;
+
+        background-color: #ff6347;
+        color: white;
+        font-size: 20px;
+        border-radius: 10px;
+        zoom: 10;
+      }
+
+      .rotateText {
+        font-size: 8px;
+      }
+
+      .textBlock {
+        background-color: #000;
+        width: 104%;
+        height: 1050px;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        overflow: hidden; /* Hide scroll bars */
+      }
+
+      /* Hide scroll bars for WebKit browsers (Chrome, Safari) */
+      iframe::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* Hide scroll bars for Firefox */
+      iframe {
+        scrollbar-width: none; /* Firefox */
+      }
+
+      /* 3D Ring Formation */
+      .ring .item:nth-child(1) {
+        transform: rotateY(0deg) translateZ(300px);
+      }
+      .ring .item:nth-child(2) {
+        transform: rotateY(36deg) translateZ(300px);
+      }
+      .ring .item:nth-child(3) {
+        transform: rotateY(72deg) translateZ(300px);
+      }
+      .ring .item:nth-child(4) {
+        transform: rotateY(108deg) translateZ(300px);
+      }
+      .ring .item:nth-child(5) {
+        transform: rotateY(144deg) translateZ(300px);
+      }
+      .ring .item:nth-child(6) {
+        transform: rotateY(180deg) translateZ(300px);
+      }
+      .ring .item:nth-child(7) {
+        transform: rotateY(216deg) translateZ(300px);
+      }
+      .ring .item:nth-child(8) {
+        transform: rotateY(252deg) translateZ(300px);
+      }
+      .ring .item:nth-child(9) {
+        transform: rotateY(288deg) translateZ(300px);
+      }
+      .ring .item:nth-child(10) {
+        transform: rotateY(324deg) translateZ(300px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ring">
+      <div class="item">
+        <iframe
+          id="opb"
+          src="https://the-one-page-bible-22.firebaseapp.com/index.html"
+          scrolling="no"
+        >
+        </iframe>
+        <div class="textBlock">
+          <p class="rotateText">The Bible on one page!</p>
+          <p class="rotateText">scroll to zoom in/out</p>
+        </div>
+      </div>
+      <div class="item">
+        <iframe id="portableHome" src="https://portablehome.co.nz/"></iframe>
+        <div class="textBlock">
+          <p class="rotateText">Created with react</p>
+          <p class="rotateText">Has built in CMS system</p>
+        </div>
+      </div>
+      <div class="item">
+        <iframe id="opg" src="https://onepagegames.net/"></iframe>
+        <div class="textBlock">
+          <p class="rotateText">A website for hosting and uploading games</p>
+          <p class="rotateText">You can play them here!</p>
+        </div>
+      </div>
+      <div class="item">
+        <iframe
+          class="itemIframe"
+          id="blokz"
+          src="blokz.html"
+          scrolling="yes"
+        ></iframe>
+        <div class="textBlock">
+          <p class="rotateText">A physics game</p>
+          <p class="rotateText">Right click to create</p>
+          <p class="rotateText">Left click to drag</p>
+        </div>
+      </div>
+      <div class="item">5</div>
+      <div class="item">6</div>
+      <div class="item">7</div>
+      <div class="item">8</div>
+      <div class="item">9</div>
+      <div class="item">10</div>
+    </div>
+
+    <!-- <script>
+      document.getElementById("blokz").onload = function () {
+        var iframe = document.getElementById("blokz").contentWindow.document;
+        iframe.body.style.transform = "scale(0.8)"; // Scale to 10%
+        iframe.body.style.transformOrigin = "0 0"; // Set transform origin to top-left corner
+        iframe.body.style.width = "1000%"; // Adjust the width to counteract scaling
+        iframe.body.style.height = "1000%"; // Adjust the height to counteract scaling
+      };
+
+      document.getElementById("opb").onload = function () {
+        var iframe = document.getElementById("opb").contentWindow.document;
+        iframe.body.style.transform = "scale(0.1)";
+        iframe.body.style.transformOrigin = "0 0";
+        iframe.body.style.width = "1000%";
+        iframe.body.style.height = "1000%";
+      };
+
+      document.getElementById("portableHome").onload = function () {
+        var iframe =
+          document.getElementById("portableHome").contentWindow.document;
+        iframe.body.style.transform = "scale(0.1)";
+        iframe.body.style.transformOrigin = "0 0";
+        iframe.body.style.width = "1000%";
+        iframe.body.style.height = "1000%";
+      };
+
+      document.getElementById("opg").onload = function () {
+        var iframe = document.getElementById("opg").contentWindow.document;
+        iframe.body.style.transform = "scale(0.1)";
+        iframe.body.style.transformOrigin = "0 0";
+        iframe.body.style.width = "1000%";
+        iframe.body.style.height = "1000%";
+      };
+    </script> -->
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const ring = document.querySelector(".ring");
+        let isDragging = false;
+        let lastX = 0;
+        let lastY = 0;
+        let rotationX = 0;
+        let rotationY = 0;
+
+        // Handle Dragging
+        ring.addEventListener("mousedown", (e) => {
+          isDragging = true;
+          lastX = e.clientX;
+          lastY = e.clientY;
+          ring.style.cursor = "grabbing";
+        });
+
+        ring.addEventListener("touchstart", (e) => {
+          isDragging = true;
+          lastX = e.touches[0].clientX;
+          lastY = e.touches[0].clientY;
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (isDragging) {
+            const deltaX = e.clientX - lastX;
+            const deltaY = e.clientY - lastY;
+            rotationX -= deltaY * 0.2;
+            rotationY += deltaX * 0.2;
+            ring.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+            lastX = e.clientX;
+            lastY = e.clientY;
+          }
+        });
+
+        document.addEventListener("touchmove", (e) => {
+          if (isDragging) {
+            const deltaX = e.touches[0].clientX - lastX;
+            const deltaY = e.touches[0].clientY - lastY;
+            rotationX -= deltaY * 0.2;
+            rotationY += deltaX * 0.2;
+            ring.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+            lastX = e.touches[0].clientX;
+            lastY = e.touches[0].clientY;
+          }
+        });
+
+        document.addEventListener("mouseup", () => {
+          isDragging = false;
+          ring.style.cursor = "grab";
+        });
+
+        document.addEventListener("touchend", () => {
+          isDragging = false;
+        });
+
+        // Handle Scrolling
+        document.addEventListener("wheel", (e) => {
+          rotationY += e.deltaY * 0.1;
+          ring.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+        });
+      });
+    </script>
+  </body>
+</html>

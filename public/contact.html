@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Contact Us - Red Box Software</title>
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <script src="./scripts/script.js" type="module"></script>
+
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow-x: hidden;
+        background: #000;
+        font-family: Arial, sans-serif;
+      }
+
+      .night-sky {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        /* background: linear-gradient(to bottom, #000022, #000); */
+        overflow: hidden;
+      }
+
+      .night-sky::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: transparent
+          url("https://www.transparenttextures.com/patterns/stardust.png")
+          repeat;
+        animation: twinkle 200s linear infinite;
+        opacity: 0.5;
+      }
+
+      @keyframes twinkle {
+        0% {
+          transform: translate(0, 0);
+        }
+        100% {
+          transform: translate(100%, 100%);
+        }
+      }
+
+      .shooting-star {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: rgb(255, 183, 0);
+        box-shadow: 0 0 6px 3px rgb(255, 183, 0);
+        border-radius: 50%;
+        pointer-events: none;
+        animation: shooting-star 1s ease-in-out forwards;
+      }
+
+      @keyframes shooting-star {
+        0% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(300px, 300px) scale(0);
+          opacity: 0;
+        }
+      }
+
+      h1 {
+        color: #ff2c3c;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+      }
+
+      h2 {
+        color: #fff;
+        text-align: center;
+        margin-bottom: 1.5em;
+        position: relative;
+        z-index: 2;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 2;
+        max-width: 500px;
+
+        background-color: rgba(0, 0, 0, 0.5);
+
+        border-radius: 8px;
+        scale: 0.9;
+      }
+
+      label {
+        margin-bottom: 0.5em;
+        font-weight: bold;
+        color: #fff;
+      }
+
+      input[type="email"],
+      textarea {
+        padding: 0.75em;
+        margin-bottom: 1em;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1em;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      textarea {
+        resize: vertical;
+        height: 150px;
+      }
+
+      button[type="submit"] {
+        background-color: #ff2c3c;
+        color: white;
+        border: none;
+        padding: 0.75em;
+        font-size: 1em;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s,
+          transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      }
+
+      button[type="submit"]:hover {
+        background-color: #e6870a;
+        transform: scale(1.1);
+      }
+
+      button[type="submit"]:active {
+        transform: scale(1);
+      }
+
+      .horizontalSpacer {
+        height: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="night-sky"></div>
+    <main>
+      <h1>Contact Us</h1>
+      <h2>We would love to hear from you!</h2>
+
+      <form action="https://formspree.io/f/xvgpakkn" method="POST">
+        <label for="email">Your email:</label>
+        <input type="email" id="email" name="email" required />
+        <label for="message">Your message:</label>
+        <textarea id="message" name="message" required></textarea>
+        <button type="submit">Send</button>
+      </form>
+    </main>
+
+    <br />
+    <br />
+    <br />
+
+    <div class="horizontalSpacer"></div>
+
+    <script src="./scripts/footer.js"></script>
+
+    <script>
+      document.querySelector(".night-sky").addEventListener("click", (e) => {
+        const shootingStar = document.createElement("div");
+        shootingStar.classList.add("shooting-star");
+        shootingStar.style.left = `${e.clientX}px`;
+        shootingStar.style.top = `${e.clientY}px`;
+        document.querySelector(".night-sky").appendChild(shootingStar);
+
+        shootingStar.addEventListener("animationend", () => {
+          shootingStar.remove();
+        });
+      });
+    </script>
+  </body>
+</html>
