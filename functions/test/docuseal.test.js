@@ -17,7 +17,7 @@ describe("DocuSeal Firebase Functions", () => {
 
   describe("Authentication and Security", () => {
     test("verifyAuthentication should throw error when no auth", async () => {
-      const request = { data: {} };
+      const request = {data: {}};
 
       try {
         await functions.createDocuSealSubmission.run(request);
@@ -33,10 +33,10 @@ describe("DocuSeal Firebase Functions", () => {
           uid: "test-uid",
           token: {
             email: "regular-user@example.com",
-            name: "Regular User",
-          },
+            name: "Regular User"
+          }
         },
-        data: {},
+        data: {}
       };
 
       try {
@@ -53,13 +53,13 @@ describe("DocuSeal Firebase Functions", () => {
           uid: "admin-uid",
           token: {
             email: "stiaan44@gmail.com",
-            name: "Admin User",
-          },
+            name: "Admin User"
+          }
         },
         data: {
           templateId: "test-template",
-          signers: [{ name: "Test Signer", email: "signer@example.com" }],
-        },
+          signers: [{name: "Test Signer", email: "signer@example.com"}]
+        }
       };
 
       // Mock successful DocuSeal API response
@@ -69,8 +69,8 @@ describe("DocuSeal Firebase Functions", () => {
           id: "submission-123",
           url: "https://docuseal.com/sign/abc123",
           status: "pending",
-          submitters: [],
-        },
+          submitters: []
+        }
       });
 
       const result = await functions.createDocuSealSubmission.run(request);
@@ -85,10 +85,10 @@ describe("DocuSeal Firebase Functions", () => {
         uid: "admin-uid",
         token: {
           email: "stiaan44@gmail.com",
-          name: "Admin User",
-        },
+          name: "Admin User"
+        }
       },
-      data: {},
+      data: {}
     };
 
     test("should create submission with existing template", async () => {
@@ -97,12 +97,12 @@ describe("DocuSeal Firebase Functions", () => {
         data: {
           templateId: "template-123",
           signers: [
-            { name: "John Doe", email: "john@example.com", role: "Signer" },
-            { name: "Jane Smith", email: "jane@example.com", role: "Witness" },
+            {name: "John Doe", email: "john@example.com", role: "Signer"},
+            {name: "Jane Smith", email: "jane@example.com", role: "Witness"}
           ],
           sendEmail: true,
-          redirectUrl: "https://example.com/success",
-        },
+          redirectUrl: "https://example.com/success"
+        }
       };
 
       mockedAxios.post.mockResolvedValueOnce({
@@ -112,8 +112,8 @@ describe("DocuSeal Firebase Functions", () => {
           url: "https://docuseal.com/sign/def456",
           status: "pending",
           submitters: [],
-          template: { id: "template-123", name: "Test Template" },
-        },
+          template: {id: "template-123", name: "Test Template"}
+        }
       });
 
       const result = await functions.createDocuSealSubmission.run(request);
@@ -129,16 +129,16 @@ describe("DocuSeal Firebase Functions", () => {
             expect.objectContaining({
               name: "John Doe",
               email: "john@example.com",
-              role: "Signer",
-            }),
+              role: "Signer"
+            })
           ]),
           send_email: true,
-          redirect_url: "https://example.com/success",
+          redirect_url: "https://example.com/success"
         }),
         expect.objectContaining({
           headers: expect.objectContaining({
-            Authorization: "Bearer test-api-key-for-jest",
-          }),
+            Authorization: "Bearer test-api-key-for-jest"
+          })
         })
       );
     });
@@ -150,16 +150,16 @@ describe("DocuSeal Firebase Functions", () => {
           templateHtml:
             "<html><body>Test template with {{name}} field</body></html>",
           templateName: "Test HTML Template",
-          signers: [{ name: "Test User", email: "test@example.com" }],
-          fields: [{ name: "name", type: "text" }],
-        },
+          signers: [{name: "Test User", email: "test@example.com"}],
+          fields: [{name: "name", type: "text"}]
+        }
       };
 
       // Mock template creation response
       mockedAxios.post
         .mockResolvedValueOnce({
           status: 201,
-          data: { id: "new-template-789" },
+          data: {id: "new-template-789"}
         })
         // Mock submission creation response
         .mockResolvedValueOnce({
@@ -168,8 +168,8 @@ describe("DocuSeal Firebase Functions", () => {
             id: "submission-789",
             url: "https://docuseal.com/sign/ghi789",
             status: "pending",
-            submitters: [],
-          },
+            submitters: []
+          }
         });
 
       const result = await functions.createDocuSealSubmission.run(request);
@@ -184,15 +184,15 @@ describe("DocuSeal Firebase Functions", () => {
         ...adminRequest,
         data: {
           templateId: "invalid-template",
-          signers: [{ name: "Test User", email: "test@example.com" }],
-        },
+          signers: [{name: "Test User", email: "test@example.com"}]
+        }
       };
 
       mockedAxios.post.mockRejectedValueOnce({
         response: {
           status: 404,
-          data: { error: "Template not found" },
-        },
+          data: {error: "Template not found"}
+        }
       });
 
       const result = await functions.createDocuSealSubmission.run(request);
@@ -208,10 +208,10 @@ describe("DocuSeal Firebase Functions", () => {
         uid: "admin-uid",
         token: {
           email: "stiaan44@gmail.com",
-          name: "Admin User",
-        },
+          name: "Admin User"
+        }
       },
-      data: {},
+      data: {}
     };
 
     test("should create PDF template from HTML", async () => {
@@ -221,10 +221,10 @@ describe("DocuSeal Firebase Functions", () => {
           html: "<html><body><h1>{{title}}</h1><p>{{content}}</p></body></html>",
           name: "Test PDF Template",
           fields: [
-            { name: "title", type: "text" },
-            { name: "content", type: "text" },
-          ],
-        },
+            {name: "title", type: "text"},
+            {name: "content", type: "text"}
+          ]
+        }
       };
 
       mockedAxios.post.mockResolvedValueOnce({
@@ -232,8 +232,8 @@ describe("DocuSeal Firebase Functions", () => {
         data: {
           id: "template-pdf-123",
           name: "Test PDF Template",
-          download_url: "https://docuseal.com/templates/pdf-123/download",
-        },
+          download_url: "https://docuseal.com/templates/pdf-123/download"
+        }
       });
 
       const result = await functions.createPdfTemplateFromHtml.run(request);
@@ -250,9 +250,9 @@ describe("DocuSeal Firebase Functions", () => {
       const request = {
         ...adminRequest,
         data: {
-          html: "<html><body>Test</body></html>",
+          html: "<html><body>Test</body></html>"
           // Missing name parameter
-        },
+        }
       };
 
       const result = await functions.createPdfTemplateFromHtml.run(request);
@@ -270,10 +270,10 @@ describe("DocuSeal Firebase Functions", () => {
         uid: "admin-uid",
         token: {
           email: "stiaan44@gmail.com",
-          name: "Admin User",
-        },
+          name: "Admin User"
+        }
       },
-      data: {},
+      data: {}
     };
 
     test("should generate valid JWT token", async () => {
@@ -282,8 +282,8 @@ describe("DocuSeal Firebase Functions", () => {
         data: {
           documentUrls: ["https://example.com/doc1.pdf"],
           userEmail: "builder@example.com",
-          userName: "Builder User",
-        },
+          userName: "Builder User"
+        }
       };
 
       const result = await functions.getBuilderToken.run(request);
@@ -297,14 +297,14 @@ describe("DocuSeal Firebase Functions", () => {
       expect(decoded.user_email).toBe("builder@example.com");
       expect(decoded.name).toBe("Builder User");
       expect(decoded.allowed_document_urls).toEqual([
-        "https://example.com/doc1.pdf",
+        "https://example.com/doc1.pdf"
       ]);
     });
 
     test("should use auth user info when not provided", async () => {
       const request = {
         ...adminRequest,
-        data: {},
+        data: {}
       };
 
       const result = await functions.getBuilderToken.run(request);
@@ -326,20 +326,20 @@ describe("DocuSeal Firebase Functions", () => {
           data: {
             id: "submission-123",
             status: "completed",
-            download_url: "https://docuseal.com/download/123",
-          },
-        },
+            download_url: "https://docuseal.com/download/123"
+          }
+        }
       };
 
       const res = {
         set: jest.fn(),
         status: jest.fn(() => res),
-        send: jest.fn(),
+        send: jest.fn()
       };
 
       // Mock document download for storage
       mockedAxios.get.mockResolvedValueOnce({
-        data: Buffer.from("PDF content"),
+        data: Buffer.from("PDF content")
       });
 
       await functions.docusealWebhook.run(req, res);
@@ -349,11 +349,11 @@ describe("DocuSeal Firebase Functions", () => {
     });
 
     test("should reject non-POST requests", async () => {
-      const req = { method: "GET" };
+      const req = {method: "GET"};
       const res = {
         set: jest.fn(),
         status: jest.fn(() => res),
-        send: jest.fn(),
+        send: jest.fn()
       };
 
       await functions.docusealWebhook.run(req, res);
@@ -365,13 +365,13 @@ describe("DocuSeal Firebase Functions", () => {
     test("should validate webhook data", async () => {
       const req = {
         method: "POST",
-        body: {}, // Invalid webhook data
+        body: {} // Invalid webhook data
       };
 
       const res = {
         set: jest.fn(),
         status: jest.fn(() => res),
-        send: jest.fn(),
+        send: jest.fn()
       };
 
       await functions.docusealWebhook.run(req, res);
@@ -387,16 +387,16 @@ describe("DocuSeal Firebase Functions", () => {
         uid: "admin-uid",
         token: {
           email: "stiaan44@gmail.com",
-          name: "Admin User",
-        },
+          name: "Admin User"
+        }
       },
-      data: {},
+      data: {}
     };
 
     test("should send reminder for valid submission", async () => {
       const request = {
         ...adminRequest,
-        data: { submissionId: "submission-123" },
+        data: {submissionId: "submission-123"}
       };
 
       // Mock DocuSeal API responses
@@ -409,15 +409,15 @@ describe("DocuSeal Firebase Functions", () => {
             {
               id: "submitter-1",
               email: "test@example.com",
-              status: "pending",
-            },
-          ],
-        },
+              status: "pending"
+            }
+          ]
+        }
       });
 
       mockedAxios.post.mockResolvedValueOnce({
         status: 200,
-        data: { success: true },
+        data: {success: true}
       });
 
       const result = await functions.sendSubmissionReminder.run(request);
@@ -429,7 +429,7 @@ describe("DocuSeal Firebase Functions", () => {
     test("should validate submission ID parameter", async () => {
       const request = {
         ...adminRequest,
-        data: {}, // Missing submissionId
+        data: {} // Missing submissionId
       };
 
       const result = await functions.sendSubmissionReminder.run(request);
@@ -441,12 +441,12 @@ describe("DocuSeal Firebase Functions", () => {
 
   describe("monitoringAndAlerts", () => {
     test("should run monitoring check and generate alerts", async () => {
-      const event = { timestamp: new Date().toISOString() };
+      const event = {timestamp: new Date().toISOString()};
 
       // Mock Slack webhook call
       mockedAxios.post.mockResolvedValueOnce({
         status: 200,
-        data: "ok",
+        data: "ok"
       });
 
       // Should not throw errors
@@ -462,17 +462,17 @@ describe("DocuSeal Firebase Functions", () => {
         uid: "admin-uid",
         token: {
           email: "stiaan44@gmail.com",
-          name: "Admin User",
-        },
+          name: "Admin User"
+        }
       },
-      data: {},
+      data: {}
     };
 
     test("should trigger manual monitoring check", async () => {
       // Mock Slack webhook call
       mockedAxios.post.mockResolvedValueOnce({
         status: 200,
-        data: "ok",
+        data: "ok"
       });
 
       const result = await functions.triggerMonitoringCheck.run(adminRequest);
@@ -489,13 +489,13 @@ describe("DocuSeal Firebase Functions", () => {
           uid: "rate-limit-test-uid",
           token: {
             email: "stiaan44@gmail.com",
-            name: "Admin User",
-          },
+            name: "Admin User"
+          }
         },
         data: {
           templateId: "test-template",
-          signers: [{ name: "Test", email: "test@example.com" }],
-        },
+          signers: [{name: "Test", email: "test@example.com"}]
+        }
       };
 
       // Mock successful responses for multiple calls
@@ -504,8 +504,8 @@ describe("DocuSeal Firebase Functions", () => {
         data: {
           id: "submission-rate-test",
           url: "https://docuseal.com/sign/rate-test",
-          status: "pending",
-        },
+          status: "pending"
+        }
       });
 
       // Make multiple rapid calls - should eventually hit rate limit
@@ -517,7 +517,7 @@ describe("DocuSeal Firebase Functions", () => {
           const result = await functions.createDocuSealSubmission.run(request);
           results.push(result);
         } catch (error) {
-          results.push({ error: error.message });
+          results.push({error: error.message});
         }
       }
 

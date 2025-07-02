@@ -6,9 +6,8 @@
 // Load environment variables
 require("dotenv").config();
 
-const { onCall, onRequest } = require("firebase-functions/v2/https");
-const { onDocumentCreated } = require("firebase-functions/v2/firestore");
-const { onSchedule } = require("firebase-functions/v2/scheduler");
+const {onCall, onRequest} = require("firebase-functions/v2/https");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
@@ -28,34 +27,6 @@ const DOCUSEAL_API_KEY =
 const ADMIN_EMAILS = [
   "stiaan44@gmail.com", // Primary admin
 ];
-
-/**
- * Middleware to verify admin access
- * @param {Object} request - Firebase function request object
- * @returns {boolean} True if user is admin
- */
-function verifyAdminAccess(request) {
-  if (!request.auth) {
-    throw new Error("Authentication required");
-  }
-
-  const userEmail = request.auth.token.email;
-  if (!userEmail) {
-    throw new Error("User email not found in token");
-  }
-
-  const isAdmin = ADMIN_EMAILS.includes(userEmail);
-  if (!isAdmin) {
-    throw new Error("Admin access required. Unauthorized user.");
-  }
-
-  logger.info("Admin access verified", {
-    userEmail: userEmail,
-    userId: request.auth.uid,
-  });
-
-  return true;
-}
 
 /**
  * Enhanced authentication middleware
@@ -99,20 +70,20 @@ function checkRateLimit(userId, functionName, maxCalls = 10, windowMs = 60000) {
   const now = Date.now();
 
   if (!rateLimitMap.has(key)) {
-    rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
+    rateLimitMap.set(key, {count: 1, resetTime: now + windowMs});
     return true;
   }
 
   const rateData = rateLimitMap.get(key);
 
   if (now > rateData.resetTime) {
-    rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
+    rateLimitMap.set(key, {count: 1, resetTime: now + windowMs});
     return true;
   }
 
   if (rateData.count >= maxCalls) {
     throw new Error(
-      `Rate limit exceeded. Maximum ${maxCalls} calls per minute.`
+      `Rate limit exceeded. Maximum ${maxCalls} calls per minute.`,
     );
   }
 
@@ -132,8 +103,8 @@ exports.createDocuSealSubmission = onCall(
   async (request) => {
     try {
       // Verify admin authentication and apply rate limiting
-      const userInfo = verifyAuthentication(request, true); // Require admin access
-      checkRateLimit(userInfo.uid, "createDocuSealSubmission", 20, 60000); // 20 calls per minute for admins
+      const userInfo = verifyAuthentication(request, true);
+      checkRateLimit(userInfo.uid, "createDocuSealSubmission", 20, 60000);
 
       const {
         templateId,
@@ -181,15 +152,15 @@ exports.createDocuSealSubmission = onCall(
           },
           {
             headers: {
-              Authorization: `Bearer ${DOCUSEAL_API_KEY}`,
+              "Authorization": `Bearer ${DOCUSEAL_API_KEY}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (templateResponse.status !== 201) {
           throw new Error(
-            `Failed to create template: ${templateResponse.data}`
+            `Failed to create template: ${templateResponse.data}`,
           );
         }
 
@@ -219,15 +190,15 @@ exports.createDocuSealSubmission = onCall(
         submissionData,
         {
           headers: {
-            Authorization: `Bearer ${DOCUSEAL_API_KEY}`,
+            "Authorization": `Bearer ${DOCUSEAL_API_KEY}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (submissionResponse.status !== 201) {
         throw new Error(
-          `Failed to create submission: ${submissionResponse.data}`
+          `Failed to create submission: ${submissionResponse.data}`,
         );
       }
 
@@ -281,7 +252,7 @@ exports.createDocuSealSubmission = onCall(
         error: error.message || "Failed to create submission",
       };
     }
-  }
+  },
 );
 
 /**
@@ -295,10 +266,10 @@ exports.createPdfTemplateFromHtml = onCall(
   async (request) => {
     try {
       // Verify admin authentication and apply rate limiting
-      const userInfo = verifyAuthentication(request, true); // Require admin access
-      checkRateLimit(userInfo.uid, "createPdfTemplateFromHtml", 10, 60000); // 10 templates per minute
+      const userInfo = verifyAuthentication(request, true);
+      checkRateLimit(userInfo.uid, "createPdfTemplateFromHtml", 10, 60000);
 
-      const { html, name, fields = [] } = request.data;
+      const {html, name, fields = []} = request.data;
 
       if (!html || !name) {
         throw new Error("HTML content and template name are required");
@@ -318,10 +289,10 @@ exports.createPdfTemplateFromHtml = onCall(
         },
         {
           headers: {
-            Authorization: `Bearer ${DOCUSEAL_API_KEY}`,
+            "Authorization": `Bearer ${DOCUSEAL_API_KEY}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.status !== 201) {
@@ -374,7 +345,7 @@ exports.createPdfTemplateFromHtml = onCall(
         error: error.message || "Failed to create template",
       };
     }
-  }
+  },
 );
 
 /**
@@ -391,7 +362,7 @@ exports.getBuilderToken = onCall(
       const userInfo = verifyAuthentication(request, true); // Require admin access
       checkRateLimit(userInfo.uid, "getBuilderToken", 30, 60000); // 30 tokens per minute
 
-      const { documentUrls = [], userEmail, userName } = request.data;
+      const {documentUrls = [], userEmail, userName} = request.data;
 
       logger.info("Generating builder token", {
         userId: userInfo.uid,
@@ -433,7 +404,7 @@ exports.getBuilderToken = onCall(
         error: error.message || "Failed to generate builder token",
       };
     }
-  }
+  },
 );
 
 /**
@@ -468,19 +439,19 @@ exports.docusealWebhook = onRequest(
 
       // Process different webhook events
       switch (webhookData.event_type) {
-        case "submission.completed":
-          await handleSubmissionCompleted(webhookData.data);
-          break;
-        case "submission.expired":
-          await handleSubmissionExpired(webhookData.data);
-          break;
-        case "submitter.completed":
-          await handleSubmitterCompleted(webhookData.data);
-          break;
-        default:
-          logger.info("Unhandled webhook event type", {
-            eventType: webhookData.event_type,
-          });
+      case "submission.completed":
+        await handleSubmissionCompleted(webhookData.data);
+        break;
+      case "submission.expired":
+        await handleSubmissionExpired(webhookData.data);
+        break;
+      case "submitter.completed":
+        await handleSubmitterCompleted(webhookData.data);
+        break;
+      default:
+        logger.info("Unhandled webhook event type", {
+          eventType: webhookData.event_type,
+        });
       }
 
       res.status(200).send("OK");
@@ -491,7 +462,7 @@ exports.docusealWebhook = onRequest(
       });
       res.status(500).send("Internal server error");
     }
-  }
+  },
 );
 
 /**
@@ -645,7 +616,7 @@ exports.emailReminderScheduler = onSchedule(
     region: "us-central1",
     timeZone: "UTC",
   },
-  async (event) => {
+  async (_event) => {
     try {
       logger.info("Starting email reminder scheduler");
 
@@ -661,7 +632,7 @@ exports.emailReminderScheduler = onSchedule(
         .get();
 
       logger.info(
-        `Found ${submissionsSnapshot.size} pending submissions to check`
+        `Found ${submissionsSnapshot.size} pending submissions to check`,
       );
 
       for (const doc of submissionsSnapshot.docs) {
@@ -676,7 +647,7 @@ exports.emailReminderScheduler = onSchedule(
         stack: error.stack,
       });
     }
-  }
+  },
 );
 
 /**
@@ -689,15 +660,15 @@ async function checkAndSendReminders(submissionId, submissionData) {
       `${DOCUSEAL_API_BASE}/submissions/${submissionId}`,
       {
         headers: {
-          Authorization: `Bearer ${DOCUSEAL_API_KEY}`,
+          "Authorization": `Bearer ${DOCUSEAL_API_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     if (response.status !== 200) {
       logger.error(
-        `Failed to get submission ${submissionId}: ${response.status}`
+        `Failed to get submission ${submissionId}: ${response.status}`,
       );
       return;
     }
@@ -722,11 +693,11 @@ async function checkAndSendReminders(submissionId, submissionData) {
     const incompleteSigners =
       submission.submitters?.filter(
         (submitter) =>
-          submitter.status === "pending" || submitter.status === "sent"
+          submitter.status === "pending" || submitter.status === "sent",
       ) || [];
 
     logger.info(
-      `Found ${incompleteSigners.length} incomplete signers for submission ${submissionId}`
+      `Found ${incompleteSigners.length} incomplete signers for submission ${submissionId}`,
     );
 
     // Send reminders to incomplete signers
@@ -762,10 +733,10 @@ async function sendEmailReminder(submissionId, signer, submissionData) {
       {},
       {
         headers: {
-          Authorization: `Bearer ${DOCUSEAL_API_KEY}`,
+          "Authorization": `Bearer ${DOCUSEAL_API_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     if (reminderResponse.status === 200) {
@@ -820,7 +791,7 @@ exports.sendSubmissionReminder = onCall(
       const userInfo = verifyAuthentication(request, true); // Require admin access
       checkRateLimit(userInfo.uid, "sendSubmissionReminder", 10, 60000); // 10 reminders per minute
 
-      const { submissionId } = request.data;
+      const {submissionId} = request.data;
 
       if (!submissionId) {
         throw new Error("Submission ID is required");
@@ -861,7 +832,7 @@ exports.sendSubmissionReminder = onCall(
         error: error.message || "Failed to send reminder",
       };
     }
-  }
+  },
 );
 
 /**
@@ -870,12 +841,12 @@ exports.sendSubmissionReminder = onCall(
 function validateEnvironment() {
   const requiredEnvVars = ["DOCUSEAL_API_KEY"];
   const missingVars = requiredEnvVars.filter(
-    (varName) => !process.env[varName]
+    (varName) => !process.env[varName],
   );
 
   if (missingVars.length > 0) {
     throw new Error(
-      `Missing required environment variables: ${missingVars.join(", ")}`
+      `Missing required environment variables: ${missingVars.join(", ")}`,
     );
   }
 
@@ -888,7 +859,7 @@ function validateEnvironment() {
   // Ensure we're not using default/example values
   if (apiKey === "your-docuseal-api-key") {
     throw new Error(
-      "DocuSeal API key is not configured. Please set DOCUSEAL_API_KEY environment variable."
+      "DocuSeal API key is not configured. Please set DOCUSEAL_API_KEY environment variable.",
     );
   }
 
@@ -899,7 +870,7 @@ function validateEnvironment() {
 try {
   validateEnvironment();
 } catch (error) {
-  logger.error("Environment validation failed", { error: error.message });
+  logger.error("Environment validation failed", {error: error.message});
 }
 
 /**
@@ -932,7 +903,7 @@ exports.monitoringAndAlerts = onSchedule(
     region: "us-central1",
     timeZone: "UTC",
   },
-  async (event) => {
+  async (_event) => {
     try {
       logger.info("Starting monitoring and alerts check");
 
@@ -1039,7 +1010,7 @@ exports.monitoringAndAlerts = onSchedule(
       // Send error alert
       await sendErrorAlert(error);
     }
-  }
+  },
 );
 
 /**
@@ -1049,14 +1020,14 @@ async function sendMonitoringAlert(alerts, stats, isWeeklySummary = false) {
   try {
     if (!SLACK_WEBHOOK_URL) {
       logger.warn(
-        "Slack webhook URL not configured, skipping Slack notification"
+        "Slack webhook URL not configured, skipping Slack notification",
       );
       return;
     }
 
-    let message = isWeeklySummary
-      ? "📊 *Weekly DocuSeal Summary*\n"
-      : "🚨 *DocuSeal Monitoring Alert*\n";
+    let message = isWeeklySummary ?
+      "📊 *Weekly DocuSeal Summary*\n" :
+      "🚨 *DocuSeal Monitoring Alert*\n";
 
     message += `\n📈 *Current Statistics:*
 • Total Pending: ${stats.totalPending}
@@ -1072,7 +1043,7 @@ async function sendMonitoringAlert(alerts, stats, isWeeklySummary = false) {
           message += `\n🕐 *${alert.count} Stale Submissions (7+ days old):*\n`;
           alert.submissions.slice(0, 5).forEach((sub) => {
             const daysOld = Math.floor(
-              (new Date() - sub.createdAt) / (1000 * 60 * 60 * 24)
+              (new Date() - sub.createdAt) / (1000 * 60 * 60 * 24),
             );
             message += `• ${sub.templateName} (${daysOld} days old) - ${sub.signers} signers\n`;
           });
@@ -1085,7 +1056,7 @@ async function sendMonitoringAlert(alerts, stats, isWeeklySummary = false) {
           message += `\n📧 *${alert.count} Submissions Without Reminders (3+ days old):*\n`;
           alert.submissions.slice(0, 5).forEach((sub) => {
             const daysOld = Math.floor(
-              (new Date() - sub.createdAt) / (1000 * 60 * 60 * 24)
+              (new Date() - sub.createdAt) / (1000 * 60 * 60 * 24),
             );
             message += `• ${sub.templateName} (${daysOld} days old) - ${sub.signers} signers\n`;
           });
@@ -1149,7 +1120,7 @@ ${error.message}
  */
 async function sendSlackMessage(message) {
   if (!SLACK_WEBHOOK_URL) {
-    logger.info("Slack message (webhook not configured):", { message });
+    logger.info("Slack message (webhook not configured):", {message});
     return;
   }
 
@@ -1182,7 +1153,7 @@ exports.triggerMonitoringCheck = onCall(
       });
 
       // Trigger the monitoring function manually
-      const event = { timestamp: new Date().toISOString() };
+      const event = {timestamp: new Date().toISOString()};
       await exports.monitoringAndAlerts.run(event);
 
       return {
@@ -1200,5 +1171,5 @@ exports.triggerMonitoringCheck = onCall(
         error: error.message || "Failed to run monitoring check",
       };
     }
-  }
+  },
 );

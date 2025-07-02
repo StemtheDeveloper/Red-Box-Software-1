@@ -10,7 +10,7 @@ function createAdminAuth(
 ) {
   return {
     uid,
-    token: { email, name },
+    token: {email, name}
   };
 }
 
@@ -24,7 +24,7 @@ function createUserAuth(
 ) {
   return {
     uid,
-    token: { email, name },
+    token: {email, name}
   };
 }
 
@@ -37,8 +37,8 @@ function createMockSubmission(id = "test-submission", overrides = {}) {
     url: `https://docuseal.com/sign/${id}`,
     status: "pending",
     submitters: [],
-    template: { id: "test-template", name: "Test Template" },
-    ...overrides,
+    template: {id: "test-template", name: "Test Template"},
+    ...overrides
   };
 }
 
@@ -50,7 +50,7 @@ function createMockTemplate(id = "test-template", overrides = {}) {
     id,
     name: "Test Template",
     download_url: `https://docuseal.com/templates/${id}/download`,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -69,10 +69,10 @@ function createWebhookRequest(
       data: {
         id: "test-submission",
         status: eventType.includes("completed") ? "completed" : "pending",
-        ...data,
+        ...data
       },
-      ...overrides,
-    },
+      ...overrides
+    }
   };
 }
 
@@ -84,7 +84,7 @@ function createMockResponse() {
     set: jest.fn(() => res),
     status: jest.fn(() => res),
     send: jest.fn(() => res),
-    json: jest.fn(() => res),
+    json: jest.fn(() => res)
   };
   return res;
 }
@@ -105,7 +105,7 @@ function generateTestData() {
     submissionId: `test-submission-${timestamp}`,
     templateId: `test-template-${timestamp}`,
     email: `test-${timestamp}@example.com`,
-    name: `Test User ${timestamp}`,
+    name: `Test User ${timestamp}`
   };
 }
 
@@ -122,7 +122,7 @@ function validateJWT(token) {
   expect(header.alg).toBe("HS256");
   expect(payload.exp).toBeGreaterThan(payload.iat);
 
-  return { header, payload };
+  return {header, payload};
 }
 
 /**
@@ -140,15 +140,15 @@ function setupFirestoreMocks() {
           status: "pending",
           templateName: "Test Template",
           createdAt: new Date(),
-          signers: [{ name: "Test User", email: "test@example.com" }],
-        }),
+          signers: [{name: "Test User", email: "test@example.com"}]
+        })
       })
-    ),
+    )
   };
 
   const mockCollection = {
     doc: jest.fn(() => mockDoc),
-    add: jest.fn(() => Promise.resolve({ id: "new-doc-id" })),
+    add: jest.fn(() => Promise.resolve({id: "new-doc-id"})),
     where: jest.fn(() => mockCollection),
     orderBy: jest.fn(() => mockCollection),
     get: jest.fn(() =>
@@ -157,18 +157,18 @@ function setupFirestoreMocks() {
         docs: [
           {
             id: "doc-1",
-            data: () => ({ id: "doc-1", status: "pending" }),
+            data: () => ({id: "doc-1", status: "pending"})
           },
           {
             id: "doc-2",
-            data: () => ({ id: "doc-2", status: "pending" }),
-          },
-        ],
+            data: () => ({id: "doc-2", status: "pending"})
+          }
+        ]
       })
-    ),
+    )
   };
 
-  return { mockDoc, mockCollection };
+  return {mockDoc, mockCollection};
 }
 
 /**
@@ -194,5 +194,5 @@ module.exports = {
   generateTestData,
   validateJWT,
   setupFirestoreMocks,
-  expectToThrow,
+  expectToThrow
 };

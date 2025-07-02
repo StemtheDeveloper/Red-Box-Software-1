@@ -20,10 +20,10 @@ jest.mock("firebase-admin", () => ({
               status: "pending",
               templateName: "Test Template",
               createdAt: new Date(),
-              signers: [{ name: "Test User", email: "test@example.com" }],
-            }),
+              signers: [{name: "Test User", email: "test@example.com"}]
+            })
           })
-        ),
+        )
       })),
       where: jest.fn(() => ({
         where: jest.fn(() => ({
@@ -38,8 +38,8 @@ jest.mock("firebase-admin", () => ({
                     status: "pending",
                     templateName: "Test Template 1",
                     createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
-                    signers: [{ name: "User 1", email: "user1@example.com" }],
-                  }),
+                    signers: [{name: "User 1", email: "user1@example.com"}]
+                  })
                 },
                 {
                   id: "test-2",
@@ -48,66 +48,66 @@ jest.mock("firebase-admin", () => ({
                     status: "pending",
                     templateName: "Test Template 2",
                     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-                    signers: [{ name: "User 2", email: "user2@example.com" }],
-                  }),
-                },
-              ],
+                    signers: [{name: "User 2", email: "user2@example.com"}]
+                  })
+                }
+              ]
             })
-          ),
+          )
         })),
         get: jest.fn(() =>
           Promise.resolve({
             size: 3,
-            docs: [],
+            docs: []
           })
-        ),
+        )
       })),
-      add: jest.fn(() => Promise.resolve({ id: "new-doc-id" })),
-    })),
+      add: jest.fn(() => Promise.resolve({id: "new-doc-id"}))
+    }))
   })),
   storage: jest.fn(() => ({
     bucket: jest.fn(() => ({
       file: jest.fn(() => ({
-        save: jest.fn(() => Promise.resolve()),
-      })),
-    })),
+        save: jest.fn(() => Promise.resolve())
+      }))
+    }))
   })),
   FieldValue: {
     serverTimestamp: jest.fn(() => new Date()),
-    arrayUnion: jest.fn((value) => ({ arrayUnion: value })),
-  },
+    arrayUnion: jest.fn((value) => ({arrayUnion: value}))
+  }
 }));
 
 // Mock Firebase Functions SDK
 jest.mock("firebase-functions/v2/https", () => ({
   onCall: jest.fn((config, handler) => ({
     run: handler,
-    config,
+    config
   })),
   onRequest: jest.fn((config, handler) => ({
     run: handler,
-    config,
-  })),
+    config
+  }))
 }));
 
 jest.mock("firebase-functions/v2/scheduler", () => ({
   onSchedule: jest.fn((config, handler) => ({
     run: handler,
-    config,
-  })),
+    config
+  }))
 }));
 
 jest.mock("firebase-functions/v2/firestore", () => ({
   onDocumentCreated: jest.fn((config, handler) => ({
     run: handler,
-    config,
-  })),
+    config
+  }))
 }));
 
 jest.mock("firebase-functions/logger", () => ({
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn(),
+  error: jest.fn()
 }));
 
 // Global test timeout

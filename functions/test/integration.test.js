@@ -13,8 +13,8 @@ describe("DocuSeal Integration Tests", () => {
     uid: "admin-uid",
     token: {
       email: "stiaan44@gmail.com",
-      name: "Admin User",
-    },
+      name: "Admin User"
+    }
   };
 
   beforeEach(() => {
@@ -30,10 +30,10 @@ describe("DocuSeal Integration Tests", () => {
           html: "<html><body><h1>Contract Agreement</h1><p>Name: {{signer_name}}</p><p>Signature: {{signature}}</p></body></html>",
           name: "Contract Template",
           fields: [
-            { name: "signer_name", type: "text" },
-            { name: "signature", type: "signature" },
-          ],
-        },
+            {name: "signer_name", type: "text"},
+            {name: "signature", type: "signature"}
+          ]
+        }
       };
 
       mockedAxios.post.mockResolvedValueOnce({
@@ -42,8 +42,8 @@ describe("DocuSeal Integration Tests", () => {
           id: "template-integration-123",
           name: "Contract Template",
           download_url:
-            "https://docuseal.com/templates/integration-123/download",
-        },
+            "https://docuseal.com/templates/integration-123/download"
+        }
       });
 
       const templateResult = await functions.createPdfTemplateFromHtml.run(
@@ -61,17 +61,17 @@ describe("DocuSeal Integration Tests", () => {
             {
               name: "John Doe",
               email: "john.doe@example.com",
-              role: "Signer",
+              role: "Signer"
             },
             {
               name: "Jane Smith",
               email: "jane.smith@example.com",
-              role: "Witness",
-            },
+              role: "Witness"
+            }
           ],
           sendEmail: true,
-          redirectUrl: "https://example.com/success",
-        },
+          redirectUrl: "https://example.com/success"
+        }
       };
 
       mockedAxios.post.mockResolvedValueOnce({
@@ -84,19 +84,19 @@ describe("DocuSeal Integration Tests", () => {
             {
               id: "submitter-1",
               email: "john.doe@example.com",
-              status: "sent",
+              status: "sent"
             },
             {
               id: "submitter-2",
               email: "jane.smith@example.com",
-              status: "sent",
-            },
+              status: "sent"
+            }
           ],
           template: {
             id: "template-integration-123",
-            name: "Contract Template",
-          },
-        },
+            name: "Contract Template"
+          }
+        }
       });
 
       const submissionResult = await functions.createDocuSealSubmission.run(
@@ -121,27 +121,27 @@ describe("DocuSeal Integration Tests", () => {
               {
                 id: "submitter-1",
                 email: "john.doe@example.com",
-                status: "completed",
+                status: "completed"
               },
               {
                 id: "submitter-2",
                 email: "jane.smith@example.com",
-                status: "completed",
-              },
-            ],
-          },
-        },
+                status: "completed"
+              }
+            ]
+          }
+        }
       };
 
       const webhookRes = {
         set: jest.fn(),
         status: jest.fn(() => webhookRes),
-        send: jest.fn(),
+        send: jest.fn()
       };
 
       // Mock document download for storage
       mockedAxios.get.mockResolvedValueOnce({
-        data: Buffer.from("Mock PDF content for completed document"),
+        data: Buffer.from("Mock PDF content for completed document")
       });
 
       await functions.docusealWebhook.run(webhookReq, webhookRes);
@@ -150,7 +150,7 @@ describe("DocuSeal Integration Tests", () => {
       // Step 4: Verify reminder functionality
       const reminderRequest = {
         auth: adminAuth,
-        data: { submissionId: "submission-integration-456" },
+        data: {submissionId: "submission-integration-456"}
       };
 
       // Mock DocuSeal API for getting submission status
@@ -163,15 +163,15 @@ describe("DocuSeal Integration Tests", () => {
             {
               id: "submitter-1",
               email: "john.doe@example.com",
-              status: "completed",
+              status: "completed"
             },
             {
               id: "submitter-2",
               email: "jane.smith@example.com",
-              status: "completed",
-            },
-          ],
-        },
+              status: "completed"
+            }
+          ]
+        }
       });
 
       const reminderResult = await functions.sendSubmissionReminder.run(
@@ -187,17 +187,17 @@ describe("DocuSeal Integration Tests", () => {
         auth: adminAuth,
         data: {
           templateId: "non-existent-template",
-          signers: [{ name: "Test User", email: "test@example.com" }],
-        },
+          signers: [{name: "Test User", email: "test@example.com"}]
+        }
       };
 
       // Simulate API failure
       mockedAxios.post.mockRejectedValueOnce({
         response: {
           status: 404,
-          data: { error: "Template not found" },
+          data: {error: "Template not found"}
         },
-        message: "Request failed with status code 404",
+        message: "Request failed with status code 404"
       });
 
       const result = await functions.createDocuSealSubmission.run(request);
@@ -212,14 +212,14 @@ describe("DocuSeal Integration Tests", () => {
         auth: adminAuth,
         data: {
           html: "<html><body>Test</body></html>",
-          name: "Test Template",
-        },
+          name: "Test Template"
+        }
       };
 
       // Simulate network timeout
       mockedAxios.post.mockRejectedValueOnce({
         code: "ECONNABORTED",
-        message: "timeout of 5000ms exceeded",
+        message: "timeout of 5000ms exceeded"
       });
 
       const result = await functions.createPdfTemplateFromHtml.run(request);
@@ -236,24 +236,24 @@ describe("DocuSeal Integration Tests", () => {
           auth: adminAuth,
           data: {
             // Missing required signers
-            templateId: "test-template",
-          },
+            templateId: "test-template"
+          }
         },
         {
           auth: adminAuth,
           data: {
             // Invalid signer data
             templateId: "test-template",
-            signers: [{ name: "" }], // Missing email
-          },
+            signers: [{name: ""}] // Missing email
+          }
         },
         {
           auth: adminAuth,
           data: {
             // Missing template reference
-            signers: [{ name: "Test", email: "test@example.com" }],
-          },
-        },
+            signers: [{name: "Test", email: "test@example.com"}]
+          }
+        }
       ];
 
       for (const request of invalidRequests) {
@@ -267,24 +267,24 @@ describe("DocuSeal Integration Tests", () => {
         auth: adminAuth,
         data: {
           templateHtml:
-            '<script>alert("xss")</script><html><body>{{name}}</body></html>',
+            "<script>alert(\"xss\")</script><html><body>{{name}}</body></html>",
           templateName: "Test Template",
-          signers: [{ name: "Test User", email: "test@example.com" }],
-        },
+          signers: [{name: "Test User", email: "test@example.com"}]
+        }
       };
 
       mockedAxios.post
         .mockResolvedValueOnce({
           status: 201,
-          data: { id: "template-sanitized" },
+          data: {id: "template-sanitized"}
         })
         .mockResolvedValueOnce({
           status: 201,
           data: {
             id: "submission-sanitized",
             url: "https://docuseal.com/sign/sanitized",
-            status: "pending",
-          },
+            status: "pending"
+          }
         });
 
       const result = await functions.createDocuSealSubmission.run(request);
@@ -295,7 +295,7 @@ describe("DocuSeal Integration Tests", () => {
       expect(mockedAxios.post).toHaveBeenCalledWith(
         expect.stringContaining("/templates/html"),
         expect.objectContaining({
-          html: expect.stringContaining("<script>"),
+          html: expect.stringContaining("<script>")
         }),
         expect.any(Object)
       );
@@ -304,18 +304,18 @@ describe("DocuSeal Integration Tests", () => {
 
   describe("Performance and Scalability", () => {
     test("should handle multiple concurrent requests", async () => {
-      const requests = Array.from({ length: 5 }, (_, i) => ({
+      const requests = Array.from({length: 5}, (_, i) => ({
         auth: {
           uid: `user-${i}`,
           token: {
             email: "stiaan44@gmail.com",
-            name: `User ${i}`,
-          },
+            name: `User ${i}`
+          }
         },
         data: {
           templateId: `template-${i}`,
-          signers: [{ name: `Signer ${i}`, email: `signer${i}@example.com` }],
-        },
+          signers: [{name: `Signer ${i}`, email: `signer${i}@example.com`}]
+        }
       }));
 
       // Mock responses for all requests
@@ -325,8 +325,8 @@ describe("DocuSeal Integration Tests", () => {
           data: {
             id: `submission-${Date.now()}-${Math.random()}`,
             url: "https://docuseal.com/sign/concurrent",
-            status: "pending",
-          },
+            status: "pending"
+          }
         })
       );
 
@@ -351,13 +351,13 @@ describe("DocuSeal Integration Tests", () => {
           uid: userId,
           token: {
             email: "stiaan44@gmail.com",
-            name: "Rate Limit Test User",
-          },
+            name: "Rate Limit Test User"
+          }
         },
         data: {
           templateId: "rate-limit-template",
-          signers: [{ name: "Test", email: "test@example.com" }],
-        },
+          signers: [{name: "Test", email: "test@example.com"}]
+        }
       };
 
       mockedAxios.post.mockResolvedValue({
@@ -365,17 +365,17 @@ describe("DocuSeal Integration Tests", () => {
         data: {
           id: "rate-limit-submission",
           url: "https://docuseal.com/sign/rate-limit",
-          status: "pending",
-        },
+          status: "pending"
+        }
       });
 
       // Make rapid successive calls
-      const promises = Array.from({ length: 25 }, () =>
+      const promises = Array.from({length: 25}, () =>
         functions.createDocuSealSubmission.run(request)
       );
 
       const results = await Promise.all(
-        promises.map((p) => p.catch((error) => ({ error: error.message })))
+        promises.map((p) => p.catch((error) => ({error: error.message})))
       );
 
       // Some requests should succeed, others should be rate limited
@@ -391,12 +391,12 @@ describe("DocuSeal Integration Tests", () => {
 
   describe("Monitoring and Alerts Integration", () => {
     test("should run monitoring check without errors", async () => {
-      const event = { timestamp: new Date().toISOString() };
+      const event = {timestamp: new Date().toISOString()};
 
       // Mock Slack webhook response
       mockedAxios.post.mockResolvedValueOnce({
         status: 200,
-        data: "ok",
+        data: "ok"
       });
 
       // Should complete without throwing
@@ -406,7 +406,7 @@ describe("DocuSeal Integration Tests", () => {
     });
 
     test("should generate appropriate alerts for stale submissions", async () => {
-      const event = { timestamp: new Date().toISOString() };
+      const event = {timestamp: new Date().toISOString()};
 
       // Mock Slack webhook to capture alert message
       let alertMessage = "";
@@ -414,7 +414,7 @@ describe("DocuSeal Integration Tests", () => {
         if (url.includes("slack")) {
           alertMessage = data.text;
         }
-        return Promise.resolve({ status: 200, data: "ok" });
+        return Promise.resolve({status: 200, data: "ok"});
       });
 
       await functions.monitoringAndAlerts.run(event);
@@ -424,7 +424,7 @@ describe("DocuSeal Integration Tests", () => {
         "https://hooks.slack.com/test-webhook",
         expect.objectContaining({
           text: expect.stringContaining("DocuSeal"),
-          username: "DocuSeal Monitor",
+          username: "DocuSeal Monitor"
         })
       );
     });
