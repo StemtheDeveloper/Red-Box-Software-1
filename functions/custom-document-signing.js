@@ -384,6 +384,118 @@ exports.getDocument = onCall(
 );
 
 /**
+ * Get document PDF for viewing
+ */
+exports.getDocumentPdf = onCall(
+  {
+    region: "us-central1",
+    enforceAppCheck: false,
+  },
+  async (request) => {
+    try {
+      const { documentId, accessToken } = request.data;
+
+      if (!documentId) {
+        throw new Error("Document ID is required");
+      }
+
+      // Get document from Firestore
+      const documentDoc = await admin
+        .firestore()
+        .collection("documents")
+        .doc(documentId)
+        .get();
+
+      if (!documentDoc.exists) {
+        throw new Error("Document not found");
+      }
+
+      const documentData = documentDoc.data();
+      let hasAccess = false;
+      let accessorEmail = null;
+
+      // Check access permissions (same as getDocument)
+      if (request.auth) {
+        const userEmail = request.auth.token.email;
+        hasAccess = documentData.allowedViewers.includes(userEmail);
+        accessorEmail = userEmail;
+      }
+
+      if (!hasAccess && accessToken) {
+        try {
+          const tokenData = verifySecureToken(accessToken);
+          if (tokenData.documentId === documentId) {
+            hasAccess = true;
+            accessorEmail = tokenData.email;
+          }
+        } catch (err) {
+          logger.warn("Invalid access token for PDF access", {
+            documentId,
+            error: err.message,
+          });
+        }
+      }
+
+      if (!hasAccess) {
+        throw new Error("Access denied to view PDF");
+      }
+
+      // Get the PDF from Firebase Storage
+      const bucket = admin.storage().bucket();
+      const originalPath = `documents/original/${documentId}/${documentData.fileName}`;
+      const file = bucket.file(originalPath);
+
+      try {
+        const [exists] = await file.exists();
+        if (!exists) {
+          throw new Error("PDF file not found in storage");
+        }
+
+        const [fileBuffer] = await file.download();
+
+        // Decrypt the document
+        const decryptedBuffer = decryptDocument(fileBuffer);
+
+        // Convert to base64 for transmission
+        const base64Data = decryptedBuffer.toString("base64");
+
+        logger.info("PDF retrieved successfully", {
+          documentId,
+          fileName: documentData.fileName,
+          accessorEmail,
+          fileSize: decryptedBuffer.length,
+        });
+
+        return {
+          success: true,
+          pdfData: base64Data,
+          fileName: documentData.fileName,
+          contentType: "application/pdf",
+        };
+      } catch (storageError) {
+        logger.error("Error retrieving PDF from storage", {
+          documentId,
+          fileName: documentData.fileName,
+          error: storageError.message,
+        });
+        throw new Error("Failed to retrieve PDF file");
+      }
+    } catch (error) {
+      logger.error("Error getting document PDF", {
+        error: error.message,
+        documentId: request.data?.documentId,
+        userId: request.auth?.uid,
+      });
+
+      return {
+        success: false,
+        error: error.message || "Failed to get PDF",
+      };
+    }
+  }
+);
+
+/**
  * Add signature to document
  */
 exports.addSignature = onCall(
@@ -901,6 +1013,7 @@ async function sendEmail(emailContent) {
 module.exports = {
   uploadDocument: exports.uploadDocument,
   getDocument: exports.getDocument,
+  getDocumentPdf: exports.getDocumentPdf,
   addSignature: exports.addSignature,
   getUserDocuments: exports.getUserDocuments,
 };

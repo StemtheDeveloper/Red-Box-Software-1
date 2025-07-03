@@ -192,6 +192,43 @@ class CustomDocumentClient {
   }
 
   /**
+   * Get document PDF for viewing
+   * @param {string} documentId - Document ID
+   * @param {string} accessToken - Optional access token for unauthenticated access
+   * @returns {Promise<Object>} PDF data result
+   */
+  async getDocumentPdf(documentId, accessToken = null) {
+    try {
+      if (!documentId) {
+        throw new Error("Document ID is required");
+      }
+
+      const { httpsCallable } = await import(
+        "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js"
+      );
+
+      const getDocumentPdfFunction = httpsCallable(
+        this.functions,
+        "getDocumentPdf"
+      );
+
+      const result = await getDocumentPdfFunction({
+        documentId: documentId,
+        accessToken: accessToken,
+      });
+
+      if (!result.data.success) {
+        throw new Error(result.data.error || "Failed to get PDF");
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error("Error getting document PDF:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Create signature canvas for drawing signatures
    * @param {string|HTMLElement} container - Container element or selector
    * @param {Object} options - Canvas options
@@ -284,7 +321,7 @@ class CustomDocumentClient {
       canvas.dispatchEvent(mouseEvent);
     });
 
-    return {
+    const signaturePad = {
       canvas: canvas,
       clear: () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -294,12 +331,14 @@ class CustomDocumentClient {
         return !imageData.data.some((channel) => channel !== 0);
       },
       getSignatureData: () => {
-        if (this.isEmpty()) {
+        if (signaturePad.isEmpty()) {
           throw new Error("Please provide a signature");
         }
         return canvas.toDataURL("image/png").split(",")[1]; // Return base64 without prefix
       },
     };
+
+    return signaturePad;
   }
 
   /**

@@ -361,6 +361,7 @@ exports.dailyReminderCheck = onSchedule(
 
 exports.uploadDocument = customDocumentSigning.uploadDocument;
 exports.getDocument = customDocumentSigning.getDocument;
+exports.getDocumentPdf = customDocumentSigning.getDocumentPdf;
 exports.addSignature = customDocumentSigning.addSignature;
 exports.getUserDocuments = customDocumentSigning.getUserDocuments;
 

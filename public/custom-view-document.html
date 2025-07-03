@@ -340,6 +340,32 @@
           width: 100% !important;
           height: 150px !important;
         }
+
+        .pdf-toolbar {
+          flex-direction: column;
+          gap: 10px;
+          align-items: stretch;
+        }
+
+        .pdf-toolbar > div {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .pdf-container {
+          min-height: 400px;
+        }
+
+        .pdf-canvas-container {
+          padding: 10px;
+          min-height: 300px;
+        }
+
+        .zoom-controls {
+          justify-content: center;
+        }
       }
 
       .auth-section {
@@ -368,6 +394,108 @@
         margin: 0;
         font-size: 16px;
         opacity: 0.9;
+      }
+
+      .pdf-viewer-section {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+      }
+
+      .pdf-container {
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        background: #f5f5f5;
+        min-height: 600px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .pdf-toolbar {
+        background: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+      }
+
+      .pdf-toolbar button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s ease;
+      }
+
+      .pdf-toolbar button:hover {
+        background: #0056b3;
+      }
+
+      .pdf-toolbar button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .pdf-page-info {
+        font-size: 14px;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .pdf-canvas-container {
+        text-align: center;
+        padding: 20px;
+        min-height: 500px;
+        overflow: auto;
+      }
+
+      .pdf-canvas {
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 100%;
+        height: auto;
+      }
+
+      .pdf-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 400px;
+        color: #666;
+      }
+
+      .pdf-error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 400px;
+        color: #dc3545;
+        text-align: center;
+      }
+
+      .zoom-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .zoom-input {
+        width: 60px;
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-align: center;
       }
     </style>
   </head>
@@ -521,6 +649,75 @@
           <div id="signersGrid" class="signers-grid"></div>
         </div>
 
+        <!-- PDF Viewer Section -->
+        <div
+          id="pdfViewerSection"
+          class="pdf-viewer-section"
+          style="display: none"
+        >
+          <h2 class="section-title">📄 Document Preview</h2>
+
+          <div class="pdf-container">
+            <div class="pdf-toolbar">
+              <button id="prevPageBtn" onclick="changePage(-1)">
+                ◀ Previous
+              </button>
+              <button id="nextPageBtn" onclick="changePage(1)">Next ▶</button>
+
+              <div class="pdf-page-info">
+                <span>Page:</span>
+                <input
+                  type="number"
+                  id="pageInput"
+                  class="zoom-input"
+                  min="1"
+                  onchange="goToPage(this.value)"
+                />
+                <span>of <span id="totalPages">-</span></span>
+              </div>
+
+              <div class="zoom-controls">
+                <button onclick="zoomOut()">🔍-</button>
+                <input
+                  type="number"
+                  id="zoomInput"
+                  class="zoom-input"
+                  value="100"
+                  min="25"
+                  max="300"
+                  step="25"
+                  onchange="setZoom(this.value)"
+                />
+                <span>%</span>
+                <button onclick="zoomIn()">🔍+</button>
+                <button onclick="fitToWidth()">Fit Width</button>
+              </div>
+
+              <button onclick="downloadPdf()" class="btn-secondary">
+                💾 Download
+              </button>
+            </div>
+
+            <div id="pdfCanvasContainer" class="pdf-canvas-container">
+              <div id="pdfLoading" class="pdf-loading">
+                <div class="spinner"></div>
+                <p>Loading PDF...</p>
+              </div>
+
+              <div id="pdfError" class="pdf-error" style="display: none">
+                <p>❌ Failed to load PDF</p>
+                <button onclick="loadPdfViewer()" class="btn">Try Again</button>
+              </div>
+
+              <canvas
+                id="pdfCanvas"
+                class="pdf-canvas"
+                style="display: none"
+              ></canvas>
+            </div>
+          </div>
+        </div>
+
         <!-- Signature Section (only shown if user can sign) -->
         <div
           id="signatureSection"
@@ -589,7 +786,7 @@
           <div class="signature-controls">
             <button onclick="goBack()" class="btn btn-secondary">← Back</button>
             <button
-              onclick="downloadDocument()"
+              onclick="downloadPdf()"
               class="btn"
               id="downloadBtn"
               style="display: none"
@@ -640,11 +837,13 @@
       // Initialize custom document client
       // Wait for the CustomDocumentClient to be available
       const initClient = () => {
-        if (window.CustomDocumentClient) {
+        if (window.CustomDocumentClient && window.firebase) {
           window.customDocumentClient = new CustomDocumentClient(
             window.firebase
           );
+          console.log("CustomDocumentClient initialized successfully");
         } else {
+          console.log("Waiting for CustomDocumentClient and Firebase...");
           setTimeout(initClient, 100);
         }
       };
@@ -654,6 +853,10 @@
       window.currentDocument = null;
       window.currentUser = null;
       window.signaturePad = null;
+      window.pdfDoc = null;
+      window.currentPage = 1;
+      window.currentZoom = 1.0;
+      window.pdfData = null;
 
       // Load document when page loads
       onAuthStateChanged(auth, async (user) => {
@@ -664,6 +867,14 @@
 
     <!-- Custom Document Client -->
     <script src="scripts/custom-document-client.js"></script>
+
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      // Configure PDF.js worker
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    </script>
 
     <!-- Page Scripts -->
     <script>
@@ -746,10 +957,17 @@
         // Display signers
         displaySigners(docData.signers, docData.currentSigner);
 
+        // Show PDF viewer
+        document.getElementById("pdfViewerSection").style.display = "block";
+        loadPdfViewer();
+
         // Show signature section if user can sign
         if (docData.currentSigner && docData.currentSigner.canSign) {
           document.getElementById("signatureSection").style.display = "block";
-          initializeSignatureCanvas();
+          // Delay signature canvas initialization to ensure client is ready
+          setTimeout(() => {
+            initializeSignatureCanvas();
+          }, 500);
         }
       }
 
@@ -794,19 +1012,47 @@
       }
 
       function initializeSignatureCanvas() {
-        const canvas = document.getElementById("signatureCanvas");
-        window.signaturePad = window.customDocumentClient.createSignatureCanvas(
-          canvas.parentNode,
-          {
-            width: 600,
-            height: 200,
-            strokeColor: "#000",
-            lineWidth: 2,
-          }
-        );
+        // Wait for customDocumentClient to be available
+        if (!window.customDocumentClient) {
+          console.error("CustomDocumentClient not available yet");
+          setTimeout(initializeSignatureCanvas, 100);
+          return;
+        }
 
-        // Remove the old canvas and use the new one
-        canvas.remove();
+        const canvasContainer = document.querySelector(
+          ".signature-canvas-container"
+        );
+        const existingCanvas = document.getElementById("signatureCanvas");
+
+        // Remove existing canvas if present
+        if (existingCanvas) {
+          existingCanvas.remove();
+        }
+
+        try {
+          // Create new signature pad
+          window.signaturePad =
+            window.customDocumentClient.createSignatureCanvas(canvasContainer, {
+              width: 600,
+              height: 200,
+              strokeColor: "#000",
+              lineWidth: 2,
+            });
+
+          // Set the canvas ID for easier reference
+          if (window.signaturePad && window.signaturePad.canvas) {
+            window.signaturePad.canvas.id = "signatureCanvas";
+            window.signaturePad.canvas.className = "signature-canvas";
+          }
+
+          console.log("Signature pad initialized:", window.signaturePad);
+          console.log(
+            "Available methods:",
+            window.signaturePad ? Object.keys(window.signaturePad) : "None"
+          );
+        } catch (error) {
+          console.error("Error initializing signature canvas:", error);
+        }
       }
 
       function clearSignature() {
@@ -847,7 +1093,23 @@
           let textSignature = "";
 
           if (type === "image") {
-            if (!window.signaturePad || window.signaturePad.isEmpty()) {
+            console.log("Signature pad:", window.signaturePad);
+            console.log(
+              "Signature pad methods:",
+              window.signaturePad
+                ? Object.keys(window.signaturePad)
+                : "No signature pad"
+            );
+
+            if (!window.signaturePad) {
+              window.customDocumentClient.showMessage(
+                "Signature pad not initialized. Please refresh the page and try again.",
+                "error"
+              );
+              return;
+            }
+
+            if (window.signaturePad.isEmpty()) {
               window.customDocumentClient.showMessage(
                 "Please provide a signature.",
                 "error"
@@ -915,15 +1177,6 @@
         }
       }
 
-      function downloadDocument() {
-        // This would typically download the signed PDF
-        // For now, we'll show a message
-        window.customDocumentClient.showMessage(
-          "Download functionality will be implemented in the next phase.",
-          "info"
-        );
-      }
-
       function goBack() {
         if (document.referrer) {
           window.history.back();
@@ -937,6 +1190,201 @@
         document.getElementById("errorMessage").textContent = message;
         document.getElementById("errorSection").style.display = "block";
       }
+
+      // PDF Viewing Functions
+      async function loadPdfViewer() {
+        if (!window.customDocumentClient || !window.currentDocument) {
+          console.error("Document client or current document not available");
+          return;
+        }
+
+        try {
+          document.getElementById("pdfLoading").style.display = "flex";
+          document.getElementById("pdfError").style.display = "none";
+          document.getElementById("pdfCanvas").style.display = "none";
+
+          const urlParams = new URLSearchParams(window.location.search);
+          const accessToken = urlParams.get("token");
+
+          const result = await window.customDocumentClient.getDocumentPdf(
+            window.currentDocument.id,
+            accessToken
+          );
+
+          if (!result.success) {
+            throw new Error(result.error || "Failed to load PDF");
+          }
+
+          // Convert base64 to array buffer
+          const binaryString = atob(result.pdfData);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+
+          // Store PDF data for download
+          window.pdfData = bytes;
+
+          // Load PDF with PDF.js
+          const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+          window.pdfDoc = pdfDoc;
+          window.currentPage = 1;
+
+          document.getElementById("totalPages").textContent = pdfDoc.numPages;
+          document.getElementById("pageInput").value = 1;
+          document.getElementById("pageInput").max = pdfDoc.numPages;
+
+          // Hide loading and show canvas
+          document.getElementById("pdfLoading").style.display = "none";
+          document.getElementById("pdfCanvas").style.display = "block";
+
+          // Render first page
+          await renderPage(1);
+
+          // Update navigation buttons
+          updateNavigationButtons();
+        } catch (error) {
+          console.error("Error loading PDF:", error);
+          document.getElementById("pdfLoading").style.display = "none";
+          document.getElementById("pdfError").style.display = "flex";
+          document
+            .getElementById("pdfError")
+            .querySelector(
+              "p"
+            ).textContent = `❌ Failed to load PDF: ${error.message}`;
+        }
+      }
+
+      async function renderPage(pageNum) {
+        if (!window.pdfDoc) return;
+
+        try {
+          const page = await window.pdfDoc.getPage(pageNum);
+          const canvas = document.getElementById("pdfCanvas");
+          const context = canvas.getContext("2d");
+
+          // Calculate scale to fit container width
+          const container = document.getElementById("pdfCanvasContainer");
+          const containerWidth = container.clientWidth - 40; // Account for padding
+          const viewport = page.getViewport({ scale: 1 });
+          const scale = (containerWidth / viewport.width) * window.currentZoom;
+
+          const scaledViewport = page.getViewport({ scale: scale });
+
+          canvas.height = scaledViewport.height;
+          canvas.width = scaledViewport.width;
+
+          const renderContext = {
+            canvasContext: context,
+            viewport: scaledViewport,
+          };
+
+          await page.render(renderContext).promise;
+          window.currentPage = pageNum;
+
+          // Update page input
+          document.getElementById("pageInput").value = pageNum;
+        } catch (error) {
+          console.error("Error rendering page:", error);
+        }
+      }
+
+      function changePage(delta) {
+        if (!window.pdfDoc) return;
+
+        const newPage = window.currentPage + delta;
+        if (newPage >= 1 && newPage <= window.pdfDoc.numPages) {
+          renderPage(newPage);
+          updateNavigationButtons();
+        }
+      }
+
+      function goToPage(pageNum) {
+        if (!window.pdfDoc) return;
+
+        const page = parseInt(pageNum);
+        if (page >= 1 && page <= window.pdfDoc.numPages) {
+          renderPage(page);
+          updateNavigationButtons();
+        }
+      }
+
+      function updateNavigationButtons() {
+        if (!window.pdfDoc) return;
+
+        const prevBtn = document.getElementById("prevPageBtn");
+        const nextBtn = document.getElementById("nextPageBtn");
+
+        prevBtn.disabled = window.currentPage <= 1;
+        nextBtn.disabled = window.currentPage >= window.pdfDoc.numPages;
+      }
+
+      function zoomIn() {
+        setZoom((window.currentZoom * 100 + 25).toString());
+      }
+
+      function zoomOut() {
+        setZoom((window.currentZoom * 100 - 25).toString());
+      }
+
+      function setZoom(percentage) {
+        const zoom = Math.max(0.25, Math.min(3.0, parseInt(percentage) / 100));
+        window.currentZoom = zoom;
+        document.getElementById("zoomInput").value = Math.round(zoom * 100);
+
+        if (window.pdfDoc) {
+          renderPage(window.currentPage);
+        }
+      }
+
+      function fitToWidth() {
+        window.currentZoom = 1.0;
+        document.getElementById("zoomInput").value = 100;
+
+        if (window.pdfDoc) {
+          renderPage(window.currentPage);
+        }
+      }
+
+      function downloadPdf() {
+        if (!window.pdfData || !window.currentDocument) {
+          window.customDocumentClient.showMessage(
+            "PDF data not available for download.",
+            "error"
+          );
+          return;
+        }
+
+        try {
+          const blob = new Blob([window.pdfData], { type: "application/pdf" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = window.currentDocument.fileName || "document.pdf";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          window.customDocumentClient.showMessage(
+            "PDF downloaded successfully!",
+            "success"
+          );
+        } catch (error) {
+          console.error("Error downloading PDF:", error);
+          window.customDocumentClient.showMessage(
+            "Failed to download PDF: " + error.message,
+            "error"
+          );
+        }
+      }
+
+      // Handle window resize to re-render PDF at correct size
+      window.addEventListener("resize", function () {
+        if (window.pdfDoc && window.currentPage) {
+          setTimeout(() => renderPage(window.currentPage), 100);
+        }
+      });
     </script>
   </body>
 </html>
