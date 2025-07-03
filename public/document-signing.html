@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document Signing - RBS</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <style>
+      .container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        color: #666;
+        font-size: 18px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+        box-sizing: border-box;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #ff2c3c;
+        box-shadow: 0 0 0 3px rgba(255, 44, 60, 0.1);
+      }
+
+      .file-upload {
+        border: 2px dashed #e1e5e9;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+        position: relative;
+      }
+
+      .file-upload:hover {
+        border-color: #ff2c3c;
+        background: #fff5f5;
+        transform: translateY(-2px);
+      }
+
+      .file-upload.dragover {
+        border-color: #ff2c3c;
+        background: #fff5f5;
+        border-style: solid;
+        box-shadow: 0 4px 12px rgba(255, 44, 60, 0.2);
+        transform: scale(1.02);
+      }
+
+      .file-upload-icon {
+        font-size: 48px;
+        color: #ccc;
+        margin-bottom: 15px;
+        transition: color 0.3s ease;
+      }
+
+      .file-upload:hover .file-upload-icon,
+      .file-upload.dragover .file-upload-icon {
+        color: #ff2c3c;
+      }
+
+      .btn {
+        background: #ff2c3c;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+      }
+
+      .btn:hover {
+        background: #e02635;
+        transform: translateY(-2px);
+      }
+
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+      }
+
+      .message {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+
+      .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .loading.show {
+        display: block;
+      }
+
+      .share-link {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        word-break: break-all;
+        font-family: monospace;
+        border: 1px solid #e1e5e9;
+        margin-bottom: 15px;
+      }
+
+      .copy-btn {
+        margin-left: 10px;
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+
+      .back-link {
+        color: #666;
+        text-decoration: none;
+        margin-bottom: 20px;
+        display: inline-block;
+      }
+
+      .back-link:hover {
+        color: #ff2c3c;
+      }
+
+      .signer-input {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .signer-input input {
+        flex: 1;
+        margin: 0;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px 10px;
+        }
+
+        .card {
+          padding: 20px;
+        }
+
+        .signer-input {
+          flex-direction: column;
+          gap: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="index.html">
+        <div class="logo">
+          <img
+            id="logo"
+            src="./Images/RBS Logo main.svg"
+            alt="RBS Logo. It's a box that's red"
+          />
+        </div>
+      </a>
+      <div class="burger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+
+      <div id="webNav">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+
+          <br />
+          <br />
+          <br />
+        </div>
+      </div>
+      <div class="dropdown-content">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+        </div>
+      </div>
+      <div id="shadow"></div>
+    </nav>
+
+    <div class="container">
+      <a href="index.html" class="back-link">← Back to Home</a>
+
+      <div class="header">
+        <h1>📄 Document Signing</h1>
+        <p>Upload a document and share it for secure electronic signature</p>
+      </div>
+
+      <div id="messageContainer"></div>
+
+      <div class="loading" id="loading">
+        <div>Sending your document...</div>
+      </div>
+
+      <!-- Main Form -->
+      <div class="card" id="mainForm">
+        <h2>Send Document for Signature</h2>
+
+        <div class="form-group">
+          <label for="documentTitle">Document Title</label>
+          <input
+            type="text"
+            id="documentTitle"
+            placeholder="e.g., Employment Contract, Service Agreement"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Upload Document (PDF)</label>
+          <div class="file-upload" id="fileUpload">
+            <div class="file-upload-icon">📁</div>
+            <div><strong>Click to upload PDF</strong> or drag and drop</div>
+            <div style="margin-top: 10px; color: #666; font-size: 14px">
+              Supports PDF files only
+            </div>
+          </div>
+          <input
+            type="file"
+            id="fileInput"
+            accept=".pdf"
+            style="display: none"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Recipient Information</label>
+          <div class="signer-input">
+            <input
+              type="text"
+              id="signerName"
+              placeholder="Recipient's Full Name"
+              required
+            />
+            <input
+              type="email"
+              id="signerEmail"
+              placeholder="Recipient's Email Address"
+              required
+            />
+          </div>
+          <small style="color: #666">
+            The document will be sent to this person for signature.
+          </small>
+        </div>
+
+        <button class="btn" onclick="sendDocument()" id="sendBtn">
+          Send Document for Signature
+        </button>
+      </div>
+
+      <!-- Success Section -->
+      <div class="card" id="successSection" style="display: none">
+        <h2>✅ Document Sent Successfully!</h2>
+        <p>
+          Your document has been sent for signature. Here's what happens next:
+        </p>
+
+        <ol style="margin: 20px 0">
+          <li>
+            The recipient will receive an email with a secure signing link
+          </li>
+          <li>They can review and sign the document online</li>
+          <li>You'll receive a notification when the document is signed</li>
+          <li>You can download the completed document using the link below</li>
+        </ol>
+
+        <div class="form-group">
+          <label>Document Tracking Link</label>
+          <div style="display: flex; align-items: center">
+            <div class="share-link" id="shareLink">...</div>
+            <button class="btn-secondary copy-btn" onclick="copyLink()">
+              Copy Link
+            </button>
+          </div>
+          <small style="color: #666">
+            Save this link to track the document status and download the signed
+            version.
+          </small>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 30px">
+          <button class="btn" onclick="startOver()">
+            Send Another Document
+          </button>
+          <a href="document-dashboard.html" class="btn btn-secondary">
+            View All Documents
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script src="config/firebase-config.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+      import {
+        getFunctions,
+        httpsCallable,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-functions.js";
+
+      // Initialize Firebase
+      if (!window.firebaseConfig) {
+        console.error("Firebase configuration not loaded!");
+      }
+
+      const app = initializeApp(window.firebaseConfig);
+      const auth = getAuth(app);
+      const functions = getFunctions(app);
+
+      let uploadedFile = null;
+      let currentUser = null;
+
+      // Check authentication
+      onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (!user) {
+          // Don't show error message or redirect immediately on page load
+          // Just store that user is not authenticated
+          console.log("User not authenticated");
+        } else {
+          console.log("User authenticated:", user.email);
+        }
+      });
+
+      // File upload handling
+      const fileUpload = document.getElementById("fileUpload");
+      const fileInput = document.getElementById("fileInput");
+
+      // Click to select file
+      fileUpload.addEventListener("click", () => fileInput.click());
+
+      // Drag and drop functionality
+      fileUpload.addEventListener("dragover", handleDragOver);
+      fileUpload.addEventListener("dragenter", handleDragEnter);
+      fileUpload.addEventListener("dragleave", handleDragLeave);
+      fileUpload.addEventListener("drop", handleDrop);
+
+      // File input change
+      fileInput.addEventListener("change", handleFileSelect);
+
+      // Prevent default drag behaviors on the document
+      document.addEventListener("dragover", function (e) {
+        e.preventDefault();
+      });
+
+      document.addEventListener("drop", function (e) {
+        e.preventDefault();
+      });
+
+      function handleDragEnter(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        fileUpload.classList.add("dragover");
+      }
+
+      function handleDragOver(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        fileUpload.classList.add("dragover");
+      }
+
+      function handleDragLeave(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Only remove dragover if we're leaving the drop zone
+        if (!fileUpload.contains(e.relatedTarget)) {
+          fileUpload.classList.remove("dragover");
+        }
+      }
+
+      function handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        fileUpload.classList.remove("dragover");
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFile(files[0]);
+        }
+      }
+
+      function handleFileSelect(e) {
+        if (e.target.files.length > 0) {
+          handleFile(e.target.files[0]);
+        }
+      }
+
+      function handleFile(file) {
+        if (file.type !== "application/pdf") {
+          showMessage("Please upload a PDF file only.", "error");
+          return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+          // 10MB limit
+          showMessage("File size must be less than 10MB.", "error");
+          return;
+        }
+
+        uploadedFile = file;
+        fileUpload.innerHTML = `
+          <div class="file-upload-icon">📄</div>
+          <div><strong>${file.name}</strong></div>
+          <div style="color: #666;">${(file.size / 1024 / 1024).toFixed(
+            2
+          )} MB</div>
+        `;
+        showMessage("PDF uploaded successfully!", "success");
+      }
+
+      // Send document function
+      window.sendDocument = async function () {
+        // Check if user is authenticated
+        if (!currentUser) {
+          showMessage(
+            "Please sign in to use document signing. You need to be authenticated to send documents.",
+            "error"
+          );
+          return;
+        }
+
+        const title = document.getElementById("documentTitle").value.trim();
+        const signerName = document.getElementById("signerName").value.trim();
+        const signerEmail = document.getElementById("signerEmail").value.trim();
+        const sendBtn = document.getElementById("sendBtn");
+
+        // Validation
+        if (!title) {
+          showMessage("Please enter a document title.", "error");
+          return;
+        }
+
+        if (!uploadedFile) {
+          showMessage("Please upload a PDF document.", "error");
+          return;
+        }
+
+        if (!signerName || !signerEmail) {
+          showMessage("Please enter the recipient's name and email.", "error");
+          return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(signerEmail)) {
+          showMessage("Please enter a valid email address.", "error");
+          return;
+        }
+
+        sendBtn.disabled = true;
+        sendBtn.textContent = "Sending...";
+        document.getElementById("loading").classList.add("show");
+
+        try {
+          // Ensure user is still authenticated
+          const idToken = await currentUser.getIdToken();
+          console.log("Got ID token for authenticated user");
+
+          // Create simple template HTML for the document
+          const templateHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px;">
+              <h1 style="color: #333; text-align: center; margin-bottom: 30px;">${title}</h1>
+              
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                <p style="margin: 0; color: #666;">
+                  <strong>Document:</strong> ${uploadedFile.name}<br>
+                  <strong>Recipient:</strong> {{signer_name}}<br>
+                  <strong>Date:</strong> {{date}}
+                </p>
+              </div>
+              
+              <div style="margin: 40px 0;">
+                <p style="font-size: 16px; line-height: 1.6;">
+                  Please review the attached document and provide your signature below to acknowledge your agreement.
+                </p>
+              </div>
+              
+              <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin: 30px 0;">
+                <h3 style="margin-top: 0;">Signature Section</h3>
+                <p><strong>Name:</strong> {{signer_name}}</p>
+                <p><strong>Email:</strong> ${signerEmail}</p>
+                <p><strong>Date:</strong> {{date}}</p>
+                <p><strong>Digital Signature:</strong> {{signature}}</p>
+              </div>
+              
+              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #888;">
+                <p>This document was sent securely via RBS Document Signing system.</p>
+              </div>
+            </div>
+          `;
+
+          const createSubmission = httpsCallable(
+            functions,
+            "createSimpleDocumentSubmission"
+          );
+
+          console.log("Calling Firebase function...");
+          const result = await createSubmission({
+            templateHtml: templateHtml,
+            templateName: title,
+            signers: [{ name: signerName, email: signerEmail }],
+            sendEmail: true,
+          });
+
+          if (result.data && result.data.success) {
+            document.getElementById("shareLink").textContent =
+              result.data.viewUrl || "Document submitted successfully";
+            document.getElementById("loading").classList.remove("show");
+            document.getElementById("mainForm").style.display = "none";
+            document.getElementById("successSection").style.display = "block";
+            showMessage("Document sent successfully!", "success");
+          } else {
+            throw new Error(
+              result.data?.error ||
+                "Failed to send document - no success response"
+            );
+          }
+        } catch (error) {
+          console.error("Error sending document:", error);
+          document.getElementById("loading").classList.remove("show");
+
+          // More specific error handling
+          if (error.code === "functions/unauthenticated") {
+            showMessage(
+              "Authentication failed. Please try signing out and signing in again.",
+              "error"
+            );
+          } else if (error.code === "functions/not-found") {
+            showMessage(
+              "Document signing service is currently unavailable. The required function was not found.",
+              "error"
+            );
+          } else if (error.code === "functions/permission-denied") {
+            showMessage(
+              "You don't have permission to use the document signing service.",
+              "error"
+            );
+          } else if (error.code === "functions/failed-precondition") {
+            showMessage(
+              "Document signing service is not properly configured.",
+              "error"
+            );
+          } else if (error.message.includes("401")) {
+            showMessage(
+              "Authentication error occurred. This might be a temporary issue with the document signing service. Please try again.",
+              "error"
+            );
+          } else if (error.message.includes("403")) {
+            showMessage(
+              "Access denied. You may not have permission to use this feature.",
+              "error"
+            );
+          } else if (error.message.includes("404")) {
+            showMessage(
+              "Document signing service not found. Please contact support.",
+              "error"
+            );
+          } else {
+            showMessage(
+              `Error sending document: ${error.message}. Please try again or contact support if the problem persists.`,
+              "error"
+            );
+          }
+        } finally {
+          sendBtn.disabled = false;
+          sendBtn.textContent = "Send Document for Signature";
+        }
+      };
+
+      // Utility functions
+      window.copyLink = function () {
+        const link = document.getElementById("shareLink").textContent;
+        navigator.clipboard.writeText(link);
+        showMessage("Link copied to clipboard!", "success");
+      };
+
+      window.startOver = function () {
+        document.getElementById("successSection").style.display = "none";
+        document.getElementById("mainForm").style.display = "block";
+
+        // Reset form
+        document.getElementById("documentTitle").value = "";
+        document.getElementById("signerName").value = "";
+        document.getElementById("signerEmail").value = "";
+
+        fileUpload.innerHTML = `
+          <div class="file-upload-icon">📁</div>
+          <div><strong>Click to upload PDF</strong> or drag and drop</div>
+          <div style="margin-top: 10px; color: #666; font-size: 14px">
+            Supports PDF files only
+          </div>
+        `;
+        uploadedFile = null;
+      };
+
+      function showMessage(message, type = "info") {
+        const container = document.getElementById("messageContainer");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${type}`;
+        messageDiv.textContent = message;
+        container.appendChild(messageDiv);
+
+        setTimeout(() => {
+          messageDiv.remove();
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

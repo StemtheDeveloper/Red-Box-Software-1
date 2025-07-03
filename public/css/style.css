@@ -155,8 +155,8 @@ p a {
 }
 
 #logo {
-  width: 200px;
-  height: 200px;
+  width: 120px;
+  height: 40px;
 }
 
 #redBoxSupport {
@@ -683,10 +683,9 @@ button[type="submit"]:hover {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  width: 50px;
-  height: 100px;
-
-  margin: 40px;
+  width: 60px;
+  height: 60px;
+  margin: 20px;
   row-gap: 10px;
   color: #ff2c3c;
   gap: 20px;

@@ -23,10 +23,13 @@
     <div class="tools-dropdown">
       <li>More ▼</li>
       <div class="tools-dropdown-content">
+        <a href="upload-document.html">📤 Send Document</a>
+        <a href="my-documents.html">📄 My Documents</a>
+        <a href="document-signing.html">Document Signing (Legacy)</a>
         <a href="clip_path_editor.html">Clip Path Editor</a>
         <a href="cubic_bezier.html">Cubic Bezier</a>
         <a href="base64.html">Base64 image encoder - decoder</a>
-        <a href="docuseal-signin.html">DocuSeal</a>
+        <a href="docuseal.html">DocuSeal (Advanced)</a>
       </div>
     </div>
 
@@ -50,10 +53,13 @@
     <div class="tools-dropdown">
       <li>More ▼</li>
       <div class="tools-dropdown-content">
+        <a href="upload-document.html">📤 Send Document</a>
+        <a href="my-documents.html">📄 My Documents</a>
+        <a href="document-signing.html">Document Signing (Legacy)</a>
         <a href="clip_path_editor.html">Clip Path Editor</a>
         <a href="cubic_bezier.html">Cubic Bezier</a>
         <a href="base64.html">Base64 image encoder - decoder</a>
-        <a href="docuseal-signin.html">DocuSeal</a>
+        <a href="docuseal.html">DocuSeal (Advanced)</a>
       </div>
     </div>
 

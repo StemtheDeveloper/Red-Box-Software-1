@@ -380,6 +380,95 @@
     </style>
   </head>
   <body>
+    <nav>
+      <a href="index.html">
+        <div class="logo">
+          <img
+            id="logo"
+            src="./Images/RBS Logo main.svg"
+            alt="RBS Logo. It's a box that's red"
+          />
+        </div>
+      </a>
+      <div class="burger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+
+      <div id="webNav">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+
+          <br />
+          <br />
+          <br />
+        </div>
+      </div>
+      <div class="dropdown-content">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+        </div>
+      </div>
+      <div id="shadow"></div>
+    </nav>
+
     <main>
       <div class="kanban-cont">
         <div class="header">
@@ -628,87 +717,92 @@
       }
 
       function createTaskElement(text, deadline = null, subtasks = []) {
-          const task = document.createElement("div");
-          task.className = "task";
-          task.draggable = true;
-          task.id = "task-" + Date.now();
+        const task = document.createElement("div");
+        task.className = "task";
+        task.draggable = true;
+        task.id = "task-" + Date.now();
 
-          const taskContent = document.createElement("div");
-          taskContent.textContent = text;
-          taskContent.className = "task-text";
+        const taskContent = document.createElement("div");
+        taskContent.textContent = text;
+        taskContent.className = "task-text";
 
-          const editBtn = document.createElement("button");
-          editBtn.textContent = "✏️";
-          editBtn.className = "edit-btn";
-          editBtn.onclick = () => editTaskTitle(task, taskContent);
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "✏️";
+        editBtn.className = "edit-btn";
+        editBtn.onclick = () => editTaskTitle(task, taskContent);
 
-          const deadlineInput = document.createElement("input");
-          deadlineInput.type = "datetime-local";
-          deadlineInput.value = deadline || "";
-          deadlineInput.addEventListener("change", () => updateTaskDeadline(task));
+        const deadlineInput = document.createElement("input");
+        deadlineInput.type = "datetime-local";
+        deadlineInput.value = deadline || "";
+        deadlineInput.addEventListener("change", () =>
+          updateTaskDeadline(task)
+        );
 
-          const subtaskButton = document.createElement("button");
-          subtaskButton.textContent = "➕ Subtask";
-          subtaskButton.onclick = () => addSubtask(task);
+        const subtaskButton = document.createElement("button");
+        subtaskButton.textContent = "➕ Subtask";
+        subtaskButton.onclick = () => addSubtask(task);
 
-          const subtaskList = document.createElement("ul");
-          subtaskList.className = "subtask-list";
-          subtasks.forEach(subtask => {
-              const subtaskElement = createSubtaskElement(subtask.text, subtask.deadline);
-              subtaskList.appendChild(subtaskElement);
-          });
+        const subtaskList = document.createElement("ul");
+        subtaskList.className = "subtask-list";
+        subtasks.forEach((subtask) => {
+          const subtaskElement = createSubtaskElement(
+            subtask.text,
+            subtask.deadline
+          );
+          subtaskList.appendChild(subtaskElement);
+        });
 
-          const taskActions = document.createElement("div");
-          taskActions.className = "task-actions";
+        const taskActions = document.createElement("div");
+        taskActions.className = "task-actions";
 
-          const deleteBtn = document.createElement("button");
-          deleteBtn.className = "delete-btn";
-          deleteBtn.textContent = "🗑️";
-          deleteBtn.onclick = () => {
-              task.remove();
-              saveTasksForBoard(currentBoardId);
-          };
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "🗑️";
+        deleteBtn.onclick = () => {
+          task.remove();
+          saveTasksForBoard(currentBoardId);
+        };
 
-          taskActions.appendChild(editBtn);
-          taskActions.appendChild(deleteBtn);
-          task.appendChild(taskContent);
-          task.appendChild(deadlineInput);
-          task.appendChild(subtaskButton);
-          task.appendChild(subtaskList);
-          task.appendChild(taskActions);
+        taskActions.appendChild(editBtn);
+        taskActions.appendChild(deleteBtn);
+        task.appendChild(taskContent);
+        task.appendChild(deadlineInput);
+        task.appendChild(subtaskButton);
+        task.appendChild(subtaskList);
+        task.appendChild(taskActions);
 
-          task.addEventListener("dragstart", dragStart);
-          task.addEventListener("dragend", dragEnd);
+        task.addEventListener("dragstart", dragStart);
+        task.addEventListener("dragend", dragEnd);
 
-          updateTaskDeadline(task);
-          return task;
+        updateTaskDeadline(task);
+        return task;
       }
 
       function editTaskTitle(task, taskContent) {
-          const oldText = taskContent.textContent;
-          const input = document.createElement("input");
-          input.type = "text";
-          input.value = oldText;
-          input.className = "task-edit-input";
-          taskContent.replaceWith(input);
-          input.focus();
+        const oldText = taskContent.textContent;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = oldText;
+        input.className = "task-edit-input";
+        taskContent.replaceWith(input);
+        input.focus();
 
-          function saveEdit() {
-              if (input.value.trim()) {
-                  taskContent.textContent = input.value.trim();
-              } else {
-                  taskContent.textContent = oldText; // Restore old text if empty
-              }
-              input.replaceWith(taskContent);
-              saveTasksForBoard(currentBoardId);
+        function saveEdit() {
+          if (input.value.trim()) {
+            taskContent.textContent = input.value.trim();
+          } else {
+            taskContent.textContent = oldText; // Restore old text if empty
           }
+          input.replaceWith(taskContent);
+          saveTasksForBoard(currentBoardId);
+        }
 
-          input.addEventListener("blur", saveEdit);
-          input.addEventListener("keypress", (e) => {
-              if (e.key === "Enter") {
-                  saveEdit();
-              }
-          });
+        input.addEventListener("blur", saveEdit);
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            saveEdit();
+          }
+        });
       }
 
       function createSubtaskElement(text, deadline = null) {
@@ -720,7 +814,9 @@
 
         const subtaskDeadline = document.createElement("input");
         subtaskDeadline.type = "datetime-local";
-        subtaskDeadline.value = deadline ? new Date(deadline).toISOString().slice(0, 16) : "";
+        subtaskDeadline.value = deadline
+          ? new Date(deadline).toISOString().slice(0, 16)
+          : "";
         subtaskDeadline.onchange = () => updateSubtaskDeadline(subtask);
 
         const deleteBtn = document.createElement("button");
@@ -790,10 +886,13 @@
             id: task.id,
             text: task.querySelector("div").textContent,
             deadline: task.querySelector('input[type="datetime-local"]').value,
-            subtasks: Array.from(task.querySelectorAll(".subtask")).map(subtask => ({
-              text: subtask.querySelector("div").textContent,
-              deadline: subtask.querySelector('input[type="datetime-local"]').value
-            }))
+            subtasks: Array.from(task.querySelectorAll(".subtask")).map(
+              (subtask) => ({
+                text: subtask.querySelector("div").textContent,
+                deadline: subtask.querySelector('input[type="datetime-local"]')
+                  .value,
+              })
+            ),
           }));
           boards[boardId].columns[columnName] = tasks;
         });
@@ -810,7 +909,11 @@
             `#${boardId} [data-column="${columnName}"]`
           );
           tasks.forEach((task) => {
-            const taskElement = createTaskElement(task.text, task.deadline, task.subtasks);
+            const taskElement = createTaskElement(
+              task.text,
+              task.deadline,
+              task.subtasks
+            );
             taskElement.id = task.id;
             column.appendChild(taskElement);
           });
@@ -881,6 +984,7 @@
       });
     </script>
     <div class="grid"></div>
+    <script src="./scripts/script.js"></script>
     <script src="./scripts/footer.js"></script>
     <script src="./scripts/grid.js"></script>
   </body>

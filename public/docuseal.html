@@ -1,31 +1,110 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DocuSeal Integration - RBS</title>
-    <link rel="stylesheet" href="css/style.css" />
-    <style>
-      .docuseal-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-      .tabs {
-        display: flex;
-        border-bottom: 2px solid #ddd;
-        margin-bottom: 20px;
-      }
-      .tab {
-        padding: 10px 20px;
-        background: #f5f5f5;
-        border: none;
-        cursor: pointer;
-        border-radius: 5px 5px 0 0;
-        margin-right: 5px;
-      }
-      .tab.active {
-        background: #007bff;
+    <title>Redirecting to Document Signing - RBS</title>
+    <meta http-equiv="refresh" content="0; url=document-signing.html" />
+    <link rel="canonical" href="document-signing.html" />
+  </head>
+  <body>
+    <nav>
+      <a href="index.html">
+        <div class="logo">
+          <img
+            id="logo"
+            src="./Images/RBS Logo main.svg"
+            alt="RBS Logo. It's a box that's red"
+          />
+        </div>
+      </a>
+      <div class="burger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+
+      <div id="webNav">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+
+          <br />
+          <br />
+          <br />
+        </div>
+      </div>
+      <div class="dropdown-content">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+        </div>
+      </div>
+      <div id="shadow"></div>
+    </nav>
+
+    <p>The document signing feature has been simplified. Redirecting to the new page...</p>
+    <script>
+      window.location.replace("document-signing.html");
+    </script>
+  </body>
+</html>
+        background: #ff2c3c;
         color: white;
       }
       .tab-content {
@@ -177,19 +256,226 @@
     </style>
     <!-- Firebase Configuration -->
     <script src="config/firebase-config.js"></script>
+    <!-- Centralized Authentication -->
+    <script src="scripts/auth.js" type="module"></script>
   </head>
   <body>
+    <nav>
+      <a href="index.html">
+        <div class="logo">
+          <img
+            id="logo"
+            src="./Images/RBS Logo main.svg"
+            alt="RBS Logo. It's a box that's red"
+          />
+        </div>
+      </a>
+      <div class="burger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+
+      <div id="webNav">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+
+          <br />
+          <br />
+          <br />
+        </div>
+      </div>
+      <div class="dropdown-content">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+        </div>
+      </div>
+      <div id="shadow"></div>
+    </nav>
+
+    <!-- Navigation -->
+        <nav>
+      <a href="index.html">
+        <div class="logo">
+          <img
+            id="logo"
+            src="./Images/RBS Logo main.svg"
+            alt="RBS Logo. It's a box that's red"
+          />
+        </div>
+      </a>
+      <div class="burger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+
+      <div id="webNav">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+
+          <br />
+          <br />
+          <br />
+        </div>
+      </div>
+      <div class="dropdown-content">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+        </div>
+      </div>
+      <div id="shadow"></div>
+    </nav>
+
+
     <div class="docuseal-container">
       <h1>DocuSeal Document Signing Integration</h1>
 
       <div id="authSection">
         <div class="message error">
           Please log in to access DocuSeal features.
-          <button
-            onclick="window.location.href='docuseal-signin.html'"
+        </div>
+        <div style="text-align: center; margin-top: 20px">
+          <a
+            href="signin.html"
             class="btn"
+            style="
+              display: inline-block;
+              padding: 10px 20px;
+              background: #007bff;
+              color: white;
+              text-decoration: none;
+              border-radius: 5px;
+            "
           >
-            Sign In to DocuSeal
+            Sign In
+          </a>
+          <button
+            onclick="window.RBSAuth.redirectToSignIn()"
+            class="btn"
+            style="
+              margin-left: 10px;
+              padding: 10px 20px;
+              background: #28a745;
+              color: white;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+            "
+          >
+            Sign In (with redirect)
           </button>
         </div>
       </div>
@@ -506,7 +792,19 @@
         getFunctions,
         httpsCallable,
       } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-functions.js";
-      import { getFirestore } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+      import {
+        getFirestore,
+        collection,
+        query,
+        where,
+        orderBy,
+        getDocs,
+        doc,
+        getDoc,
+        addDoc,
+        updateDoc,
+        deleteDoc,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
       // Use configuration from external file
       if (!window.firebaseConfig) {
@@ -522,52 +820,211 @@
       const functions = getFunctions(app);
       const db = getFirestore(app);
 
+      // Create a v8-compatible wrapper for Firestore to work with DocuSeal client
+      const firestoreV8Wrapper = {
+        collection: (collectionName) => ({
+          where: (field, operator, value) => ({
+            where: (field2, operator2, value2) => ({
+              orderBy: (field, direction = "desc") => ({
+                get: async () => {
+                  try {
+                    let q = collection(db, collectionName);
+                    q = query(q, where(field, operator, value));
+                    if (field2) {
+                      q = query(q, where(field2, operator2, value2));
+                    }
+                    q = query(q, orderBy(field, direction));
+                    const snapshot = await getDocs(q);
+                    const docs = snapshot.docs.map((doc) => ({
+                      id: doc.id,
+                      data: () => doc.data(),
+                    }));
+                    return {
+                      docs: docs,
+                      forEach: (callback) => docs.forEach(callback),
+                    };
+                  } catch (error) {
+                    console.error("Firestore query error:", error);
+                    return {
+                      docs: [],
+                      forEach: (callback) => [],
+                    };
+                  }
+                },
+              }),
+              get: async () => {
+                try {
+                  let q = collection(db, collectionName);
+                  q = query(q, where(field, operator, value));
+                  if (field2) {
+                    q = query(q, where(field2, operator2, value2));
+                  }
+                  const snapshot = await getDocs(q);
+                  const docs = snapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    data: () => doc.data(),
+                  }));
+                  return {
+                    docs: docs,
+                    forEach: (callback) => docs.forEach(callback),
+                  };
+                } catch (error) {
+                  console.error("Firestore query error:", error);
+                  return {
+                    docs: [],
+                    forEach: (callback) => [],
+                  };
+                }
+              },
+            }),
+            orderBy: (field, direction = "desc") => ({
+              get: async () => {
+                try {
+                  let q = collection(db, collectionName);
+                  q = query(q, where(field, operator, value));
+                  q = query(q, orderBy(field, direction));
+                  const snapshot = await getDocs(q);
+                  const docs = snapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    data: () => doc.data(),
+                  }));
+                  return {
+                    docs: docs,
+                    forEach: (callback) => docs.forEach(callback),
+                  };
+                } catch (error) {
+                  console.error("Firestore query error:", error);
+                  return {
+                    docs: [],
+                    forEach: (callback) => [],
+                  };
+                }
+              },
+            }),
+            get: async () => {
+              try {
+                let q = collection(db, collectionName);
+                q = query(q, where(field, operator, value));
+                const snapshot = await getDocs(q);
+                const docs = snapshot.docs.map((doc) => ({
+                  id: doc.id,
+                  data: () => doc.data(),
+                }));
+                return {
+                  docs: docs,
+                  forEach: (callback) => docs.forEach(callback),
+                };
+              } catch (error) {
+                console.error("Firestore query error:", error);
+                return {
+                  docs: [],
+                  forEach: (callback) => [],
+                };
+              }
+            },
+          }),
+          orderBy: (field, direction = "desc") => ({
+            get: async () => {
+              try {
+                let q = collection(db, collectionName);
+                q = query(q, orderBy(field, direction));
+                const snapshot = await getDocs(q);
+                const docs = snapshot.docs.map((doc) => ({
+                  id: doc.id,
+                  data: () => doc.data(),
+                }));
+                return {
+                  docs: docs,
+                  forEach: (callback) => docs.forEach(callback),
+                };
+              } catch (error) {
+                console.error("Firestore query error:", error);
+                return {
+                  docs: [],
+                  forEach: (callback) => [],
+                };
+              }
+            },
+          }),
+          get: async () => {
+            try {
+              const q = collection(db, collectionName);
+              const snapshot = await getDocs(q);
+              const docs = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                data: () => doc.data(),
+              }));
+              return {
+                docs: docs,
+                forEach: (callback) => docs.forEach(callback),
+              };
+            } catch (error) {
+              console.error("Firestore query error:", error);
+              return {
+                docs: [],
+                forEach: (callback) => [],
+              };
+            }
+          },
+          doc: (docId) => ({
+            get: async () => {
+              try {
+                const docRef = doc(db, collectionName, docId);
+                const docSnap = await getDoc(docRef);
+                return {
+                  exists: docSnap.exists(),
+                  data: () => docSnap.data(),
+                  id: docSnap.id,
+                };
+              } catch (error) {
+                console.error("Firestore doc get error:", error);
+                return { exists: false };
+              }
+            },
+            set: async (data) => {
+              try {
+                const docRef = doc(db, collectionName, docId);
+                await updateDoc(docRef, data);
+                return true;
+              } catch (error) {
+                console.error("Firestore doc set error:", error);
+                return false;
+              }
+            },
+            update: async (data) => {
+              try {
+                const docRef = doc(db, collectionName, docId);
+                await updateDoc(docRef, data);
+                return true;
+              } catch (error) {
+                console.error("Firestore doc update error:", error);
+                return false;
+              }
+            },
+          }),
+          add: async (data) => {
+            try {
+              const docRef = await addDoc(collection(db, collectionName), data);
+              return { id: docRef.id };
+            } catch (error) {
+              console.error("Firestore add error:", error);
+              return null;
+            }
+          },
+        }),
+      };
+
       // Make Firebase available globally
       window.firebase = {
         app,
         auth,
         functions: () => functions,
         httpsCallable,
-        firestore: () => db,
+        firestore: () => firestoreV8Wrapper,
       };
 
       // Initialize DocuSeal client
       window.docuSealClient = new DocuSealClient(window.firebase);
-
-      // Check authentication status
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          try {
-            // Check if user has DocuSeal access
-            const { doc: docRef, getDoc } = await import(
-              "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js"
-            );
-            const userDoc = await getDoc(docRef(db, "users", user.uid));
-            const userData = userDoc.data();
-
-            // Allow admin user or users with docusealAccess
-            if (
-              user.email === "stiaan44@gmail.com" ||
-              (userData && userData.docusealAccess === true)
-            ) {
-              document.getElementById("authSection").style.display = "none";
-              document.getElementById("mainContent").style.display = "block";
-              loadSubmissions();
-              loadTemplates();
-            } else {
-              document.getElementById("authSection").style.display = "block";
-              document.getElementById("mainContent").style.display = "none";
-            }
-          } catch (error) {
-            console.error("Error checking user access:", error);
-            document.getElementById("authSection").style.display = "block";
-            document.getElementById("mainContent").style.display = "none";
-          }
-        } else {
-          document.getElementById("authSection").style.display = "block";
-          document.getElementById("mainContent").style.display = "none";
-        }
-      });
     </script>
 
     <!-- DocuSeal Client Library -->
@@ -1003,6 +1460,46 @@
                 `;
         }
       }
+
+      // Authentication handling for DocuSeal page
+      document.addEventListener("DOMContentLoaded", async () => {
+        if (window.RBSAuth) {
+          await window.RBSAuth.initialize();
+
+          // Check authentication
+          const isAuthenticated = await window.RBSAuth.requireAuth(false);
+
+          if (isAuthenticated) {
+            document.getElementById("authSection").style.display = "none";
+            document.getElementById("mainContent").style.display = "block";
+            loadSubmissions();
+            loadTemplates();
+          } else {
+            document.getElementById("authSection").style.display = "block";
+            document.getElementById("mainContent").style.display = "none";
+          }
+        }
+      });
+
+      // Listen for auth state changes
+      window.addEventListener("authStateChanged", (event) => {
+        const { user } = event.detail;
+
+        if (user) {
+          document.getElementById("authSection").style.display = "none";
+          document.getElementById("mainContent").style.display = "block";
+          loadSubmissions();
+          loadTemplates();
+        } else {
+          document.getElementById("authSection").style.display = "block";
+          document.getElementById("mainContent").style.display = "none";
+        }
+      });
     </script>
+
+    <!-- Navigation Scripts -->
+    <script src="./scripts/script.js"></script>
+    <script src="./scripts/footer.js"></script>
+    <script src="./scripts/grid.js"></script>
   </body>
 </html>

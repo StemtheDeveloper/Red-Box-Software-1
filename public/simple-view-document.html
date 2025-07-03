@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Document - RBS</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <style>
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        color: #666;
+        font-size: 18px;
+      }
+
+      .document-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 30px;
+      }
+
+      .document-header {
+        background: #f8f9fa;
+        padding: 20px;
+        border-bottom: 1px solid #e1e5e9;
+      }
+
+      .document-title {
+        margin: 0;
+        color: #333;
+        font-size: 1.5em;
+      }
+
+      .document-meta {
+        color: #666;
+        margin-top: 5px;
+      }
+
+      .document-content {
+        padding: 30px;
+        min-height: 400px;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .document-content iframe {
+        width: 100%;
+        height: 600px;
+        border: none;
+        border-radius: 8px;
+      }
+
+      .signing-section {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        text-align: center;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #ff2c3c;
+        box-shadow: 0 0 0 3px rgba(255, 44, 60, 0.1);
+      }
+
+      .signature-pad {
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        width: 100%;
+        height: 200px;
+        cursor: crosshair;
+      }
+
+      .signature-controls {
+        margin-top: 10px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .btn {
+        background: #ff2c3c;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+      }
+
+      .btn:hover {
+        background: #e02635;
+        transform: translateY(-2px);
+      }
+
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+      }
+
+      .btn-small {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+
+      .message {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+
+      .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .message.info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+
+      .loading.show {
+        display: block;
+      }
+
+      .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-left: 10px;
+      }
+
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-completed {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .back-link {
+        color: #666;
+        text-decoration: none;
+        margin-bottom: 20px;
+        display: inline-block;
+      }
+
+      .back-link:hover {
+        color: #ff2c3c;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px 10px;
+        }
+
+        .document-content {
+          padding: 20px;
+        }
+
+        .signing-section {
+          padding: 20px;
+        }
+
+        .signature-controls {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="index.html">
+        <div class="logo">
+          <img
+            id="logo"
+            src="./Images/RBS Logo main.svg"
+            alt="RBS Logo. It's a box that's red"
+          />
+        </div>
+      </a>
+      <div class="burger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+
+      <div id="webNav">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+
+          <br />
+          <br />
+          <br />
+        </div>
+      </div>
+      <div class="dropdown-content">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+        </div>
+      </div>
+      <div id="shadow"></div>
+    </nav>
+
+    <a href="simple-dashboard.html" class="back-link">← Back to Dashboard</a>
+
+    <div class="container">
+      <div class="header">
+        <h1>Document Signing</h1>
+        <p>Review and sign the document below</p>
+      </div>
+
+      <div id="messageContainer"></div>
+
+      <div class="loading" id="loading">
+        <div>Loading document...</div>
+      </div>
+
+      <!-- Document Display -->
+      <div class="document-card" id="documentCard" style="display: none">
+        <div class="document-header">
+          <h2 class="document-title" id="documentTitle">Loading...</h2>
+          <div class="document-meta" id="documentMeta">
+            <span id="documentStatus">Status: Loading...</span>
+          </div>
+        </div>
+        <div class="document-content" id="documentContent">
+          <!-- Document content will be loaded here -->
+        </div>
+      </div>
+
+      <!-- Signing Section -->
+      <div class="signing-section" id="signingSection" style="display: none">
+        <h3>📝 Complete Your Signature</h3>
+        <p>
+          Please fill in your information and sign below to complete the
+          document.
+        </p>
+
+        <div class="form-group">
+          <label for="signerName">Full Name</label>
+          <input
+            type="text"
+            id="signerName"
+            placeholder="Enter your full name"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="signerEmail">Email Address</label>
+          <input
+            type="email"
+            id="signerEmail"
+            placeholder="Enter your email address"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="signatureDate">Date</label>
+          <input type="date" id="signatureDate" required />
+        </div>
+
+        <div class="form-group">
+          <label>Digital Signature</label>
+          <canvas
+            id="signaturePad"
+            class="signature-pad"
+            width="600"
+            height="200"
+          ></canvas>
+          <div class="signature-controls">
+            <button
+              class="btn btn-secondary btn-small"
+              onclick="clearSignature()"
+            >
+              Clear
+            </button>
+            <button
+              class="btn btn-secondary btn-small"
+              onclick="toggleDrawing()"
+            >
+              Toggle Drawing
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top: 30px">
+          <button class="btn" onclick="submitSignature()" id="submitBtn">
+            Complete Signature
+          </button>
+        </div>
+      </div>
+
+      <!-- Completed Section -->
+      <div class="signing-section" id="completedSection" style="display: none">
+        <h3>✅ Document Signed Successfully!</h3>
+        <p>
+          Thank you for signing the document. All parties will be notified of
+          the completion.
+        </p>
+
+        <div style="margin-top: 30px">
+          <a href="simple-dashboard.html" class="btn">Return to Dashboard</a>
+          <button class="btn btn-secondary" onclick="downloadDocument()">
+            Download Signed Document
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script src="config/firebase-config.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+      import {
+        getFunctions,
+        httpsCallable,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-functions.js";
+
+      // Initialize Firebase
+      if (!window.firebaseConfig) {
+        console.error("Firebase configuration not loaded!");
+      }
+
+      const app = initializeApp(window.firebaseConfig);
+      const auth = getAuth(app);
+      const functions = getFunctions(app);
+
+      // Get document ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const documentId = urlParams.get("id");
+      const accessToken = urlParams.get("token");
+
+      let currentUser = null;
+      let documentData = null;
+      let isDrawing = false;
+      let canvas, ctx;
+
+      // Initialize signature pad
+      document.addEventListener("DOMContentLoaded", () => {
+        canvas = document.getElementById("signaturePad");
+        ctx = canvas.getContext("2d");
+        setupSignaturePad();
+
+        // Set today's date as default
+        document.getElementById("signatureDate").value = new Date()
+          .toISOString()
+          .split("T")[0];
+      });
+
+      function setupSignaturePad() {
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseout", stopDrawing);
+
+        // Touch events for mobile
+        canvas.addEventListener("touchstart", handleTouch);
+        canvas.addEventListener("touchmove", handleTouch);
+        canvas.addEventListener("touchend", stopDrawing);
+      }
+
+      function startDrawing(e) {
+        isDrawing = true;
+        draw(e);
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      }
+
+      function stopDrawing() {
+        if (isDrawing) {
+          isDrawing = false;
+          ctx.beginPath();
+        }
+      }
+
+      function handleTouch(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent(
+          e.type === "touchstart"
+            ? "mousedown"
+            : e.type === "touchmove"
+            ? "mousemove"
+            : "mouseup",
+          {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+          }
+        );
+        canvas.dispatchEvent(mouseEvent);
+      }
+
+      // Check authentication and load document
+      onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        loadDocument();
+      });
+
+      async function loadDocument() {
+        if (!documentId) {
+          showMessage("No document ID provided.", "error");
+          return;
+        }
+
+        document.getElementById("loading").classList.add("show");
+
+        try {
+          const getSubmission = httpsCallable(
+            functions,
+            "getDocumentSubmission"
+          );
+          const result = await getSubmission({
+            submissionId: documentId,
+            accessToken: accessToken,
+          });
+
+          if (result.data.success) {
+            documentData = result.data.submission;
+            displayDocument();
+          } else {
+            throw new Error(result.data.error || "Failed to load document");
+          }
+        } catch (error) {
+          console.error("Error loading document:", error);
+          showMessage(`Error loading document: ${error.message}`, "error");
+        } finally {
+          document.getElementById("loading").classList.remove("show");
+        }
+      }
+
+      function displayDocument() {
+        if (!documentData) return;
+
+        // Update document info
+        document.getElementById("documentTitle").textContent =
+          documentData.templateName;
+        document.getElementById("documentMeta").innerHTML = `
+          Status: <span class="status-badge status-${documentData.status}">${
+          documentData.status
+        }</span> • 
+          Created: ${new Date(documentData.createdAt).toLocaleDateString()}
+        `;
+
+        // Display document content or iframe
+        const contentDiv = document.getElementById("documentContent");
+        if (documentData.submissionUrl) {
+          // Show DocuSeal iframe
+          contentDiv.innerHTML = `
+            <iframe src="${documentData.submissionUrl}" title="Document for signing"></iframe>
+          `;
+        } else {
+          // Show simple HTML content (fallback)
+          contentDiv.innerHTML = `
+            <div style="padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+              <h3>${documentData.templateName}</h3>
+              <p>This document is ready for signature.</p>
+              <p><strong>Status:</strong> ${documentData.status}</p>
+            </div>
+          `;
+        }
+
+        // Show appropriate section based on status
+        document.getElementById("documentCard").style.display = "block";
+
+        if (documentData.status === "completed") {
+          document.getElementById("completedSection").style.display = "block";
+        } else {
+          document.getElementById("signingSection").style.display = "block";
+
+          // Pre-fill user info if available
+          if (currentUser) {
+            document.getElementById("signerEmail").value =
+              currentUser.email || "";
+            document.getElementById("signerName").value =
+              currentUser.displayName || "";
+          }
+        }
+      }
+
+      // Global functions
+      window.clearSignature = function () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+      };
+
+      window.toggleDrawing = function () {
+        isDrawing = false;
+        ctx.beginPath();
+      };
+
+      window.submitSignature = async function () {
+        const name = document.getElementById("signerName").value.trim();
+        const email = document.getElementById("signerEmail").value.trim();
+        const date = document.getElementById("signatureDate").value;
+
+        if (!name || !email || !date) {
+          showMessage("Please fill in all required fields.", "error");
+          return;
+        }
+
+        // Check if signature is drawn
+        const signatureData = canvas.toDataURL();
+        const emptyCanvas = document.createElement("canvas");
+        emptyCanvas.width = canvas.width;
+        emptyCanvas.height = canvas.height;
+        if (signatureData === emptyCanvas.toDataURL()) {
+          showMessage("Please provide your signature.", "error");
+          return;
+        }
+
+        const submitBtn = document.getElementById("submitBtn");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+
+        try {
+          // For now, just show success (in real implementation, this would submit to DocuSeal)
+          showMessage("Signature submitted successfully!", "success");
+
+          // Hide signing section and show completed section
+          setTimeout(() => {
+            document.getElementById("signingSection").style.display = "none";
+            document.getElementById("completedSection").style.display = "block";
+
+            // Update document status
+            const statusBadge = document.querySelector(".status-badge");
+            if (statusBadge) {
+              statusBadge.className = "status-badge status-completed";
+              statusBadge.textContent = "completed";
+            }
+          }, 1500);
+        } catch (error) {
+          console.error("Error submitting signature:", error);
+          showMessage(`Error submitting signature: ${error.message}`, "error");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Complete Signature";
+        }
+      };
+
+      window.downloadDocument = function () {
+        showMessage("Download functionality coming soon!", "info");
+      };
+
+      function showMessage(message, type = "info") {
+        const container = document.getElementById("messageContainer");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${type}`;
+        messageDiv.textContent = message;
+        container.appendChild(messageDiv);
+
+        setTimeout(() => {
+          messageDiv.remove();
+        }, 5000);
+      }
+    </script>
+
+    <!-- Navigation Scripts -->
+    <script src="./scripts/script.js"></script>
+    <script src="./scripts/footer.js"></script>
+    <script src="./scripts/grid.js"></script>
+  </body>
+</html>

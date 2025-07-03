@@ -1,26 +1,41 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Function to check if user is admin
-    function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'stiaan44@gmail.com';
+    
+    // Helper function to get document access info
+    function getDocumentAccess(documentId) {
+      return firestore.get(/databases/(default)/documents/documents/$(documentId)).data;
     }
     
-    // Rules for executables folder with nested product folders
-    match /executables/{productName}/{fileName} {
+    // Original documents - only creator and signers can access
+    match /documents/original/{documentId}/{filename} {
+      allow read: if request.auth != null && 
+        (getDocumentAccess(documentId).createdByEmail == request.auth.token.email ||
+         request.auth.token.email in getDocumentAccess(documentId).allowedViewers);
+      
+      allow write: if request.auth != null && 
+        getDocumentAccess(documentId).createdByEmail == request.auth.token.email;
+    }
+    
+    // Signed documents - same access as originals but no user writes
+    match /documents/signed/{documentId}/{filename} {
+      allow read: if request.auth != null && 
+        (getDocumentAccess(documentId).createdByEmail == request.auth.token.email ||
+         request.auth.token.email in getDocumentAccess(documentId).allowedViewers);
+      
+      allow write: if false; // Only server can write signed documents
+    }
+    
+    // Document templates - public read, authenticated write
+    match /templates/{templateId}/{filename} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if request.auth != null;
     }
     
-    // Rules for logos folder with nested product folders
-    match /logos/{productName}/{fileName} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Default rule - deny all other access
+    // Admin access for all other files
     match /{allPaths=**} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null && 
+        request.auth.token.email in ['stiaan44@gmail.com'];
     }
   }
 }

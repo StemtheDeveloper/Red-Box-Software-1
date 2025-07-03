@@ -8,17 +8,112 @@
     <title>Admin Dashboard - Red Box Software</title>
 
     <script src="scripts/script.js" type="module"></script>
+    <script src="scripts/auth.js" type="module"></script>
     <style></style>
   </head>
   <body>
+    <nav>
+      <a href="index.html">
+        <div class="logo">
+          <img
+            id="logo"
+            src="./Images/RBS Logo main.svg"
+            alt="RBS Logo. It's a box that's red"
+          />
+        </div>
+      </a>
+      <div class="burger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+
+      <div id="webNav">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+
+          <br />
+          <br />
+          <br />
+        </div>
+      </div>
+      <div class="dropdown-content">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+        </div>
+      </div>
+      <div id="shadow"></div>
+    </nav>
+
     <div class="admin-container">
       <div id="loginSection">
-        <h2>Admin Login</h2>
+        <h2>Admin Access Required</h2>
+        <div class="message info">
+          Please sign in with your admin account to access the dashboard.
+        </div>
         <div class="form-group">
-          <input type="email" id="emailInput" placeholder="Email" />
-          <input type="password" id="passwordInput" placeholder="Password" />
-          <button onclick="login()">Login</button>
-          <button onclick="signInWithGoogle()">Sign in with Google</button>
+          <button
+            onclick="window.RBSAuth.redirectToSignIn()"
+            class="signin-btn"
+          >
+            Sign In
+          </button>
         </div>
       </div>
 
@@ -118,7 +213,7 @@
           </p>
           <div style="margin: 20px 0">
             <a
-              href="docuseal.html"
+              href="document-signing.html"
               target="_blank"
               style="
                 display: inline-block;
@@ -133,7 +228,7 @@
             >
           </div>
 
-          <!-- User Access Management -->
+          <!-- User Access Information -->
           <div
             style="
               background: #e7f3ff;
@@ -142,76 +237,20 @@
               margin: 20px 0;
             "
           >
-            <h3>👥 User Access Management</h3>
-            <p>Manage which users can access DocuSeal features.</p>
-
-            <div style="margin: 15px 0">
-              <h4>Grant DocuSeal Access</h4>
-              <div style="display: flex; gap: 10px; margin-bottom: 10px">
-                <input
-                  type="email"
-                  id="userEmailInput"
-                  placeholder="Enter user email"
-                  style="
-                    flex: 1;
-                    padding: 8px;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                  "
-                />
-                <button
-                  onclick="grantDocuSealAccess()"
-                  style="
-                    background: #28a745;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                  "
-                >
-                  Grant Access
-                </button>
-              </div>
-              <small style="color: #666"
-                >Enter the email address of the user you want to grant DocuSeal
-                access to.</small
-              >
+            <h3>👥 User Access Information</h3>
+            <p>All authenticated users now have access to DocuSeal features.</p>
+            <div
+              style="
+                background: #d4edda;
+                padding: 15px;
+                border-radius: 4px;
+                margin-top: 15px;
+              "
+            >
+              <strong>✅ Access Policy:</strong> Any user who can sign in to the
+              website automatically has access to DocuSeal and other
+              authenticated features.
             </div>
-
-            <div style="margin: 15px 0">
-              <h4>Current DocuSeal Users</h4>
-              <div
-                id="docusealUsersList"
-                style="
-                  max-height: 300px;
-                  overflow-y: auto;
-                  border: 1px solid #ddd;
-                  border-radius: 4px;
-                  margin-top: 10px;
-                "
-              >
-                <div style="padding: 20px; text-align: center; color: #666">
-                  Loading users...
-                </div>
-              </div>
-              <button
-                onclick="loadDocuSealUsers()"
-                style="
-                  background: #6c757d;
-                  color: white;
-                  border: none;
-                  padding: 8px 16px;
-                  border-radius: 4px;
-                  cursor: pointer;
-                  margin-top: 10px;
-                "
-              >
-                Refresh List
-              </button>
-            </div>
-
-            <div id="userManagementMessage" style="margin-top: 15px"></div>
           </div>
 
           <div
@@ -505,7 +544,6 @@
           docusealTab.style.display = "block";
           docusealButton.classList.add("active");
           checkApiKeyStatus();
-          loadDocuSealUsers();
         }
       };
 
@@ -883,176 +921,41 @@
         }
       };
 
-      // DocuSeal User Management Functions
-      window.grantDocuSealAccess = async function () {
-        const email = document.getElementById("userEmailInput").value.trim();
-        const messageDiv = document.getElementById("userManagementMessage");
-
-        if (!email) {
-          messageDiv.innerHTML =
-            '<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 4px;">Please enter an email address.</div>';
-          return;
-        }
-
-        if (!email.includes("@")) {
-          messageDiv.innerHTML =
-            '<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 4px;">Please enter a valid email address.</div>';
-          return;
-        }
-
-        try {
-          messageDiv.innerHTML =
-            '<div style="color: #856404; padding: 10px; background: #fff3cd; border-radius: 4px;">Granting access...</div>';
-
-          // Check if user exists in authentication by email
-          const userQuery = query(
-            collection(db, "users"),
-            where("email", "==", email)
-          );
-          const userSnapshot = await getDocs(userQuery);
-
-          if (!userSnapshot.empty) {
-            // User document exists, update it
-            const existingDoc = userSnapshot.docs[0];
-            await updateDoc(existingDoc.ref, {
-              docusealAccess: true,
-              updatedAt: new Date(),
-              updatedBy: auth.currentUser.email,
-            });
-            messageDiv.innerHTML =
-              '<div style="color: #155724; padding: 10px; background: #d4edda; border-radius: 4px;">Access granted successfully for existing user!</div>';
-          } else {
-            // Create a new user record
-            await addDoc(collection(db, "users"), {
-              email: email,
-              docusealAccess: true,
-              createdAt: new Date(),
-              createdBy: auth.currentUser.email,
-            });
-            messageDiv.innerHTML =
-              '<div style="color: #155724; padding: 10px; background: #d4edda; border-radius: 4px;">Access granted successfully! User record created for: ' +
-              email +
-              "</div>";
-          }
-
-          document.getElementById("userEmailInput").value = "";
-          loadDocuSealUsers();
-        } catch (error) {
-          console.error("Error granting access:", error);
-          messageDiv.innerHTML =
-            '<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 4px;">Error granting access: ' +
-            error.message +
-            "</div>";
-        }
-
-        // Clear message after 5 seconds
-        setTimeout(() => {
-          messageDiv.innerHTML = "";
-        }, 5000);
-      };
-
-      window.revokeDocuSealAccess = async function (userId, email) {
-        if (
-          !confirm(
-            `Are you sure you want to revoke DocuSeal access for ${email}?`
-          )
-        ) {
-          return;
-        }
-
-        try {
-          await updateDoc(doc(db, "users", userId), {
-            docusealAccess: false,
-            updatedAt: new Date(),
-            updatedBy: auth.currentUser.email,
-          });
-
-          const messageDiv = document.getElementById("userManagementMessage");
-          messageDiv.innerHTML =
-            '<div style="color: #155724; padding: 10px; background: #d4edda; border-radius: 4px;">Access revoked successfully!</div>';
-          loadDocuSealUsers();
-
-          setTimeout(() => {
-            messageDiv.innerHTML = "";
-          }, 3000);
-        } catch (error) {
-          console.error("Error revoking access:", error);
-          const messageDiv = document.getElementById("userManagementMessage");
-          messageDiv.innerHTML =
-            '<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 4px;">Error revoking access: ' +
-            error.message +
-            "</div>";
-        }
-      };
-
-      window.loadDocuSealUsers = async function () {
-        const usersList = document.getElementById("docusealUsersList");
-        usersList.innerHTML =
-          '<div style="padding: 20px; text-align: center; color: #666">Loading users...</div>';
-
-        try {
-          const usersQuery = query(
-            collection(db, "users"),
-            where("docusealAccess", "==", true),
-            orderBy("email")
-          );
-          const usersSnapshot = await getDocs(usersQuery);
-
-          if (usersSnapshot.empty) {
-            usersList.innerHTML =
-              '<div style="padding: 20px; text-align: center; color: #666">No users with DocuSeal access found.</div>';
-            return;
-          }
-
-          let usersHtml = "";
-          usersSnapshot.forEach((doc) => {
-            const userData = doc.data();
-            const userId = doc.id;
-            usersHtml += `
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee;">
-                <div>
-                  <strong>${userData.email}</strong><br />
-                  <small style="color: #666">
-                    Access granted: ${
-                      userData.createdAt
-                        ? userData.createdAt.toDate().toLocaleDateString()
-                        : "Unknown"
-                    }
-                    ${userData.createdBy ? " by " + userData.createdBy : ""}
-                  </small>
-                </div>
-                <button
-                  onclick="revokeDocuSealAccess('${userId}', '${
-              userData.email
-            }')"
-                  style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;"
-                >
-                  Revoke Access
-                </button>
-              </div>
-            `;
-          });
-          usersList.innerHTML = usersHtml;
-        } catch (error) {
-          console.error("Error loading users:", error);
-          usersList.innerHTML =
-            '<div style="padding: 20px; text-align: center; color: #dc3545">Error loading users: ' +
-            error.message +
-            "</div>";
-        }
-      };
-
       window.checkApiKeyStatus = function () {
         document.getElementById("apiKeyStatus").textContent =
           "API Key Configured ✅";
       };
 
       // Check auth state
-      onAuthStateChanged(auth, (user) => {
-        if (user && user.email === "stiaan44@gmail.com") {
+      onAuthStateChanged(auth, (user) => {});
+
+      // Updated authentication handling using centralized auth system
+      document.addEventListener("DOMContentLoaded", async () => {
+        if (window.RBSAuth) {
+          await window.RBSAuth.initialize();
+
+          // Require admin access
+          const hasAdminAccess = await window.RBSAuth.requireAdmin(false);
+
+          if (hasAdminAccess) {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("adminSection").style.display = "block";
+            loadProducts(); // Load products when admin logs in
+          } else {
+            document.getElementById("loginSection").style.display = "block";
+            document.getElementById("adminSection").style.display = "none";
+          }
+        }
+      });
+
+      // Listen for auth state changes
+      window.addEventListener("authStateChanged", (event) => {
+        const { user } = event.detail;
+
+        if (user && window.RBSAuth && window.RBSAuth.isAdmin()) {
           document.getElementById("loginSection").style.display = "none";
           document.getElementById("adminSection").style.display = "block";
-          loadProducts(); // Load products when admin logs in
+          loadProducts();
         } else {
           document.getElementById("loginSection").style.display = "block";
           document.getElementById("adminSection").style.display = "none";

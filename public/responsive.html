@@ -85,18 +85,183 @@
     </style>
   </head>
   <body>
+    <nav>
+      <a href="index.html">
+        <div class="logo">
+          <img
+            id="logo"
+            src="./Images/RBS Logo main.svg"
+            alt="RBS Logo. It's a box that's red"
+          />
+        </div>
+      </a>
+      <div class="burger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+
+      <div id="webNav">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+
+          <br />
+          <br />
+          <br />
+        </div>
+      </div>
+      <div class="dropdown-content">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+        </div>
+      </div>
+      <div id="shadow"></div>
+    </nav>
+
     <header>
       <nav>
-        <div class="burger-menu">
-          <input type="checkbox" id="burger-toggle" />
-          <label for="burger-toggle"></label>
-          <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
+        <a href="index.html">
+          <div class="logo">
+            <img
+              id="logo"
+              src="./Images/RBS Logo main.svg"
+              alt="RBS Logo. It's a box that's red"
+            />
+          </div>
+        </a>
+        <div class="burger">
+          <div class="line"></div>
+          <div class="line"></div>
+          <div class="line"></div>
         </div>
+
+        <div id="webNav">
+          <div id="navBtnsCont" class="nav-links">
+            <a href="index.html"><li>Home</li></a>
+            <a href="projects.html"><li>Projects</li></a>
+            <a href="products.html"><li>Products</li></a>
+            <a href="services.html"><li>Services</li></a>
+            <a href="articles.html"><li>Articles</li></a>
+            <a href="about.html"><li>About</li></a>
+            <a href="contact.html"><li>Contact</li></a>
+            <div class="tools-dropdown">
+              <li>More ▼</li>
+              <div class="tools-dropdown-content">
+                <a href="clip_path_editor.html">Clip Path Editor</a>
+                <a href="cubic_bezier.html">Cubic Bezier</a>
+                <a href="base64.html">Base64 image encoder - decoder</a>
+                <a href="kanban.html">Kanban Task Manager</a>
+                <a href="qr_code_generator.html">QR code generator</a>
+                <a href="custom-document-signing.html">Document Signing</a>
+              </div>
+            </div>
+
+            <a href="admin.html" style="display: none"><li>Admin</li></a>
+            <li>
+              <button
+                onclick="handleSignOut()"
+                class="sign-out-btn"
+                style="display: none"
+              >
+                Sign Out
+              </button>
+            </li>
+
+            <br />
+            <br />
+            <br />
+          </div>
+        </div>
+        <div class="dropdown-content">
+          <div id="navBtnsCont" class="nav-links">
+            <a href="index.html"><li>Home</li></a>
+            <a href="projects.html"><li>Projects</li></a>
+            <a href="products.html"><li>Products</li></a>
+            <a href="services.html"><li>Services</li></a>
+            <a href="articles.html"><li>Articles</li></a>
+            <a href="about.html"><li>About</li></a>
+            <a href="contact.html"><li>Contact</li></a>
+            <div class="tools-dropdown">
+              <li>More ▼</li>
+              <div class="tools-dropdown-content">
+                <a href="clip_path_editor.html">Clip Path Editor</a>
+                <a href="cubic_bezier.html">Cubic Bezier</a>
+                <a href="base64.html">Base64 image encoder - decoder</a>
+                <a href="kanban.html">Kanban Task Manager</a>
+                <a href="qr_code_generator.html">QR code generator</a>
+                <a href="custom-document-signing.html">Document Signing</a>
+              </div>
+            </div>
+
+            <a href="admin.html" style="display: none"><li>Admin</li></a>
+            <li>
+              <button
+                onclick="handleSignOut()"
+                class="sign-out-btn"
+                style="display: none"
+              >
+                Sign Out
+              </button>
+            </li>
+          </div>
+        </div>
+        <div id="shadow"></div>
       </nav>
     </header>
 

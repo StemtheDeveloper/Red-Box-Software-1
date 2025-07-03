@@ -2,7 +2,9 @@
   "name": "functions",
   "description": "Cloud Functions for Firebase",
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 50",
+    "lint:fix": "eslint . --fix",
+    "lint:strict": "eslint .",
     "serve": "firebase emulators:start --only functions --port 5001",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
@@ -20,8 +22,11 @@
     "axios": "^1.10.0",
     "dotenv": "^16.6.0",
     "firebase-admin": "^12.7.0",
-    "firebase-functions": "^6.1.1",
-    "jsonwebtoken": "^9.0.2"
+    "firebase-functions": "^6.3.2",
+    "googleapis": "^137.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.10.1",
+    "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
     "eslint": "^8.57.1",

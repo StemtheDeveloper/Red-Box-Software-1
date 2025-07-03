@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>View Document - RBS</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" href="./Images/RBS Favicon.ico" type="image/x-icon" />
+    <style>
+      .viewer-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      .document-header {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+
+      .document-title {
+        color: #333;
+        margin: 0 0 15px 0;
+        font-size: 1.8em;
+      }
+
+      .document-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        color: #666;
+        margin-bottom: 20px;
+      }
+
+      .status-badge {
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-completed {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-expired {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .signers-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+      }
+
+      .signer-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #e1e5e9;
+      }
+
+      .signer-item:last-child {
+        border-bottom: none;
+      }
+
+      .signer-info {
+        flex: 1;
+      }
+
+      .signer-name {
+        font-weight: 600;
+        color: #333;
+      }
+
+      .signer-email {
+        color: #666;
+        font-size: 0.9em;
+      }
+
+      .signer-status {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: 600;
+      }
+
+      .signer-completed {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .signer-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .document-viewer {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .viewer-header {
+        background: #f8f9fa;
+        padding: 20px;
+        border-bottom: 1px solid #e1e5e9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .viewer-title {
+        margin: 0;
+        color: #333;
+        font-size: 1.2em;
+      }
+
+      .btn {
+        background: #ff2c3c;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+      }
+
+      .btn:hover {
+        background: #e02635;
+        transform: translateY(-2px);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+      }
+
+      .iframe-container {
+        width: 100%;
+        height: 600px;
+        border: none;
+        display: block;
+      }
+
+      .access-denied {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+      }
+
+      .access-denied-icon {
+        font-size: 4em;
+        margin-bottom: 20px;
+        color: #dc3545;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #ff2c3c;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .message {
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+
+      .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .message.info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .back-link {
+        display: inline-block;
+        color: #ff2c3c;
+        text-decoration: none;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 768px) {
+        .viewer-container {
+          padding: 20px 10px;
+        }
+
+        .document-meta {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .viewer-header {
+          flex-direction: column;
+          gap: 15px;
+          align-items: stretch;
+          text-align: center;
+        }
+
+        .signer-item {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="index.html">
+        <div class="logo">
+          <img
+            id="logo"
+            src="./Images/RBS Logo main.svg"
+            alt="RBS Logo. It's a box that's red"
+          />
+        </div>
+      </a>
+      <div class="burger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+
+      <div id="webNav">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+
+          <br />
+          <br />
+          <br />
+        </div>
+      </div>
+      <div class="dropdown-content">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+        </div>
+      </div>
+      <div id="shadow"></div>
+    </nav>
+
+    <div class="viewer-container">
+      <a href="document-dashboard.html" class="back-link"
+        >← Back to Dashboard</a
+      >
+
+      <div id="messageContainer"></div>
+
+      <div id="loadingState" class="loading">
+        <div class="spinner"></div>
+        <h2>Loading Document...</h2>
+        <p>Please wait while we fetch your document</p>
+      </div>
+
+      <div id="accessDeniedState" class="access-denied" style="display: none">
+        <div class="access-denied-icon">🔒</div>
+        <h2>Access Denied</h2>
+        <p>You don't have permission to view this document.</p>
+        <p>Please check the link or contact the document sender.</p>
+        <a href="index.html" class="btn btn-secondary">Go Home</a>
+      </div>
+
+      <div id="documentContent" style="display: none">
+        <div class="document-header">
+          <h1 class="document-title" id="documentTitle">Document Title</h1>
+          <div class="document-meta">
+            <span id="documentDate">📅 Date</span>
+            <span id="documentSender">📧 From: sender@example.com</span>
+            <span class="status-badge" id="documentStatus">Status</span>
+          </div>
+
+          <div class="signers-info">
+            <h3>👥 Signers</h3>
+            <div id="signersList">
+              <!-- Signers will be populated here -->
+            </div>
+          </div>
+        </div>
+
+        <div class="document-viewer">
+          <div class="viewer-header">
+            <h3 class="viewer-title">📄 Document Content</h3>
+            <div>
+              <a href="#" id="signDocumentBtn" class="btn" style="display: none"
+                >✍️ Sign Document</a
+              >
+              <a
+                href="#"
+                id="downloadBtn"
+                class="btn btn-secondary"
+                style="display: none"
+                >📥 Download</a
+              >
+            </div>
+          </div>
+          <iframe
+            id="documentFrame"
+            class="iframe-container"
+            src="about:blank"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script src="config/firebase-config.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+      import {
+        getFunctions,
+        httpsCallable,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-functions.js";
+
+      // Initialize Firebase
+      if (!window.firebaseConfig) {
+        console.error("Firebase configuration not loaded!");
+        showAccessDenied();
+        return;
+      }
+
+      const app = initializeApp(window.firebaseConfig);
+      const auth = getAuth(app);
+      const functions = getFunctions(app);
+
+      // Get URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const documentId = urlParams.get("id");
+      const accessToken = urlParams.get("token");
+
+      if (!documentId) {
+        showMessage("Invalid document link", "error");
+        showAccessDenied();
+      } else {
+        // Try to load the document
+        loadDocument();
+      }
+
+      async function loadDocument() {
+        try {
+          const getDocument = httpsCallable(functions, "getDocumentSubmission");
+          const result = await getDocument({
+            submissionId: documentId,
+            accessToken: accessToken,
+          });
+
+          if (result.data.success) {
+            displayDocument(result.data.submission);
+          } else {
+            throw new Error(result.data.error || "Failed to load document");
+          }
+        } catch (error) {
+          console.error("Error loading document:", error);
+
+          if (
+            error.message.includes("Access denied") ||
+            error.message.includes("Authentication required")
+          ) {
+            // Try to authenticate user
+            onAuthStateChanged(auth, (user) => {
+              if (user) {
+                // Retry loading with authenticated user
+                loadDocument();
+              } else {
+                // Redirect to signin
+                window.location.href = `signin.html?redirect=${encodeURIComponent(
+                  window.location.href
+                )}`;
+              }
+            });
+          } else {
+            showMessage("Error loading document: " + error.message, "error");
+            showAccessDenied();
+          }
+        }
+      }
+
+      function displayDocument(submission) {
+        hideLoading();
+        showDocumentContent();
+
+        // Update document header
+        document.getElementById("documentTitle").textContent =
+          submission.templateName;
+
+        if (submission.createdAt) {
+          const date = new Date(
+            submission.createdAt.seconds * 1000
+          ).toLocaleDateString();
+          document.getElementById("documentDate").textContent = `📅 ${date}`;
+        }
+
+        document.getElementById(
+          "documentSender"
+        ).textContent = `📧 From: ${submission.createdByEmail}`;
+
+        // Update status
+        const statusElement = document.getElementById("documentStatus");
+        statusElement.textContent = submission.status;
+        statusElement.className = `status-badge status-${submission.status}`;
+
+        // Display signers
+        displaySigners(submission.signers);
+
+        // Load document content
+        if (submission.submissionUrl) {
+          document.getElementById("documentFrame").src =
+            submission.submissionUrl;
+
+          // Show sign button if document is pending and user is a signer
+          const currentUserEmail = auth.currentUser?.email;
+          const isSignerAndPending =
+            submission.status === "pending" &&
+            submission.signers.some(
+              (signer) => signer.email === currentUserEmail
+            );
+
+          if (isSignerAndPending) {
+            const signBtn = document.getElementById("signDocumentBtn");
+            signBtn.style.display = "inline-block";
+            signBtn.href = submission.submissionUrl;
+            signBtn.target = "_blank";
+          }
+
+          // Show download button if completed
+          if (submission.status === "completed") {
+            const downloadBtn = document.getElementById("downloadBtn");
+            downloadBtn.style.display = "inline-block";
+            downloadBtn.href = submission.submissionUrl;
+            downloadBtn.target = "_blank";
+          }
+        }
+      }
+
+      function displaySigners(signers) {
+        const signersList = document.getElementById("signersList");
+
+        if (!signers || signers.length === 0) {
+          signersList.innerHTML = "<p>No signers specified</p>";
+          return;
+        }
+
+        signersList.innerHTML = signers
+          .map((signer) => {
+            // For now, assume all signers are pending (in a full implementation, you'd check actual signer status)
+            const signerStatus = "pending";
+            const statusClass =
+              signerStatus === "completed"
+                ? "signer-completed"
+                : "signer-pending";
+
+            return `
+            <div class="signer-item">
+              <div class="signer-info">
+                <div class="signer-name">${signer.name}</div>
+                <div class="signer-email">${signer.email}</div>
+              </div>
+              <div class="signer-status ${statusClass}">
+                ${signerStatus === "completed" ? "✅ Signed" : "⏳ Pending"}
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+      }
+
+      function hideLoading() {
+        document.getElementById("loadingState").style.display = "none";
+      }
+
+      function showDocumentContent() {
+        document.getElementById("documentContent").style.display = "block";
+      }
+
+      function showAccessDenied() {
+        document.getElementById("loadingState").style.display = "none";
+        document.getElementById("accessDeniedState").style.display = "block";
+      }
+
+      function showMessage(message, type = "info") {
+        const messageContainer = document.getElementById("messageContainer");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${type}`;
+        messageDiv.textContent = message;
+
+        messageContainer.innerHTML = "";
+        messageContainer.appendChild(messageDiv);
+
+        setTimeout(() => {
+          messageDiv.remove();
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

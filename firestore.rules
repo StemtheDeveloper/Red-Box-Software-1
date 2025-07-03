@@ -1,42 +1,75 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Function to check if user is admin
-    function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'stiaan44@gmail.com';
-    }
-    
-    // Rules for the products collection
-    match /products/{product} {
-      // Anyone can read
-      allow read: if true;
-      // Only admin can write (create, update, delete)
-      allow write: if isAdmin();
-    }
-    
-    // Rules for the articles collection
-    match /articles/{article} {
-      // Anyone can read
-      allow read: if true;
-      // Only admin can write (create, update, delete)
-      allow write: if isAdmin();
-    }
-    
-    // Rules for the users collection
+    // Admin access for specific collections
     match /users/{userId} {
-      // Users can read their own document
-      allow read: if request.auth != null && request.auth.uid == userId;
-      // Admin can read all user documents
-      allow read: if isAdmin();
-      // Admin can write (create, update, delete) user documents
-      allow write: if isAdmin();
-      // Users can create their own document (for initial signup)
-      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == userId || 
+         request.auth.token.email in ['stiaan44@gmail.com']);
     }
     
-    // Default rule - deny all other access
+    // Document signing system
+    match /documents/{documentId} {
+      // Creators can read/write their documents
+      allow read, write: if request.auth != null && 
+        request.auth.token.email == resource.data.createdByEmail;
+      
+      // Signers can read documents they're assigned to
+      allow read: if request.auth != null && 
+        request.auth.token.email in resource.data.allowedViewers;
+      
+      // Signers can update their signature status
+      allow update: if request.auth != null && 
+        request.auth.token.email in resource.data.allowedViewers &&
+        // Only allow updating signer status, not document metadata
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['signers', 'status', 'auditTrail', 'completedAt']);
+    }
+    
+    // Individual signatures (detailed tracking)
+    match /signatures/{signatureId} {
+      allow read, write: if request.auth != null && 
+        (request.auth.token.email == resource.data.signerEmail ||
+         // Allow document creator to read signatures
+         exists(/databases/$(database)/documents/documents/$(resource.data.documentId)) &&
+         get(/databases/$(database)/documents/documents/$(resource.data.documentId)).data.createdByEmail == request.auth.token.email);
+    }
+    
+    // Email logs - only creators and admins
+    match /email_logs/{logId} {
+      allow read: if request.auth != null && 
+        (request.auth.token.email in ['stiaan44@gmail.com'] || // Admin emails
+         // Document creator can see email logs for their documents
+         exists(/databases/$(database)/documents/documents/$(resource.data.documentId)) &&
+         get(/databases/$(database)/documents/documents/$(resource.data.documentId)).data.createdByEmail == request.auth.token.email);
+      
+      allow write: if false; // Only server can write email logs
+    }
+    
+    // Document templates - public read, authenticated write
+    match /document_templates/{templateId} {
+      allow read: if true; // Public templates can be read by anyone
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+        request.auth.token.email == resource.data.createdBy;
+    }
+    
+    // Legacy collections - keep existing access for now
+    match /docuseal_submissions/{submissionId} {
+      allow read, write: if request.auth != null && 
+        request.auth.token.email in ['stiaan44@gmail.com'];
+    }
+    
+    match /docuseal_templates/{templateId} {
+      allow read, write: if request.auth != null && 
+        request.auth.token.email in ['stiaan44@gmail.com'];
+    }
+    
+    // Default fallback for other collections
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null && 
+        request.auth.token.email in ['stiaan44@gmail.com'];
     }
   }
 }

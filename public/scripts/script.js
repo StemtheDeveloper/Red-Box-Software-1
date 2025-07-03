@@ -1,163 +1,99 @@
-// Function to check if user is admin
+// Import the centralized auth system
+import "./auth.js";
+
+// Function to check if user is admin (keeping for compatibility)
 function checkAdminStatus() {
-  if (localStorage.getItem("userEmail") === "stiaan44@gmail.com") {
-    return true;
-  }
-  return false;
+  return window.RBSAuth
+    ? window.RBSAuth.isAdmin()
+    : localStorage.getItem("userEmail") === "stiaan44@gmail.com";
 }
 
-// Function to handle sign out
+// Function to handle sign out (keeping for compatibility)
 async function handleSignOut() {
+  if (window.RBSAuth) {
+    return await window.RBSAuth.signOut();
+  }
+
+  // Fallback method
   try {
     const auth = getAuth();
     await signOut(auth);
     localStorage.removeItem("userEmail");
     updateNavigation();
-    // Redirect to home page after sign out
     window.location.href = "index.html";
   } catch (error) {
     console.error("Error signing out:", error);
   }
 }
 
-// Function to update navigation based on admin status
+// Function to update navigation based on auth and admin status
 function updateNavigation() {
-  const isAdmin = checkAdminStatus();
+  if (window.RBSAuth) {
+    window.RBSAuth.updateUI();
+  } else {
+    // Fallback for when auth system isn't loaded yet
+    const isAdmin = checkAdminStatus();
+    const isAuthenticated = !!localStorage.getItem("userEmail");
+    updateAuthElements(isAuthenticated, isAdmin);
+  }
 
   // Add event listeners after updating the navigation
   setupEventListeners();
 }
 
-// Function to get navigation HTML
-function getNavigationHTML() {
-  return `
-    <nav>
-      <a href="index.html">
-        <div class="logo">
-          <img id="logo" src="./Images/RBS Logo main.svg" alt="RBS Logo. It's a box that's red" />
-        </div>
-      </a>
-      <div class="burger">
-        <div class="line"></div>
-        <div class="line"></div>
-        <div class="line"></div>
-      </div>
+// Function to update authentication-related elements in navigation
+function updateAuthElements(isAuthenticated, isAdmin) {
+  // Find sign out buttons and admin links
+  const signOutBtns = document.querySelectorAll(".sign-out-btn");
+  const adminLinks = document.querySelectorAll('a[href="admin.html"]');
 
-      <div id="webNav">
-        <div id="navBtnsCont" class="nav-links">
-          <a href="index.html"><li>Home</li></a>
-          <a href="projects.html"><li>Projects</li></a>
-          <a href="products.html"><li>Products</li></a>
-          <a href="services.html"><li>Services</li></a>
-          <a href="articles.html"><li>Articles</li></a>
-          <a href="about.html"><li>About</li></a>
-          <a href="contact.html"><li>Contact</li></a>
-          <div class="tools-dropdown">
-            <li>More ▼</li>
-            <div class="tools-dropdown-content">
-              <a href="clip_path_editor.html">Clip Path Editor</a>
-              <a href="cubic_bezier.html">Cubic Bezier</a>
-              <a href="base64.html">Base64 image encoder - decoder</a>
-              <a href="kanban.html">Kanban Task Manager</a>
-              <a href="qr_code_generator.html">QR code generator</a>
-              <a href="docuseal.html">Document signing</a>
-              
-              
-            </div>
-          </div>
-          <br />
-          <br />
-          <br />
-        </div>
-      </div>
-      <div class="dropdown-content">
-        <div id="navBtnsCont" class="nav-links">
-          <a href="index.html"><li>Home</li></a>
-          <a href="projects.html"><li>Projects</li></a>
-          <a href="products.html"><li>Products</li></a>
-          <a href="services.html"><li>Services</li></a>
-          <a href="articles.html"><li>Articles</li></a>
-          <a href="about.html"><li>About</li></a>
-          <a href="contact.html"><li>Contact</li></a>
-          <div class="tools-dropdown">
-            <li>More ▼</li>
-            <div class="tools-dropdown-content">
-              <a href="clip_path_editor.html">Clip Path Editor</a>
-              <a href="cubic_bezier.html">Cubic Bezier</a>
-              <a href="base64.html">Base64 image encoder - decoder</a>
-              <a href="kanban.html">Kanban Task Manager</a>
-              <a href="qr_code_generator.html">QR code generator</a>
-              <a href="docuseal.html">Document signing</a>
-              
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="shadow"></div>
-    </nav>
-  `;
-}
-
-// Function to inject navigation
-function injectNavigation() {
-  const body = document.body;
-  body.insertAdjacentHTML("afterbegin", getNavigationHTML());
-}
-
-// Function to set up event listeners
-function setupEventListeners() {
-  const currentLocation = window.location.href;
-  const navLinksA = document.querySelectorAll(".nav-links a");
-
-  navLinksA.forEach((link) => {
-    if (link.href === currentLocation) {
-      link.classList.add("active");
+  // Show/hide sign out buttons
+  signOutBtns.forEach((btn) => {
+    if (isAuthenticated) {
+      btn.style.display = "block";
+    } else {
+      btn.style.display = "none";
     }
   });
 
-  const burger = document.querySelector(".burger");
-  const dropdownContent = document.querySelector(".dropdown-content");
-  const shadow = document.getElementById("shadow");
-
-  if (!burger || !dropdownContent || !shadow) return;
-
-  let isAnimating = false;
-
-  // Optimize for mobile by using passive event listeners where possible
-  const toggleMenu = () => {
-    if (isAnimating) return; // Prevent rapid clicking during animation
-
-    isAnimating = true;
-    const isShowing = dropdownContent.classList.contains("show");
-
-    if (isShowing) {
-      // Close menu
-      dropdownContent.classList.remove("show");
-      shadow.classList.remove("show");
-      shadow.style.pointerEvents = "none";
-      document.body.style.overflow = "";
+  // Show/hide admin links
+  adminLinks.forEach((link) => {
+    if (isAuthenticated && isAdmin) {
+      link.style.display = "block";
     } else {
-      // Open menu
-      dropdownContent.classList.add("show");
-      shadow.classList.add("show");
-      shadow.style.pointerEvents = "auto";
-      document.body.style.overflow = "hidden"; // Prevent background scrolling
+      link.style.display = "none";
     }
+  });
 
-    // Reset animation flag after transition completes
-    setTimeout(() => {
-      isAnimating = false;
-    }, 200); // Match the CSS transition duration
-  };
+  // Add sign in link if not authenticated
+  if (!isAuthenticated) {
+    addSignInLink();
+  } else {
+    removeSignInLink();
+  }
+}
 
-  burger.addEventListener("click", toggleMenu, { passive: true });
-  shadow.addEventListener("click", toggleMenu, { passive: true });
+// Function to add sign in link to navigation
+function addSignInLink() {
+  const navContainers = document.querySelectorAll("#navBtnsCont");
 
-  // Close menu on escape key
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && dropdownContent.classList.contains("show")) {
-      toggleMenu();
+  navContainers.forEach((container) => {
+    // Check if sign in link already exists
+    if (!container.querySelector(".signin-link")) {
+      const signInLi = document.createElement("li");
+      signInLi.innerHTML =
+        '<a href="signin.html" class="signin-link">Sign In</a>';
+      container.appendChild(signInLi);
     }
+  });
+}
+
+// Function to remove sign in link from navigation
+function removeSignInLink() {
+  const signInLinks = document.querySelectorAll(".signin-link");
+  signInLinks.forEach((link) => {
+    const li = link.closest("li");
+    if (li) li.remove();
   });
 }
 
@@ -187,7 +123,6 @@ const auth = getAuth(app);
 
 // Initial setup when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
-  injectNavigation();
   onAuthStateChanged(auth, (user) => {
     if (user && user.email) {
       localStorage.setItem("userEmail", user.email);

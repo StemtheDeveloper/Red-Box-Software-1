@@ -38,9 +38,98 @@
     <script defer src="/__/firebase/init.js?useEmulator=false"></script>
     <!-- Firebase Configuration -->
     <script src="config/firebase-config.js"></script>
-    <script src="./scripts/script.js" type="module"></script>
   </head>
   <body>
+    <!-- Navigation -->
+    <nav>
+      <a href="index.html">
+        <div class="logo">
+          <img
+            id="logo"
+            src="./Images/RBS Logo main.svg"
+            alt="RBS Logo. It's a box that's red"
+          />
+        </div>
+      </a>
+      <div class="burger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+
+      <div id="webNav">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+
+          <br />
+          <br />
+          <br />
+        </div>
+      </div>
+      <div class="dropdown-content">
+        <div id="navBtnsCont" class="nav-links">
+          <a href="index.html"><li>Home</li></a>
+          <a href="projects.html"><li>Projects</li></a>
+          <a href="products.html"><li>Products</li></a>
+          <a href="services.html"><li>Services</li></a>
+          <a href="articles.html"><li>Articles</li></a>
+          <a href="about.html"><li>About</li></a>
+          <a href="contact.html"><li>Contact</li></a>
+          <div class="tools-dropdown">
+            <li>More ▼</li>
+            <div class="tools-dropdown-content">
+              <a href="clip_path_editor.html">Clip Path Editor</a>
+              <a href="cubic_bezier.html">Cubic Bezier</a>
+              <a href="base64.html">Base64 image encoder - decoder</a>
+              <a href="kanban.html">Kanban Task Manager</a>
+              <a href="qr_code_generator.html">QR code generator</a>
+              <a href="custom-document-signing.html">Document Signing</a>
+            </div>
+          </div>
+
+          <a href="admin.html" style="display: none"><li>Admin</li></a>
+          <li>
+            <button
+              onclick="handleSignOut()"
+              class="sign-out-btn"
+              style="display: none"
+            >
+              Sign Out
+            </button>
+          </li>
+        </div>
+      </div>
+      <div id="shadow"></div>
+    </nav>
+
     <script type="module">
       // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -329,6 +418,24 @@
 
         <h2 class="destructible">Online Utilities</h2>
         <div class="utilities destructible">
+          <div class="utility">
+            <h4>Document Signing</h4>
+            <p>
+              Upload documents and send them for electronic signature. A simple
+              and secure way to get contracts, agreements, and other documents
+              signed by multiple parties. Track signing progress and download
+              completed documents.
+            </p>
+            <a href="document-signing.html">
+              <img
+                src="./Images/RBS Logo main.svg"
+                alt="Document signing and sharing system"
+                width="200"
+              />
+              ⬅️click here
+            </a>
+          </div>
+
           <div class="utility">
             <h4>Clip Path Editor And SVG Designer</h4>
             <p>
@@ -863,8 +970,178 @@
         disableMobileFeatures();
         window.addEventListener("resize", disableMobileFeatures);
       });
+
+      // Navigation functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        // Set up event listeners for navigation
+        setupEventListeners();
+
+        // Initialize authentication system
+        initializeAuth();
+      });
+
+      // Function to set up event listeners (from original script.js)
+      function setupEventListeners() {
+        const currentLocation = window.location.href;
+        const navLinksA = document.querySelectorAll(".nav-links a");
+
+        navLinksA.forEach((link) => {
+          if (link.href === currentLocation) {
+            link.classList.add("active");
+          }
+        });
+
+        const burger = document.querySelector(".burger");
+        const dropdownContent = document.querySelector(".dropdown-content");
+        const shadow = document.getElementById("shadow");
+
+        if (!burger || !dropdownContent || !shadow) return;
+
+        let isAnimating = false;
+
+        // Optimize for mobile by using passive event listeners where possible
+        const toggleMenu = () => {
+          if (isAnimating) return; // Prevent rapid clicking during animation
+
+          isAnimating = true;
+          const isShowing = dropdownContent.classList.contains("show");
+
+          if (isShowing) {
+            // Close menu
+            dropdownContent.classList.remove("show");
+            shadow.classList.remove("show");
+            shadow.style.pointerEvents = "none";
+            document.body.style.overflow = "";
+          } else {
+            // Open menu
+            dropdownContent.classList.add("show");
+            shadow.classList.add("show");
+            shadow.style.pointerEvents = "auto";
+            document.body.style.overflow = "hidden"; // Prevent background scrolling
+          }
+
+          // Reset animation flag after transition completes
+          setTimeout(() => {
+            isAnimating = false;
+          }, 200); // Match the CSS transition duration
+        };
+
+        burger.addEventListener("click", toggleMenu, { passive: true });
+        shadow.addEventListener("click", toggleMenu, { passive: true });
+
+        // Close menu on escape key
+        document.addEventListener("keydown", (e) => {
+          if (
+            e.key === "Escape" &&
+            dropdownContent.classList.contains("show")
+          ) {
+            toggleMenu();
+          }
+        });
+      }
+
+      // Authentication system
+      async function initializeAuth() {
+        try {
+          const { getAuth, onAuthStateChanged, signOut } = await import(
+            "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js"
+          );
+
+          const auth = getAuth();
+
+          // Listen for auth state changes
+          onAuthStateChanged(auth, (user) => {
+            if (user && user.email) {
+              localStorage.setItem("userEmail", user.email);
+            } else {
+              localStorage.removeItem("userEmail");
+            }
+            updateNavigation(user);
+          });
+
+          // Make sign out function global
+          window.handleSignOut = async function () {
+            try {
+              await signOut(auth);
+              localStorage.removeItem("userEmail");
+              updateNavigation(null);
+              window.location.href = "index.html";
+            } catch (error) {
+              console.error("Error signing out:", error);
+            }
+          };
+        } catch (error) {
+          console.error("Failed to initialize auth:", error);
+        }
+      }
+
+      // Function to update navigation based on auth and admin status (from original script.js)
+      function updateNavigation(user) {
+        const isAdmin =
+          user?.email === "stiaan44@gmail.com" ||
+          localStorage.getItem("userEmail") === "stiaan44@gmail.com";
+        const isAuthenticated = !!user || !!localStorage.getItem("userEmail");
+        updateAuthElements(isAuthenticated, isAdmin);
+      }
+
+      // Function to update authentication-related elements in navigation (from original script.js)
+      function updateAuthElements(isAuthenticated, isAdmin) {
+        // Find sign out buttons and admin links
+        const signOutBtns = document.querySelectorAll(".sign-out-btn");
+        const adminLinks = document.querySelectorAll('a[href="admin.html"]');
+
+        // Show/hide sign out buttons
+        signOutBtns.forEach((btn) => {
+          if (isAuthenticated) {
+            btn.style.display = "block";
+          } else {
+            btn.style.display = "none";
+          }
+        });
+
+        // Show/hide admin links
+        adminLinks.forEach((link) => {
+          if (isAuthenticated && isAdmin) {
+            link.style.display = "block";
+          } else {
+            link.style.display = "none";
+          }
+        });
+
+        // Add sign in link if not authenticated
+        if (!isAuthenticated) {
+          addSignInLink();
+        } else {
+          removeSignInLink();
+        }
+      }
+
+      // Function to add sign in link to navigation (from original script.js)
+      function addSignInLink() {
+        const navContainers = document.querySelectorAll("#navBtnsCont");
+
+        navContainers.forEach((container) => {
+          // Check if sign in link already exists
+          if (!container.querySelector(".signin-link")) {
+            const signInLi = document.createElement("li");
+            signInLi.innerHTML =
+              '<a href="signin.html" class="signin-link">Sign In</a>';
+            container.appendChild(signInLi);
+          }
+        });
+      }
+
+      // Function to remove sign in link from navigation (from original script.js)
+      function removeSignInLink() {
+        const signInLinks = document.querySelectorAll(".signin-link");
+        signInLinks.forEach((link) => {
+          const li = link.closest("li");
+          if (li) li.remove();
+        });
+      }
     </script>
 
+    <script src="./scripts/script.js"></script>
     <script src="./scripts/footer.js"></script>
     <script src="./scripts/grid.js"></script>
   </body>
