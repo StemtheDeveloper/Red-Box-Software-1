@@ -155,13 +155,19 @@ class RBSAuth {
   // Show authentication UI elements
   showAuthElements() {
     const signOutBtns = document.querySelectorAll(".sign-out-btn");
+    const profileLinks = document.querySelectorAll('a[href="profile.html"]');
+
     signOutBtns.forEach((btn) => (btn.style.display = "block"));
+    profileLinks.forEach((link) => (link.style.display = "block"));
   }
 
   // Hide authentication UI elements
   hideAuthElements() {
     const signOutBtns = document.querySelectorAll(".sign-out-btn");
+    const profileLinks = document.querySelectorAll('a[href="profile.html"]');
+
     signOutBtns.forEach((btn) => (btn.style.display = "none"));
+    profileLinks.forEach((link) => (link.style.display = "none"));
   }
 
   // Show admin UI elements

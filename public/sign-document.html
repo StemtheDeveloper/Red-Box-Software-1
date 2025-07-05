@@ -3,916 +3,283 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document Signing - Red Box Software</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-      }
-
-      .signing-container {
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        max-width: 800px;
-        width: 100%;
-        overflow: hidden;
-      }
-
-      .header {
-        background: #2c3e50;
-        color: white;
-        padding: 30px;
-        text-align: center;
-      }
-
-      .header h1 {
-        font-size: 2em;
-        margin-bottom: 10px;
-      }
-
-      .header p {
-        opacity: 0.9;
-        font-size: 1.1em;
-      }
-
-      .content {
-        padding: 40px;
-      }
-
-      .document-info {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 25px;
-        margin-bottom: 30px;
-        border-left: 4px solid #007bff;
-      }
-
-      .document-info h3 {
-        color: #2c3e50;
-        margin-bottom: 15px;
-        font-size: 1.3em;
-      }
-
-      .info-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        padding: 8px 0;
-        border-bottom: 1px solid #e9ecef;
-      }
-
-      .info-row:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-      }
-
-      .info-label {
-        font-weight: 600;
-        color: #495057;
-      }
-
-      .info-value {
-        color: #6c757d;
-      }
-
-      .signers-list {
-        margin-top: 20px;
-      }
-
-      .signer-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 15px;
-        background: white;
-        margin-bottom: 8px;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-      }
-
-      .signer-info {
-        display: flex;
-        align-items: center;
-      }
-
-      .signer-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #007bff;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        margin-right: 15px;
-      }
-
-      .signer-details h4 {
-        margin: 0;
-        color: #2c3e50;
-        font-size: 1em;
-      }
-
-      .signer-details p {
-        margin: 0;
-        color: #6c757d;
-        font-size: 0.9em;
-      }
-
-      .status-badge {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.85em;
-        font-weight: 600;
-        text-transform: uppercase;
-      }
-
-      .status-pending {
-        background: #fff3cd;
-        color: #856404;
-      }
-
-      .status-completed {
-        background: #d4edda;
-        color: #155724;
-      }
-
-      .signing-section {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 30px;
-        margin: 30px 0;
-        border: 2px dashed #007bff;
-      }
-
-      .signing-section.active {
-        border-color: #28a745;
-        background: #f8fff9;
-      }
-
-      .signature-canvas {
-        border: 2px solid #dee2e6;
-        border-radius: 8px;
-        background: white;
-        cursor: crosshair;
-        display: block;
-        margin: 20px auto;
-        touch-action: none;
-      }
-
-      .signature-buttons {
-        display: flex;
-        gap: 15px;
-        justify-content: center;
-        margin-top: 20px;
-        flex-wrap: wrap;
-      }
-
-      .btn {
-        padding: 12px 24px;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 1em;
-        min-width: 120px;
-      }
-
-      .btn-primary {
-        background: #007bff;
-        color: white;
-      }
-
-      .btn-primary:hover {
-        background: #0056b3;
-        transform: translateY(-2px);
-      }
-
-      .btn-secondary {
-        background: #6c757d;
-        color: white;
-      }
-
-      .btn-secondary:hover {
-        background: #545b62;
-      }
-
-      .btn-success {
-        background: #28a745;
-        color: white;
-      }
-
-      .btn-success:hover {
-        background: #1e7e34;
-        transform: translateY(-2px);
-      }
-
-      .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none !important;
-      }
-
-      .message {
-        padding: 15px 20px;
-        border-radius: 8px;
-        margin: 20px 0;
-        font-weight: 500;
-      }
-
-      .message.success {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-      }
-
-      .message.error {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-      }
-
-      .message.info {
-        background: #d1ecf1;
-        color: #0c5460;
-        border: 1px solid #b6d4db;
-      }
-
-      .loading {
-        display: none;
-        text-align: center;
-        padding: 20px;
-      }
-
-      .loading.show {
-        display: block;
-      }
-
-      .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #007bff;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 15px;
-      }
-
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-
-      .completed-section {
-        text-align: center;
-        padding: 40px 20px;
-      }
-
-      .completed-section h2 {
-        color: #28a745;
-        margin-bottom: 20px;
-        font-size: 2em;
-      }
-
-      .completed-section .icon {
-        font-size: 4em;
-        color: #28a745;
-        margin-bottom: 20px;
-      }
-
-      .text-signature-input {
-        width: 100%;
-        padding: 15px;
-        border: 2px solid #dee2e6;
-        border-radius: 8px;
-        font-size: 1.1em;
-        font-family: cursive;
-        background: white;
-        margin: 15px 0;
-      }
-
-      .text-signature-input:focus {
-        outline: none;
-        border-color: #007bff;
-      }
-
-      .signature-type-tabs {
-        display: flex;
-        margin-bottom: 20px;
-        background: #e9ecef;
-        border-radius: 8px;
-        padding: 4px;
-      }
-
-      .signature-tab {
-        flex: 1;
-        padding: 12px 20px;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        border-radius: 6px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-      }
-
-      .signature-tab.active {
-        background: white;
-        color: #007bff;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      @media (max-width: 768px) {
-        .signing-container {
-          margin: 10px;
-        }
-
-        .content {
-          padding: 20px;
-        }
-
-        .header {
-          padding: 20px;
-        }
-
-        .header h1 {
-          font-size: 1.5em;
-        }
-
-        .signature-canvas {
-          width: 100%;
-          height: 200px;
-        }
-
-        .signature-buttons {
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .btn {
-          width: 100%;
-          max-width: 250px;
-        }
-      }
-    </style>
+    <title>Sign Document</title>
+    <link rel="stylesheet" href="css/document-signing.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   </head>
   <body>
-    <nav>
-      <a href="index.html">
-        <div class="logo">
-          <img
-            id="logo"
-            src="./Images/RBS Logo main.svg"
-            alt="RBS Logo. It's a box that's red"
-          />
-        </div>
-      </a>
-      <div class="burger">
-        <div class="line"></div>
-        <div class="line"></div>
-        <div class="line"></div>
-      </div>
-
-      <div id="webNav">
-        <div id="navBtnsCont" class="nav-links">
-          <a href="index.html"><li>Home</li></a>
-          <a href="projects.html"><li>Projects</li></a>
-          <a href="products.html"><li>Products</li></a>
-          <a href="services.html"><li>Services</li></a>
-          <a href="articles.html"><li>Articles</li></a>
-          <a href="about.html"><li>About</li></a>
-          <a href="contact.html"><li>Contact</li></a>
-          <div class="tools-dropdown">
-            <li>More ▼</li>
-            <div class="tools-dropdown-content">
-              <a href="clip_path_editor.html">Clip Path Editor</a>
-              <a href="cubic_bezier.html">Cubic Bezier</a>
-              <a href="base64.html">Base64 image encoder - decoder</a>
-              <a href="kanban.html">Kanban Task Manager</a>
-              <a href="qr_code_generator.html">QR code generator</a>
-              <a href="custom-document-signing.html">Document Signing</a>
-            </div>
-          </div>
-
-          <a href="admin.html" style="display: none"><li>Admin</li></a>
-          <li>
-            <button
-              onclick="handleSignOut()"
-              class="sign-out-btn"
-              style="display: none"
-            >
-              Sign Out
-            </button>
-          </li>
-
-          <br />
-          <br />
-          <br />
-        </div>
-      </div>
-      <div class="dropdown-content">
-        <div id="navBtnsCont" class="nav-links">
-          <a href="index.html"><li>Home</li></a>
-          <a href="projects.html"><li>Projects</li></a>
-          <a href="products.html"><li>Products</li></a>
-          <a href="services.html"><li>Services</li></a>
-          <a href="articles.html"><li>Articles</li></a>
-          <a href="about.html"><li>About</li></a>
-          <a href="contact.html"><li>Contact</li></a>
-          <div class="tools-dropdown">
-            <li>More ▼</li>
-            <div class="tools-dropdown-content">
-              <a href="clip_path_editor.html">Clip Path Editor</a>
-              <a href="cubic_bezier.html">Cubic Bezier</a>
-              <a href="base64.html">Base64 image encoder - decoder</a>
-              <a href="kanban.html">Kanban Task Manager</a>
-              <a href="qr_code_generator.html">QR code generator</a>
-              <a href="custom-document-signing.html">Document Signing</a>
-            </div>
-          </div>
-
-          <a href="admin.html" style="display: none"><li>Admin</li></a>
-          <li>
-            <button
-              onclick="handleSignOut()"
-              class="sign-out-btn"
-              style="display: none"
-            >
-              Sign Out
-            </button>
-          </li>
-        </div>
-      </div>
-      <div id="shadow"></div>
-    </nav>
-
     <div class="signing-container">
-      <div class="header">
-        <h1>🔐 Document Signing</h1>
-        <p>Secure electronic signature platform</p>
+      <header class="signing-header">
+        <div class="header-info">
+          <h1 id="documentTitle">Loading Document...</h1>
+          <p id="documentStatus"></p>
+        </div>
+        <div class="header-actions">
+          <button id="downloadBtn" class="btn btn-secondary">
+            Download PDF
+          </button>
+          <button id="signBtn" class="btn btn-primary" style="display: none">
+            Sign Document
+          </button>
+        </div>
+      </header>
+
+      <div class="signing-workspace">
+        <!-- Toolbar -->
+        <div class="toolbar" id="toolbar" style="display: none">
+          <div class="tool-group">
+            <button
+              class="tool-btn active"
+              data-tool="signature"
+              title="Add Signature"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path d="M3 17l3.5-3.5c.5-.5 1.5-.5 2 0l5.5 5.5"></path>
+                <path d="M14.5 6.5c.5-.5 1.5-.5 2 0l4.5 4.5"></path>
+                <path d="M8 14l1.5-1.5c.5-.5 1.5-.5 2 0l4.5 4.5"></path>
+              </svg>
+              Signature
+            </button>
+            <button class="tool-btn" data-tool="text" title="Add Text">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                <line x1="9" y1="20" x2="15" y2="20"></line>
+                <line x1="12" y1="4" x2="12" y2="20"></line>
+              </svg>
+              Text
+            </button>
+            <button class="tool-btn" data-tool="date" title="Add Date">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              Date
+            </button>
+          </div>
+          <div class="tool-group">
+            <button id="undoBtn" class="tool-btn" title="Undo">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path d="M3 7v6h6"></path>
+                <path
+                  d="M3 13c0-4.97 4.03-9 9-9s9 4.03 9 9-4.03 9-9 9c-2.39 0-4.56-.94-6.17-2.46"
+                ></path>
+              </svg>
+            </button>
+            <button id="clearBtn" class="tool-btn" title="Clear All">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path
+                  d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- PDF Viewer -->
+        <div class="pdf-viewer-container">
+          <div class="pdf-controls">
+            <button id="prevPage" class="btn-icon" disabled>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <span class="page-info">
+              Page <span id="pageNum">1</span> of <span id="pageCount">1</span>
+            </span>
+            <button id="nextPage" class="btn-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+            <div class="zoom-controls">
+              <button id="zoomOut" class="btn-icon">-</button>
+              <span id="zoomLevel">100%</span>
+              <button id="zoomIn" class="btn-icon">+</button>
+            </div>
+          </div>
+
+          <div class="pdf-wrapper">
+            <canvas id="pdfCanvas"></canvas>
+            <div id="annotationLayer" class="annotation-layer"></div>
+          </div>
+        </div>
+
+        <!-- Signature Panel -->
+        <div class="signature-panel" id="signaturePanel" style="display: none">
+          <h3>Add Your Signature</h3>
+          <div class="signature-tabs">
+            <button class="sig-tab active" data-tab="draw">Draw</button>
+            <button class="sig-tab" data-tab="type">Type</button>
+            <button class="sig-tab" data-tab="saved">Saved</button>
+          </div>
+
+          <!-- Draw Signature -->
+          <div class="sig-content" id="drawTab">
+            <canvas id="signatureCanvas" width="400" height="150"></canvas>
+            <div class="sig-actions">
+              <button id="clearSignature" class="btn btn-secondary">
+                Clear
+              </button>
+              <label class="checkbox-label">
+                <input type="checkbox" id="saveSignature" />
+                Save for future use
+              </label>
+            </div>
+          </div>
+
+          <!-- Type Signature -->
+          <div class="sig-content" id="typeTab" style="display: none">
+            <input
+              type="text"
+              id="typedSignature"
+              placeholder="Type your name"
+            />
+            <div class="font-options">
+              <label>
+                <input type="radio" name="font" value="cursive" checked />
+                <span style="font-family: cursive">Cursive</span>
+              </label>
+              <label>
+                <input type="radio" name="font" value="serif" />
+                <span style="font-family: serif">Serif</span>
+              </label>
+              <label>
+                <input type="radio" name="font" value="sans-serif" />
+                <span style="font-family: sans-serif">Sans-serif</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Saved Signatures -->
+          <div class="sig-content" id="savedTab" style="display: none">
+            <div id="savedSignatures" class="saved-signatures">
+              <p>No saved signatures</p>
+            </div>
+          </div>
+
+          <div class="panel-actions">
+            <button id="cancelSignature" class="btn btn-secondary">
+              Cancel
+            </button>
+            <button id="applySignature" class="btn btn-primary">Apply</button>
+          </div>
+        </div>
+
+        <!-- Text Input Panel -->
+        <div class="text-panel" id="textPanel" style="display: none">
+          <h3>Add Text</h3>
+          <textarea
+            id="textInput"
+            placeholder="Enter your text"
+            rows="3"
+          ></textarea>
+          <div class="text-options">
+            <label>
+              Font Size:
+              <select id="fontSize">
+                <option value="12">12px</option>
+                <option value="14" selected>14px</option>
+                <option value="16">16px</option>
+                <option value="18">18px</option>
+                <option value="20">20px</option>
+              </select>
+            </label>
+          </div>
+          <div class="panel-actions">
+            <button id="cancelText" class="btn btn-secondary">Cancel</button>
+            <button id="applyText" class="btn btn-primary">Apply</button>
+          </div>
+        </div>
       </div>
 
-      <div class="content">
-        <div id="loadingSection" class="loading show">
-          <div class="spinner"></div>
-          <p>Loading document...</p>
+      <!-- Signer Info -->
+      <div class="signer-info" id="signerInfo" style="display: none">
+        <h3>Document Details</h3>
+        <div class="info-item">
+          <strong>Sent by:</strong> <span id="sentBy"></span>
         </div>
-
-        <div id="errorSection" style="display: none">
-          <div class="message error" id="errorMessage"></div>
+        <div class="info-item">
+          <strong>Your Role:</strong> <span id="signerRole"></span>
         </div>
+        <div class="info-item">
+          <strong>Status:</strong> <span id="signerStatus"></span>
+        </div>
+        <div id="signersList" class="signers-status"></div>
+      </div>
+    </div>
 
-        <div id="mainContent" style="display: none">
-          <div class="document-info" id="documentInfo">
-            <!-- Document info will be populated by JavaScript -->
-          </div>
-
-          <div
-            id="signingSection"
-            class="signing-section"
-            style="display: none"
-          >
-            <h3>📝 Your Signature Required</h3>
-            <p>Please sign the document below to complete the process.</p>
-
-            <div class="signature-type-tabs">
-              <button
-                class="signature-tab active"
-                onclick="switchSignatureType('draw')"
-              >
-                Draw Signature
-              </button>
-              <button
-                class="signature-tab"
-                onclick="switchSignatureType('type')"
-              >
-                Type Signature
-              </button>
-            </div>
-
-            <div id="drawSignatureTab">
-              <canvas
-                id="signatureCanvas"
-                class="signature-canvas"
-                width="600"
-                height="200"
-              ></canvas>
-              <div class="signature-buttons">
-                <button class="btn btn-secondary" onclick="clearSignature()">
-                  Clear
-                </button>
-                <button
-                  class="btn btn-primary"
-                  onclick="saveSignature()"
-                  id="saveSignatureBtn"
-                >
-                  Save Signature
-                </button>
-              </div>
-            </div>
-
-            <div id="typeSignatureTab" style="display: none">
-              <input
-                type="text"
-                class="text-signature-input"
-                id="textSignatureInput"
-                placeholder="Type your full name here"
-              />
-              <div class="signature-buttons">
-                <button
-                  class="btn btn-primary"
-                  onclick="saveTextSignature()"
-                  id="saveTextSignatureBtn"
-                >
-                  Save Signature
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div
-            id="completedSection"
-            class="completed-section"
-            style="display: none"
-          >
-            <div class="icon">✅</div>
-            <h2>Document Signed Successfully!</h2>
-            <p>
-              Thank you for signing the document. All parties will be notified
-              of the completion.
-            </p>
-            <div class="signature-buttons">
-              <button class="btn btn-primary" onclick="viewDocument()">
-                View Document
-              </button>
-            </div>
-          </div>
-
-          <div
-            id="alreadySignedSection"
-            class="completed-section"
-            style="display: none"
-          >
-            <div class="icon">ℹ️</div>
-            <h2>Already Signed</h2>
-            <p>You have already signed this document.</p>
-            <div class="signature-buttons">
-              <button class="btn btn-primary" onclick="viewDocument()">
-                View Document
-              </button>
-            </div>
-          </div>
-
-          <div id="messageContainer"></div>
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+      <div class="modal-content">
+        <h3>Confirm Signature</h3>
+        <p>
+          By signing this document, you agree to the terms and conditions
+          outlined within.
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeConfirmModal()">
+            Cancel
+          </button>
+          <button id="confirmSign" class="btn btn-primary">
+            Confirm & Sign
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Firebase Configuration -->
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
     <script src="config/firebase-config.js"></script>
-
-    <!-- Firebase SDK -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-      import {
-        getAuth,
-        onAuthStateChanged,
-      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-      import {
-        getFunctions,
-        httpsCallable,
-      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-functions.js";
-
-      // Initialize Firebase
-      if (!window.firebaseConfig) {
-        console.error("Firebase configuration not loaded!");
-        document.getElementById("errorSection").style.display = "block";
-        document.getElementById("errorMessage").textContent =
-          "Configuration error. Please contact support.";
-        document.getElementById("loadingSection").classList.remove("show");
-      }
-
-      const app = initializeApp(window.firebaseConfig);
-      const auth = getAuth(app);
-      const functions = getFunctions(app);
-
-      // Global variables
-      let currentDocument = null;
-      let currentSigner = null;
-      let signaturePad = null;
-      let documentId = null;
-      let accessToken = null;
-
-      // Signature pad setup
-      class SignaturePad {
-        constructor(canvas) {
-          this.canvas = canvas;
-          this.ctx = canvas.getContext("2d");
-          this.drawing = false;
-          this.points = [];
-
-          this.ctx.strokeStyle = "#000";
-          this.ctx.lineWidth = 2;
-          this.ctx.lineCap = "round";
-          this.ctx.lineJoin = "round";
-
-          this.setupEventListeners();
-        }
-
-        setupEventListeners() {
-          // Mouse events
-          this.canvas.addEventListener("mousedown", (e) =>
-            this.startDrawing(e)
-          );
-          this.canvas.addEventListener("mousemove", (e) => this.draw(e));
-          this.canvas.addEventListener("mouseup", () => this.stopDrawing());
-          this.canvas.addEventListener("mouseout", () => this.stopDrawing());
-
-          // Touch events
-          this.canvas.addEventListener("touchstart", (e) => {
-            e.preventDefault();
-            this.startDrawing(e.touches[0]);
-          });
-          this.canvas.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-            this.draw(e.touches[0]);
-          });
-          this.canvas.addEventListener("touchend", (e) => {
-            e.preventDefault();
-            this.stopDrawing();
-          });
-        }
-
-        getPoint(e) {
-          const rect = this.canvas.getBoundingClientRect();
-          return {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-          };
-        }
-
-        startDrawing(e) {
-          this.drawing = true;
-          const point = this.getPoint(e);
-          this.ctx.beginPath();
-          this.ctx.moveTo(point.x, point.y);
-          this.points.push(point);
-        }
-
-        draw(e) {
-          if (!this.drawing) return;
-
-          const point = this.getPoint(e);
-          this.ctx.lineTo(point.x, point.y);
-          this.ctx.stroke();
-          this.points.push(point);
-        }
-
-        stopDrawing() {
-          this.drawing = false;
-        }
-
-        clear() {
-          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-          this.points = [];
-        }
-
-        isEmpty() {
-          return this.points.length === 0;
-        }
-
-        toDataURL() {
-          return this.canvas.toDataURL("image/png");
-        }
-      }
-
-      // Initialize when page loads
-      document.addEventListener("DOMContentLoaded", async () => {
-        // Get document ID and token from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        documentId = urlParams.get("id");
-        accessToken = urlParams.get("token");
-
-        if (!documentId) {
-          showError("No document ID provided");
-          return;
-        }
-
-        // Initialize signature pad
-        const canvas = document.getElementById("signatureCanvas");
-        signaturePad = new SignaturePad(canvas);
-
-        // Load document
-        await loadDocument();
-      });
-
-      async function loadDocument() {
-        try {
-          const getDocument = httpsCallable(functions, "getDocument");
-          const result = await getDocument({
-            documentId: documentId,
-            accessToken: accessToken,
-          });
-
-          if (!result.data.success) {
-            throw new Error(result.data.error);
-          }
-
-          currentDocument = result.data.document;
-          currentSigner = result.data.document.currentSigner;
-
-          displayDocument();
-        } catch (error) {
-          console.error("Error loading document:", error);
-          showError(error.message || "Failed to load document");
-        }
-      }
-
-      function displayDocument() {
-        document.getElementById("loadingSection").classList.remove("show");
-        document.getElementById("mainContent").style.display = "block";
-
-        // Populate document info
-        const documentInfo = document.getElementById("documentInfo");
-        documentInfo.innerHTML = `
-                <h3>${currentDocument.title}</h3>
-                ${
-                  currentDocument.description
-                    ? `<p style="margin-bottom: 15px;">${currentDocument.description}</p>`
-                    : ""
-                }
-                <div class="info-row">
-                    <span class="info-label">Document ID:</span>
-                    <span class="info-value">${currentDocument.id}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Created by:</span>
-                    <span class="info-value">${currentDocument.createdBy}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Status:</span>
-                    <span class="info-value status-badge status-${
-                      currentDocument.status
-                    }">${currentDocument.status}</span>
-                </div>
-                <div class="signers-list">
-                    <h4 style="margin-bottom: 15px;">Signers:</h4>
-                    ${currentDocument.signers
-                      .map(
-                        (signer) => `
-                        <div class="signer-item">
-                            <div class="signer-info">
-                                <div class="signer-avatar">${signer.name
-                                  .charAt(0)
-                                  .toUpperCase()}</div>
-                                <div class="signer-details">
-                                    <h4>${signer.name}</h4>
-                                    <p>${signer.email} • ${signer.role}</p>
-                                </div>
-                            </div>
-                            <span class="status-badge status-${
-                              signer.status
-                            }">${signer.status}</span>
-                        </div>
-                    `
-                      )
-                      .join("")}
-                </div>
-            `;
-
-        // Show appropriate section based on signer status
-        if (currentSigner) {
-          if (currentSigner.status === "pending" && currentSigner.canSign) {
-            document.getElementById("signingSection").style.display = "block";
-          } else {
-            document.getElementById("alreadySignedSection").style.display =
-              "block";
-          }
-        } else {
-          // Document creator or viewer
-          if (currentDocument.status === "completed") {
-            document.getElementById("completedSection").style.display = "block";
-          }
-        }
-      }
-
-      function showError(message) {
-        document.getElementById("loadingSection").classList.remove("show");
-        document.getElementById("errorSection").style.display = "block";
-        document.getElementById("errorMessage").textContent = message;
-      }
-
-      function showMessage(message, type = "info") {
-        const messageContainer = document.getElementById("messageContainer");
-        messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
-        setTimeout(() => {
-          messageContainer.innerHTML = "";
-        }, 5000);
-      }
-
-      // Signature functions
-      window.switchSignatureType = function (type) {
-        const tabs = document.querySelectorAll(".signature-tab");
-        tabs.forEach((tab) => tab.classList.remove("active"));
-
-        document.getElementById("drawSignatureTab").style.display =
-          type === "draw" ? "block" : "none";
-        document.getElementById("typeSignatureTab").style.display =
-          type === "type" ? "block" : "none";
-
-        event.target.classList.add("active");
-      };
-
-      window.clearSignature = function () {
-        signaturePad.clear();
-      };
-
-      window.saveSignature = async function () {
-        if (signaturePad.isEmpty()) {
-          showMessage("Please draw your signature first", "error");
-          return;
-        }
-
-        const signatureData = signaturePad.toDataURL();
-        await submitSignature(signatureData, "image");
-      };
-
-      window.saveTextSignature = async function () {
-        const textSignature = document
-          .getElementById("textSignatureInput")
-          .value.trim();
-        if (!textSignature) {
-          showMessage("Please type your signature first", "error");
-          return;
-        }
-
-        await submitSignature(textSignature, "text");
-      };
-
-      async function submitSignature(signatureData, signatureType) {
-        try {
-          const saveBtn =
-            document.getElementById("saveSignatureBtn") ||
-            document.getElementById("saveTextSignatureBtn");
-          saveBtn.disabled = true;
-          saveBtn.textContent = "Saving...";
-
-          const addSignature = httpsCallable(functions, "addSignature");
-          const result = await addSignature({
-            documentId: documentId,
-            signerId: currentSigner.id,
-            accessToken: accessToken,
-            signatureData:
-              signatureType === "image"
-                ? signatureData.split(",")[1]
-                : signatureData, // Remove data:image/png;base64, prefix
-            signatureType: signatureType,
-            textSignature: signatureType === "text" ? signatureData : "",
-          });
-
-          if (!result.data.success) {
-            throw new Error(result.data.error);
-          }
-
-          // Hide signing section and show success
-          document.getElementById("signingSection").style.display = "none";
-          document.getElementById("completedSection").style.display = "block";
-
-          showMessage(result.data.message, "success");
-        } catch (error) {
-          console.error("Error saving signature:", error);
-          showMessage(error.message || "Failed to save signature", "error");
-
-          const saveBtn =
-            document.getElementById("saveSignatureBtn") ||
-            document.getElementById("saveTextSignatureBtn");
-          saveBtn.disabled = false;
-          saveBtn.textContent = "Save Signature";
-        }
-      }
-
-      window.viewDocument = function () {
-        window.location.href = `view-document.html?id=${documentId}${
-          accessToken ? `&token=${accessToken}` : ""
-        }`;
-      };
-    </script>
+    <script src="js/document-signing.js"></script>
   </body>
 </html>

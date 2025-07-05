@@ -41,11 +41,40 @@ function updateNavigation() {
   setupEventListeners();
 }
 
+// Function to set up event listeners for navigation
+function setupEventListeners() {
+  const currentLocation = window.location.href;
+  const navLinksA = document.querySelectorAll(".nav-links a");
+
+  navLinksA.forEach((link) => {
+    if (link.href === currentLocation) {
+      link.classList.add("active");
+    }
+  });
+
+  const burger = document.querySelector(".burger");
+  const dropdownContent = document.querySelector(".dropdown-content");
+  const shadow = document.getElementById("shadow");
+
+  if (burger && dropdownContent && shadow) {
+    burger.addEventListener("click", () => {
+      dropdownContent.classList.toggle("show");
+      shadow.classList.toggle("show");
+    });
+
+    shadow.addEventListener("click", () => {
+      dropdownContent.classList.toggle("show");
+      shadow.classList.toggle("show");
+    });
+  }
+}
+
 // Function to update authentication-related elements in navigation
 function updateAuthElements(isAuthenticated, isAdmin) {
-  // Find sign out buttons and admin links
+  // Find sign out buttons, admin links, and profile links
   const signOutBtns = document.querySelectorAll(".sign-out-btn");
   const adminLinks = document.querySelectorAll('a[href="admin.html"]');
+  const profileLinks = document.querySelectorAll('a[href="profile.html"]');
 
   // Show/hide sign out buttons
   signOutBtns.forEach((btn) => {
@@ -59,6 +88,15 @@ function updateAuthElements(isAuthenticated, isAdmin) {
   // Show/hide admin links
   adminLinks.forEach((link) => {
     if (isAuthenticated && isAdmin) {
+      link.style.display = "block";
+    } else {
+      link.style.display = "none";
+    }
+  });
+
+  // Show/hide profile links
+  profileLinks.forEach((link) => {
+    if (isAuthenticated) {
       link.style.display = "block";
     } else {
       link.style.display = "none";
