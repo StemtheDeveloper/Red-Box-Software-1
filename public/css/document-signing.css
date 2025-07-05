@@ -475,7 +475,7 @@ header {
   flex: 1;
   overflow: auto;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
   padding: 2rem;
   position: relative;
@@ -484,13 +484,14 @@ header {
 #pdfCanvas {
   box-shadow: var(--shadow-lg);
   background: white;
+  position: relative; /* Add this to establish positioning context */
 }
 
 .annotation-layer {
   position: absolute;
-  top: 0;
-  left: 0;
+  /* Position will be set dynamically by JavaScript to match canvas exactly */
   pointer-events: none;
+  /* The size and position will be set by JavaScript to match canvas dimensions */
 }
 
 .annotation-layer.active {

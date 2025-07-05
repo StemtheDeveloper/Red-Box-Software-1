@@ -789,6 +789,19 @@ async function generateSignedPDF(documentId, originalFileName, signers) {
             signer.annotations && signer.annotations.length > 0
           ),
           annotationCount: signer.annotations ? signer.annotations.length : 0,
+          annotationDetails: signer.annotations
+            ? signer.annotations.map((a) => ({
+                type: a.type,
+                x: a.x,
+                y: a.y,
+                page: a.page,
+                canvasWidth: a.canvasWidth,
+                canvasHeight: a.canvasHeight,
+                originalPdfWidth: a.originalPdfWidth,
+                originalPdfHeight: a.originalPdfHeight,
+                scale: a.scale,
+              }))
+            : [],
         });
 
         // Use the new annotation system
@@ -879,37 +892,28 @@ async function addPositionedAnnotations(
         });
 
         for (const annotation of pageAnnotations) {
-          // The key insight: the frontend coordinates are relative to the displayed canvas
-          // We need to convert them to PDF coordinates
+          // SIMPLIFIED COORDINATE CONVERSION LOGIC
+          // The frontend now sends PDF coordinates directly, so we just need to handle Y-axis flip
 
-          // Get the canvas dimensions when annotation was placed
-          const canvasWidth = annotation.canvasWidth || 600;
-          const canvasHeight = annotation.canvasHeight || 800;
+          // Get the PDF coordinates from the annotation (already in PDF coordinate space)
+          const pdfX = annotation.x;
+          const pdfY = annotation.y;
 
-          // Calculate the ratio between PDF page and canvas
-          // This handles any scaling that was applied in the frontend
-          const xRatio = pdfWidth / canvasWidth;
-          const yRatio = pdfHeight / canvasHeight;
-
-          // Convert coordinates
-          // X coordinate is straightforward - just scale it
-          const pdfX = annotation.x * xRatio;
-
-          // Y coordinate needs to be flipped because:
-          // - Canvas/HTML: origin is top-left, Y increases downward
-          // - PDF: origin is bottom-left, Y increases upward
-          const pdfY = pdfHeight - annotation.y * yRatio;
+          // The only conversion needed is Y-axis flip for PDF coordinate system
+          // Frontend: origin top-left, Y increases downward
+          // PDF: origin bottom-left, Y increases upward
+          const finalPdfX = pdfX;
+          const finalPdfY = pdfHeight - pdfY;
 
           logger.info("Coordinate conversion", {
             annotationType: annotation.type,
-            canvas: {
+            input: {
               coords: { x: annotation.x, y: annotation.y },
-              size: { width: canvasWidth, height: canvasHeight },
+              page: annotation.page,
             },
             pdf: {
               size: { width: pdfWidth, height: pdfHeight },
-              ratio: { x: xRatio, y: yRatio },
-              coords: { x: pdfX, y: pdfY },
+              finalCoords: { x: finalPdfX, y: finalPdfY },
             },
           });
 
@@ -920,15 +924,27 @@ async function addPositionedAnnotations(
                   pdfDoc,
                   page,
                   annotation,
-                  pdfX,
-                  pdfY
+                  finalPdfX,
+                  finalPdfY
                 );
                 break;
               case "text":
-                await addTextAnnotation(pdfDoc, page, annotation, pdfX, pdfY);
+                await addTextAnnotation(
+                  pdfDoc,
+                  page,
+                  annotation,
+                  finalPdfX,
+                  finalPdfY
+                );
                 break;
               case "date":
-                await addDateAnnotation(pdfDoc, page, annotation, pdfX, pdfY);
+                await addDateAnnotation(
+                  pdfDoc,
+                  page,
+                  annotation,
+                  finalPdfX,
+                  finalPdfY
+                );
                 break;
               default:
                 logger.warn(`Unknown annotation type: ${annotation.type}`);
@@ -937,7 +953,7 @@ async function addPositionedAnnotations(
             logger.warn("Failed to add annotation", {
               type: annotation.type,
               error: annotationError.message,
-              coordinates: { x: pdfX, y: pdfY },
+              coordinates: { x: finalPdfX, y: finalPdfY },
             });
           }
         }

@@ -296,24 +296,45 @@ async function renderPage(pageNumber) {
 
 function updateAnnotationLayer() {
   const canvas = pdfCanvas;
-  const container = canvas.parentElement;
+  const wrapper = canvas.parentElement; // This is .pdf-wrapper
 
-  // Set annotation layer to match canvas dimensions and position
-  annotationLayer.style.width = canvas.width + "px";
-  annotationLayer.style.height = canvas.height + "px";
+  // Get the exact position and size of the canvas relative to the wrapper
+  const canvasRect = canvas.getBoundingClientRect();
+  const wrapperRect = wrapper.getBoundingClientRect();
+
+  // Calculate the canvas position relative to the wrapper
+  const canvasLeft = canvasRect.left - wrapperRect.left;
+  const canvasTop = canvasRect.top - wrapperRect.top;
+
+  // CRITICAL FIX: Use the display dimensions of the canvas, not the internal canvas resolution
+  // canvasRect.width/height are the actual displayed dimensions
+  // canvas.width/height are the internal rendering resolution
+  annotationLayer.style.width = canvasRect.width + "px";
+  annotationLayer.style.height = canvasRect.height + "px";
   annotationLayer.style.position = "absolute";
-  annotationLayer.style.top = "0px";
-  annotationLayer.style.left = "0px";
+  annotationLayer.style.top = canvasTop + "px";
+  annotationLayer.style.left = canvasLeft + "px";
   annotationLayer.style.pointerEvents = "auto";
   annotationLayer.style.zIndex = "10";
 
   // Add active class to enable pointer events
   annotationLayer.classList.add("active");
 
-  // Ensure the container is relatively positioned
-  if (container) {
-    container.style.position = "relative";
+  // Ensure the wrapper is relatively positioned
+  if (wrapper) {
+    wrapper.style.position = "relative";
   }
+
+  console.log("Annotation layer updated:", {
+    canvasSize: { width: canvas.width, height: canvas.height },
+    canvasPosition: { top: canvasTop, left: canvasLeft },
+    layerStyle: {
+      width: annotationLayer.style.width,
+      height: annotationLayer.style.height,
+      top: annotationLayer.style.top,
+      left: annotationLayer.style.left,
+    },
+  });
 }
 
 // Event Listeners
@@ -470,10 +491,10 @@ function handleAnnotationClick(e) {
     return;
   }
 
-  // Get click coordinates relative to the annotation layer
-  const rect = annotationLayer.getBoundingClientRect();
-  const layerX = e.clientX - rect.left;
-  const layerY = e.clientY - rect.top;
+  // Get click coordinates relative to the annotation layer (which should overlay the canvas exactly)
+  const layerRect = annotationLayer.getBoundingClientRect();
+  const layerX = e.clientX - layerRect.left;
+  const layerY = e.clientY - layerRect.top;
 
   // IMPORTANT: Ensure we have the current PDF page dimensions
   if (!pdfDoc) {
@@ -481,31 +502,76 @@ function handleAnnotationClick(e) {
     return;
   }
 
+  // CRITICAL: Convert display coordinates to PDF coordinates immediately
+  // The canvas might be scaled/zoomed, so we need to convert to the actual PDF coordinate space
+
+  // Use the original PDF dimensions that were captured during PDF loading
+  if (
+    !originalPdfDimensions ||
+    !originalPdfDimensions.width ||
+    !originalPdfDimensions.height
+  ) {
+    console.error(
+      "Original PDF dimensions not available",
+      originalPdfDimensions
+    );
+    showToast(
+      "PDF dimensions not loaded. Please refresh and try again.",
+      "error"
+    );
+    return;
+  }
+
+  // Convert annotation layer coordinates to PDF coordinates
+  // Since the annotation layer should perfectly overlay the canvas, we can use its dimensions
+  const pdfX = (layerX / layerRect.width) * originalPdfDimensions.width;
+  const pdfY = (layerY / layerRect.height) * originalPdfDimensions.height;
+
+  // Ensure coordinates are within PDF bounds
+  const clampedPdfX = Math.max(0, Math.min(pdfX, originalPdfDimensions.width));
+  const clampedPdfY = Math.max(0, Math.min(pdfY, originalPdfDimensions.height));
+
   // Store comprehensive positioning data
   pendingAnnotation = {
-    x: layerX,
-    y: layerY,
+    // Store PDF coordinates (not layer coordinates!)
+    x: clampedPdfX,
+    y: clampedPdfY,
     page: currentPage,
-    // Store actual canvas dimensions at time of annotation
-    canvasWidth: pdfCanvas.width,
-    canvasHeight: pdfCanvas.height,
+    // Store display layer dimensions for reference
+    layerWidth: layerRect.width,
+    layerHeight: layerRect.height,
     scale: scale,
-    // Store the original PDF dimensions if available
-    originalPdfWidth: originalPdfDimensions.width || pdfCanvas.width / scale,
-    originalPdfHeight: originalPdfDimensions.height || pdfCanvas.height / scale,
+    // Store the original PDF dimensions
+    originalPdfWidth: originalPdfDimensions.width,
+    originalPdfHeight: originalPdfDimensions.height,
+    // Store the conversion info for debugging
+    displayCoords: { x: layerX, y: layerY },
   };
 
   console.log("Click position captured:", {
-    layerCoords: { x: layerX, y: layerY },
+    displayCoords: { x: layerX, y: layerY },
+    pdfCoords: { x: clampedPdfX, y: clampedPdfY },
     page: currentPage,
-    canvas: {
-      width: pdfCanvas.width,
-      height: pdfCanvas.height,
+    layer: {
+      width: layerRect.width,
+      height: layerRect.height,
       scale: scale,
     },
+    canvas: {
+      internalWidth: pdfCanvas.width,
+      internalHeight: pdfCanvas.height,
+    },
     originalPdf: {
-      width: pendingAnnotation.originalPdfWidth,
-      height: pendingAnnotation.originalPdfHeight,
+      width: originalPdfDimensions.width,
+      height: originalPdfDimensions.height,
+    },
+    conversionRatios: {
+      xRatio: layerRect.width / originalPdfDimensions.width,
+      yRatio: layerRect.height / originalPdfDimensions.height,
+    },
+    coordinatePercentages: {
+      xPercent: (layerX / layerRect.width) * 100,
+      yPercent: (layerY / layerRect.height) * 100,
     },
   });
 
@@ -568,30 +634,31 @@ function applySignature() {
   }
 
   if (signatureData && pendingAnnotation) {
-    // Ensure we capture current state
-    const currentCanvasWidth = pdfCanvas.width;
-    const currentCanvasHeight = pdfCanvas.height;
-    const currentScale = scale;
-
     annotations.push({
       type: "signature",
       data: signatureData,
       x: pendingAnnotation.x,
       y: pendingAnnotation.y,
       page: pendingAnnotation.page,
-      // Store all coordinate conversion data
-      canvasWidth: currentCanvasWidth,
-      canvasHeight: currentCanvasHeight,
-      scale: currentScale,
-      originalPdfWidth: originalPdfDimensions.width,
-      originalPdfHeight: originalPdfDimensions.height,
+      // Store all coordinate conversion data using the layer dimensions
+      layerWidth: pendingAnnotation.layerWidth,
+      layerHeight: pendingAnnotation.layerHeight,
+      scale: pendingAnnotation.scale,
+      originalPdfWidth: pendingAnnotation.originalPdfWidth,
+      originalPdfHeight: pendingAnnotation.originalPdfHeight,
     });
 
     console.log("Signature annotation added:", {
       position: { x: pendingAnnotation.x, y: pendingAnnotation.y },
-      canvas: { width: currentCanvasWidth, height: currentCanvasHeight },
-      scale: currentScale,
-      originalPdf: originalPdfDimensions,
+      layer: {
+        width: pendingAnnotation.layerWidth,
+        height: pendingAnnotation.layerHeight,
+      },
+      scale: pendingAnnotation.scale,
+      originalPdf: {
+        width: pendingAnnotation.originalPdfWidth,
+        height: pendingAnnotation.originalPdfHeight,
+      },
     });
 
     renderAnnotations();
@@ -617,11 +684,10 @@ function applyText() {
       x: pendingAnnotation.x,
       y: pendingAnnotation.y,
       page: pendingAnnotation.page,
-      // Include enhanced positioning data for accurate coordinate conversion
-      canvasWidth: pendingAnnotation.canvasWidth,
-      canvasHeight: pendingAnnotation.canvasHeight,
+      // Include enhanced positioning data using layer dimensions
+      layerWidth: pendingAnnotation.layerWidth,
+      layerHeight: pendingAnnotation.layerHeight,
       scale: pendingAnnotation.scale,
-      layerRect: pendingAnnotation.layerRect,
       // Include original PDF dimensions for accurate coordinate conversion
       originalPdfWidth: pendingAnnotation.originalPdfWidth,
       originalPdfHeight: pendingAnnotation.originalPdfHeight,
@@ -634,31 +700,27 @@ function applyText() {
   }
 }
 
-function addDateAnnotation(x, y) {
+function addDateAnnotation(layerX, layerY) {
   const date = new Date().toLocaleDateString();
+
+  // Convert layer coordinates to PDF coordinates
+  const layerRect = annotationLayer.getBoundingClientRect();
+  const pdfX = (layerX / layerRect.width) * originalPdfDimensions.width;
+  const pdfY = (layerY / layerRect.height) * originalPdfDimensions.height;
+
   annotations.push({
     type: "date",
     data: date,
-    x: x,
-    y: y,
+    x: pdfX,
+    y: pdfY,
     page: currentPage,
-    // Include enhanced positioning data for accurate coordinate conversion
-    canvasWidth: pdfCanvas.width,
-    canvasHeight: pdfCanvas.height,
+    // Include layer dimensions for accurate coordinate conversion
+    layerWidth: layerRect.width,
+    layerHeight: layerRect.height,
     scale: scale,
-    layerRect: {
-      width: annotationLayer.getBoundingClientRect().width,
-      height: annotationLayer.getBoundingClientRect().height,
-    },
     // Ensure we always have original PDF dimensions
-    originalPdfWidth:
-      originalPdfDimensions && originalPdfDimensions.width
-        ? originalPdfDimensions.width
-        : pdfCanvas.width / scale,
-    originalPdfHeight:
-      originalPdfDimensions && originalPdfDimensions.height
-        ? originalPdfDimensions.height
-        : pdfCanvas.height / scale,
+    originalPdfWidth: originalPdfDimensions.width,
+    originalPdfHeight: originalPdfDimensions.height,
   });
 
   renderAnnotations();
@@ -671,10 +733,27 @@ function renderAnnotations() {
   annotations.forEach((annotation, index) => {
     if (annotation.page !== currentPage) return;
 
+    // Convert PDF coordinates back to canvas coordinates for display
+    let displayX, displayY;
+
+    if (annotation.originalPdfWidth && annotation.originalPdfHeight) {
+      // New system: annotation coordinates are in PDF space, convert to layer display space
+      // Use the current annotation layer dimensions for consistent conversion
+      const currentLayerRect = annotationLayer.getBoundingClientRect();
+      displayX =
+        (annotation.x / annotation.originalPdfWidth) * currentLayerRect.width;
+      displayY =
+        (annotation.y / annotation.originalPdfHeight) * currentLayerRect.height;
+    } else {
+      // Fallback: assume coordinates are already in layer space (legacy)
+      displayX = annotation.x;
+      displayY = annotation.y;
+    }
+
     const element = document.createElement("div");
     element.className = `annotation ${annotation.type}`;
-    element.style.left = annotation.x + "px";
-    element.style.top = annotation.y + "px";
+    element.style.left = displayX + "px";
+    element.style.top = displayY + "px";
     element.dataset.index = index;
 
     switch (annotation.type) {
