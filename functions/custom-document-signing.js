@@ -168,6 +168,17 @@ exports.uploadDocument = onCall(
         signatureData: null,
       }));
 
+      // Store original document data directly in Firestore (base64)
+      // Note: For large documents, consider using a different approach
+      const documentFileData = {
+        originalData: base64Data,
+        fileName: fileName,
+        fileType: fileType,
+        fileSize: fileSize,
+        uploadedBy: userInfo.email,
+        uploadedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
       // Store document metadata in Firestore
       const currentTimestamp = admin.firestore.Timestamp.now();
 
@@ -189,7 +200,8 @@ exports.uploadDocument = onCall(
           ...processedSigners.map((s) => s.email),
         ],
         completedAt: null,
-        signedDocumentPath: null,
+        signedDocumentData: null, // Will store final signed document data
+        fileData: documentFileData, // Store document data directly
         auditTrail: [
           {
             action: "document_created",
@@ -207,26 +219,6 @@ exports.uploadDocument = onCall(
         .collection("documents")
         .doc(documentId)
         .set(documentData);
-
-      // Store original document in Firebase Storage with encryption
-      const fileBuffer = Buffer.from(base64Data, "base64");
-      const encryptedBuffer = encryptDocument(fileBuffer);
-
-      const bucket = admin.storage().bucket();
-      const originalPath = `documents/original/${documentId}/${fileName}`;
-      const file = bucket.file(originalPath);
-
-      await file.save(encryptedBuffer, {
-        metadata: {
-          contentType: fileType,
-          metadata: {
-            documentId,
-            uploadedBy: userInfo.email,
-            encrypted: "true",
-            originalSize: fileSize.toString(),
-          },
-        },
-      });
 
       // Send email invitations to signers
       await sendSigningInvitations(documentId, documentData);
@@ -440,30 +432,21 @@ exports.getDocumentPdf = onCall(
         throw new Error("Access denied to view PDF");
       }
 
-      // Get the PDF from Firebase Storage
-      const bucket = admin.storage().bucket();
-      const originalPath = `documents/original/${documentId}/${documentData.fileName}`;
-      const file = bucket.file(originalPath);
-
+      // Get the PDF data from Firestore document
       try {
-        const [exists] = await file.exists();
-        if (!exists) {
-          throw new Error("PDF file not found in storage");
+        const fileData = documentData.fileData;
+        if (!fileData || !fileData.originalData) {
+          throw new Error("PDF data not found in document");
         }
 
-        const [fileBuffer] = await file.download();
-
-        // Decrypt the document
-        const decryptedBuffer = decryptDocument(fileBuffer);
-
-        // Convert to base64 for transmission
-        const base64Data = decryptedBuffer.toString("base64");
+        // Return the stored base64 data directly
+        const base64Data = fileData.originalData;
 
         logger.info("PDF retrieved successfully", {
           documentId,
           fileName: documentData.fileName,
           accessorEmail,
-          fileSize: decryptedBuffer.length,
+          fileSize: fileData.fileSize,
         });
 
         return {
@@ -472,13 +455,13 @@ exports.getDocumentPdf = onCall(
           fileName: documentData.fileName,
           contentType: "application/pdf",
         };
-      } catch (storageError) {
-        logger.error("Error retrieving PDF from storage", {
+      } catch (dataError) {
+        logger.error("Error retrieving PDF data from document", {
           documentId,
           fileName: documentData.fileName,
-          error: storageError.message,
+          error: dataError.message,
         });
-        throw new Error("Failed to retrieve PDF file");
+        throw new Error("Failed to retrieve PDF data");
       }
     } catch (error) {
       logger.error("Error getting document PDF", {
@@ -584,6 +567,9 @@ exports.addSignature = onCall(
           ipAddress: request.rawRequest?.ip || "unknown",
           userAgent: request.rawRequest?.get("user-agent") || "unknown",
         },
+        // Store positioned annotations for PDF generation
+        annotations: request.data.annotations || [],
+        documentMetadata: request.data.documentMetadata || {},
       };
 
       // Check if all signers have completed
@@ -730,51 +716,32 @@ exports.getUserDocuments = onCall(
  * Helper functions
  */
 
-// Simple encryption for document storage (replace with proper encryption in production)
-function encryptDocument(buffer) {
-  const algorithm = "aes-256-cbc";
-  const key = crypto.scryptSync(
-    process.env.DOCUMENT_ENCRYPTION_KEY || "default-key-change-in-production",
-    "salt",
-    32
-  );
-  const iv = crypto.randomBytes(16);
-
-  const cipher = crypto.createCipher(algorithm, key);
-  let encrypted = cipher.update(buffer);
-  encrypted = Buffer.concat([encrypted, cipher.final()]);
-
-  return Buffer.concat([iv, encrypted]);
-}
-
-function decryptDocument(encryptedBuffer) {
-  const algorithm = "aes-256-cbc";
-  const key = crypto.scryptSync(
-    process.env.DOCUMENT_ENCRYPTION_KEY || "default-key-change-in-production",
-    "salt",
-    32
-  );
-
-  const iv = encryptedBuffer.slice(0, 16);
-  const encrypted = encryptedBuffer.slice(16);
-
-  const decipher = crypto.createDecipher(algorithm, key);
-  let decrypted = decipher.update(encrypted);
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
-
-  return decrypted;
-}
+// Note: Encryption functions removed since we're storing documents directly in Firestore
+// For production use, consider implementing client-side encryption before storing in Firestore
 
 // Generate final signed PDF with all signatures
 async function generateSignedPDF(documentId, originalFileName, signers) {
   try {
-    // Get original document from storage
-    const bucket = admin.storage().bucket();
-    const originalPath = `documents/original/${documentId}/${originalFileName}`;
-    const originalFile = bucket.file(originalPath);
+    // Get original document data from Firestore
+    const documentRef = admin
+      .firestore()
+      .collection("documents")
+      .doc(documentId);
+    const documentDoc = await documentRef.get();
 
-    const [encryptedBuffer] = await originalFile.download();
-    const pdfBuffer = decryptDocument(encryptedBuffer);
+    if (!documentDoc.exists) {
+      throw new Error("Document not found");
+    }
+
+    const documentData = documentDoc.data();
+    const fileData = documentData.fileData;
+
+    if (!fileData || !fileData.originalData) {
+      throw new Error("Original document data not found");
+    }
+
+    // Convert base64 back to buffer
+    const pdfBuffer = Buffer.from(fileData.originalData, "base64");
 
     // Load PDF with pdf-lib
     const pdfDoc = await PDFLib.PDFDocument.load(pdfBuffer);
@@ -782,104 +749,315 @@ async function generateSignedPDF(documentId, originalFileName, signers) {
     const firstPage = pages[0];
     const { width, height } = firstPage.getSize();
 
-    // Add signatures to the document
+    // Add signatures and annotations to the document
     for (let i = 0; i < signers.length; i++) {
       const signer = signers[i];
-      if (signer.status === "completed" && signer.signatureData) {
-        const yPosition = height - 100 - i * 60; // Stack signatures vertically
-
-        if (signer.signatureData.type === "image") {
-          try {
-            // Embed signature image
-            const signatureImageBuffer = Buffer.from(
-              signer.signatureData.data,
-              "base64"
-            );
-            const signatureImage = await pdfDoc.embedPng(signatureImageBuffer);
-
-            firstPage.drawImage(signatureImage, {
-              x: 50,
-              y: yPosition,
-              width: 150,
-              height: 40,
-            });
-          } catch (imageError) {
-            logger.warn("Failed to embed signature image, using text", {
-              documentId,
-              signerId: signer.id,
-              error: imageError.message,
-            });
-
-            // Fallback to text signature
-            firstPage.drawText(`Signed by: ${signer.name}`, {
-              x: 50,
-              y: yPosition,
-              size: 12,
-              font: await pdfDoc.embedFont(StandardFonts.Helvetica),
-              color: rgb(0, 0, 0),
-            });
-          }
-        } else {
-          // Text signature
-          firstPage.drawText(`Signed by: ${signer.name}`, {
-            x: 50,
-            y: yPosition,
-            size: 12,
-            font: await pdfDoc.embedFont(StandardFonts.Helvetica),
-            color: rgb(0, 0, 0),
-          });
+      if (signer.status === "completed") {
+        // Use positioned annotations if available, otherwise fallback to old method
+        if (signer.annotations && signer.annotations.length > 0) {
+          await addPositionedAnnotations(
+            pdfDoc,
+            pages,
+            signer.annotations,
+            signer.documentMetadata
+          );
+        } else if (signer.signatureData) {
+          // Fallback to old positioning method
+          await addLegacySignature(pdfDoc, firstPage, signer, i, height);
         }
-
-        // Add signature details
-        firstPage.drawText(`Date: ${new Date().toLocaleDateString()}`, {
-          x: 50,
-          y: yPosition - 15,
-          size: 10,
-          font: await pdfDoc.embedFont(StandardFonts.Helvetica),
-          color: rgb(0.5, 0.5, 0.5),
-        });
       }
     }
 
-    // Save signed document
+    // Save signed document data back to Firestore
     const signedPdfBytes = await pdfDoc.save();
-    const signedPath = `documents/signed/${documentId}/signed_${originalFileName}`;
-    const signedFile = bucket.file(signedPath);
+    const signedBase64 = Buffer.from(signedPdfBytes).toString("base64");
 
-    await signedFile.save(Buffer.from(signedPdfBytes), {
-      metadata: {
-        contentType: "application/pdf",
-        metadata: {
-          documentId,
-          signersCount: signers.length.toString(),
-          completedAt: new Date().toISOString(),
-        },
+    // Update document with signed data
+    await documentRef.update({
+      signedDocumentData: {
+        data: signedBase64,
+        fileName: `signed_${originalFileName}`,
+        generatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        fileSize: signedPdfBytes.length,
       },
+      auditTrail: admin.firestore.FieldValue.arrayUnion({
+        action: "final_pdf_generated",
+        timestamp: admin.firestore.Timestamp.now(),
+        details: { signedFileName: `signed_${originalFileName}` },
+      }),
     });
-
-    // Update document with signed PDF path
-    await admin
-      .firestore()
-      .collection("documents")
-      .doc(documentId)
-      .update({
-        signedDocumentPath: signedPath,
-        auditTrail: admin.firestore.FieldValue.arrayUnion({
-          action: "final_pdf_generated",
-          timestamp: admin.firestore.Timestamp.now(),
-          details: { signedPath },
-        }),
-      });
 
     logger.info("Signed PDF generated successfully", {
       documentId,
-      signedPath,
+      signedFileName: `signed_${originalFileName}`,
     });
   } catch (error) {
     logger.error("Error generating signed PDF", {
       error: error.message,
       documentId,
     });
+  }
+}
+
+/**
+ * Helper function to add positioned annotations to PDF
+ */
+async function addPositionedAnnotations(
+  pdfDoc,
+  pages,
+  annotations,
+  documentMetadata
+) {
+  const { StandardFonts, rgb } = PDFLib;
+
+  try {
+    // Group annotations by page
+    const annotationsByPage = {};
+    annotations.forEach((annotation) => {
+      const pageIndex = (annotation.page || 1) - 1; // Convert to 0-based index
+      if (!annotationsByPage[pageIndex]) {
+        annotationsByPage[pageIndex] = [];
+      }
+      annotationsByPage[pageIndex].push(annotation);
+    });
+
+    // Process each page
+    for (const [pageIndex, pageAnnotations] of Object.entries(
+      annotationsByPage
+    )) {
+      const pageNum = parseInt(pageIndex);
+      if (pageNum >= 0 && pageNum < pages.length) {
+        const page = pages[pageNum];
+        const { width, height } = page.getSize();
+
+        // Calculate scaling factors
+        const canvasWidth = documentMetadata?.canvasWidth || 600;
+        const canvasHeight = documentMetadata?.canvasHeight || 800;
+        const scaleX = width / canvasWidth;
+        const scaleY = height / canvasHeight;
+
+        for (const annotation of pageAnnotations) {
+          // Convert coordinates (PDF coordinate system has origin at bottom-left)
+          const pdfX = annotation.x * scaleX;
+          const pdfY = height - annotation.y * scaleY; // Flip Y coordinate
+
+          try {
+            switch (annotation.type) {
+              case "signature":
+                await addSignatureAnnotation(
+                  pdfDoc,
+                  page,
+                  annotation,
+                  pdfX,
+                  pdfY,
+                  scaleX,
+                  scaleY
+                );
+                break;
+              case "text":
+                await addTextAnnotation(pdfDoc, page, annotation, pdfX, pdfY);
+                break;
+              case "date":
+                await addDateAnnotation(pdfDoc, page, annotation, pdfX, pdfY);
+                break;
+              default:
+                logger.warn(`Unknown annotation type: ${annotation.type}`);
+            }
+          } catch (annotationError) {
+            logger.warn("Failed to add annotation", {
+              type: annotation.type,
+              error: annotationError.message,
+            });
+          }
+        }
+      }
+    }
+  } catch (error) {
+    logger.error("Error adding positioned annotations", {
+      error: error.message,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Helper function to add signature annotation
+ */
+async function addSignatureAnnotation(
+  pdfDoc,
+  page,
+  annotation,
+  x,
+  y,
+  scaleX,
+  scaleY
+) {
+  try {
+    const signatureImageData = annotation.data;
+    // Remove data URL prefix if present
+    const base64Data = signatureImageData.replace(
+      /^data:image\/[a-z]+;base64,/,
+      ""
+    );
+    const signatureImageBuffer = Buffer.from(base64Data, "base64");
+
+    let signatureImage;
+    try {
+      signatureImage = await pdfDoc.embedPng(signatureImageBuffer);
+    } catch (pngError) {
+      // Try as JPEG if PNG fails
+      signatureImage = await pdfDoc.embedJpg(signatureImageBuffer);
+    }
+
+    // Scale the signature appropriately
+    const signatureWidth = 100 * scaleX;
+    const signatureHeight = 50 * scaleY;
+
+    page.drawImage(signatureImage, {
+      x: x,
+      y: y - signatureHeight, // Adjust for image height
+      width: signatureWidth,
+      height: signatureHeight,
+    });
+  } catch (error) {
+    logger.warn("Failed to embed signature image", { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Helper function to add text annotation
+ */
+async function addTextAnnotation(pdfDoc, page, annotation, x, y) {
+  const { StandardFonts, rgb } = PDFLib;
+
+  try {
+    const fontSize = annotation.fontSize ? parseInt(annotation.fontSize) : 14;
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    page.drawText(annotation.data, {
+      x: x,
+      y: y,
+      size: fontSize,
+      font: font,
+      color: rgb(0, 0, 0),
+    });
+  } catch (error) {
+    logger.warn("Failed to add text annotation", { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Helper function to add date annotation
+ */
+async function addDateAnnotation(pdfDoc, page, annotation, x, y) {
+  const { StandardFonts, rgb } = PDFLib;
+
+  try {
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    page.drawText(annotation.data, {
+      x: x,
+      y: y,
+      size: 12,
+      font: font,
+      color: rgb(0, 0, 0),
+    });
+  } catch (error) {
+    logger.warn("Failed to add date annotation", { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Helper function for legacy signature positioning (fallback)
+ */
+async function addLegacySignature(
+  pdfDoc,
+  page,
+  signer,
+  signerIndex,
+  pageHeight
+) {
+  const { StandardFonts, rgb } = PDFLib;
+
+  try {
+    const yPosition = pageHeight - 100 - signerIndex * 60; // Stack signatures vertically
+
+    if (signer.signatureData.type === "image") {
+      try {
+        // Embed signature image
+        const signatureImageData = signer.signatureData.data;
+        // Remove data URL prefix if present
+        const base64Data = signatureImageData.replace(
+          /^data:image\/[a-z]+;base64,/,
+          ""
+        );
+        const signatureImageBuffer = Buffer.from(base64Data, "base64");
+
+        let signatureImage;
+        try {
+          signatureImage = await pdfDoc.embedPng(signatureImageBuffer);
+        } catch (pngError) {
+          signatureImage = await pdfDoc.embedJpg(signatureImageBuffer);
+        }
+
+        page.drawImage(signatureImage, {
+          x: 50,
+          y: yPosition,
+          width: 150,
+          height: 40,
+        });
+      } catch (imageError) {
+        logger.warn("Failed to embed signature image, using text", {
+          signerId: signer.id,
+          error: imageError.message,
+        });
+
+        // Fallback to text signature
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        page.drawText(`Signed by: ${signer.name}`, {
+          x: 50,
+          y: yPosition,
+          size: 12,
+          font: font,
+          color: rgb(0, 0, 0),
+        });
+      }
+    } else {
+      // Text signature
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      page.drawText(`Signed by: ${signer.name}`, {
+        x: 50,
+        y: yPosition,
+        size: 12,
+        font: font,
+        color: rgb(0, 0, 0),
+      });
+    }
+
+    // Add signature details
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const detailsY = yPosition - 15;
+    page.drawText(
+      `Signed by: ${signer.name} | Date: ${signer.signedAt
+        .toDate()
+        .toLocaleDateString()}`,
+      {
+        x: 50,
+        y: detailsY,
+        size: 8,
+        font: font,
+        color: rgb(0.5, 0.5, 0.5),
+      }
+    );
+  } catch (error) {
+    logger.warn("Failed to add legacy signature", {
+      signerId: signer.id,
+      error: error.message,
+    });
+    throw error;
   }
 }
 

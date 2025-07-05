@@ -1,8 +1,28 @@
 // js/document-signing.js
 
 // Initialize Firebase
-const auth = firebase.auth();
-const functions = firebase.functions();
+let auth, functions;
+
+if (!window.firebaseConfig) {
+  console.error(
+    "Firebase configuration not loaded! Make sure config/firebase-config.js is included."
+  );
+  // Don't throw error in test mode, just log it
+  if (new URLSearchParams(window.location.search).get("token") !== "test") {
+    throw new Error("Firebase configuration missing");
+  }
+} else {
+  try {
+    // Initialize Firebase app
+    firebase.initializeApp(window.firebaseConfig);
+
+    auth = firebase.auth();
+    functions = firebase.functions();
+    console.log("Firebase initialized successfully");
+  } catch (error) {
+    console.error("Firebase initialization error:", error);
+  }
+}
 
 // PDF.js configuration
 pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -52,6 +72,17 @@ let pendingAnnotation = null;
 
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
+  // Initialize signature storage first
+  if (typeof SignatureStorage !== "undefined") {
+    window.signatureStorage = new SignatureStorage();
+    window.signatureStorage.init();
+    console.log("Enhanced signature storage initialized");
+  } else {
+    console.warn(
+      "SignatureStorage class not found, falling back to basic localStorage"
+    );
+  }
+
   // Get URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   documentId = urlParams.get("id");
@@ -59,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!documentId) {
     showToast("Invalid document link", "error");
-    setTimeout(() => (window.location.href = "/"), 2000);
+    setTimeout(() => (window.location.href = "index.html"), 2000);
     return;
   }
 
@@ -72,6 +103,42 @@ document.addEventListener("DOMContentLoaded", () => {
 // Document Loading
 async function loadDocument() {
   try {
+    console.log(
+      "Loading document with ID:",
+      documentId,
+      "and token:",
+      accessToken
+    );
+
+    // If we're in test mode (token = "test"), use mock data
+    if (accessToken === "test") {
+      console.log("Using mock data for testing");
+      documentData = {
+        title: "Test Document",
+        status: "pending",
+        createdBy: "Test User",
+        currentSigner: {
+          canSign: true,
+          role: "Signer",
+          status: "pending",
+        },
+        signers: [
+          {
+            name: "Test Signer",
+            role: "Signer",
+            status: "pending",
+          },
+        ],
+        isCreator: false,
+      };
+
+      updateUI();
+
+      // Create a simple mock PDF
+      createMockPDF();
+      return;
+    }
+
     const getDocument = functions.httpsCallable("getDocument");
     const result = await getDocument({ documentId, accessToken });
 
@@ -85,18 +152,21 @@ async function loadDocument() {
   } catch (error) {
     console.error("Load error:", error);
     showToast(error.message || "Failed to load document", "error");
-    setTimeout(() => (window.location.href = "/"), 2000);
+    setTimeout(() => (window.location.href = "index.html"), 2000);
   }
 }
 
 async function loadPDF() {
   try {
+    console.log("Loading PDF for document:", documentId);
     const getDocumentPdf = functions.httpsCallable("getDocumentPdf");
     const result = await getDocumentPdf({ documentId, accessToken });
 
     if (!result.data.success) {
       throw new Error(result.data.error || "Failed to load PDF");
     }
+
+    console.log("PDF data received, size:", result.data.pdfData.length);
 
     // Convert base64 to Uint8Array
     const pdfData = atob(result.data.pdfData);
@@ -105,15 +175,18 @@ async function loadPDF() {
       pdfArray[i] = pdfData.charCodeAt(i);
     }
 
+    console.log("Converted to Uint8Array, size:", pdfArray.length);
+
     // Load PDF with PDF.js
     const loadingTask = pdfjsLib.getDocument({ data: pdfArray });
     pdfDoc = await loadingTask.promise;
 
+    console.log("PDF loaded successfully, pages:", pdfDoc.numPages);
     pageCount.textContent = pdfDoc.numPages;
     renderPage(currentPage);
   } catch (error) {
     console.error("PDF load error:", error);
-    showToast("Failed to load PDF", "error");
+    showToast("Failed to load PDF: " + error.message, "error");
   }
 }
 
@@ -171,6 +244,7 @@ function updateUI() {
 // PDF Rendering
 async function renderPage(pageNumber) {
   try {
+    console.log("Rendering page:", pageNumber);
     const page = await pdfDoc.getPage(pageNumber);
     const viewport = page.getViewport({ scale });
 
@@ -179,27 +253,52 @@ async function renderPage(pageNumber) {
     canvas.height = viewport.height;
     canvas.width = viewport.width;
 
+    console.log("Canvas dimensions:", canvas.width, "x", canvas.height);
+
     const renderContext = {
       canvasContext: context,
       viewport: viewport,
     };
 
     await page.render(renderContext);
+    console.log("Page rendered successfully");
 
     // Update annotation layer position
     updateAnnotationLayer();
+
+    // Re-render existing annotations for this page
+    renderAnnotations();
+
+    // Update navigation buttons
+    updateNavigationButtons();
+
+    console.log("Annotation layer updated");
   } catch (error) {
     console.error("Render error:", error);
-    showToast("Failed to render page", "error");
+    showToast("Failed to render page: " + error.message, "error");
   }
 }
 
 function updateAnnotationLayer() {
-  const canvasRect = pdfCanvas.getBoundingClientRect();
-  annotationLayer.style.width = pdfCanvas.width + "px";
-  annotationLayer.style.height = pdfCanvas.height + "px";
-  annotationLayer.style.left = canvasRect.left + "px";
-  annotationLayer.style.top = canvasRect.top + "px";
+  const canvas = pdfCanvas;
+  const container = canvas.parentElement;
+
+  // Set annotation layer to match canvas dimensions and position
+  annotationLayer.style.width = canvas.width + "px";
+  annotationLayer.style.height = canvas.height + "px";
+  annotationLayer.style.position = "absolute";
+  annotationLayer.style.top = "0px";
+  annotationLayer.style.left = "0px";
+  annotationLayer.style.pointerEvents = "auto";
+  annotationLayer.style.zIndex = "10";
+
+  // Add active class to enable pointer events
+  annotationLayer.classList.add("active");
+
+  // Ensure the container is relatively positioned
+  if (container) {
+    container.style.position = "relative";
+  }
 }
 
 // Event Listeners
@@ -326,6 +425,13 @@ function setupEventListeners() {
   document
     .getElementById("confirmSign")
     .addEventListener("click", submitSignature);
+
+  // Window resize handler to update annotation layer
+  window.addEventListener("resize", () => {
+    if (pdfDoc) {
+      setTimeout(updateAnnotationLayer, 100);
+    }
+  });
 }
 
 function updateNavigationButtons() {
@@ -335,26 +441,44 @@ function updateNavigationButtons() {
 
 // Annotation Handling
 function handleAnnotationClick(e) {
-  if (!documentData.currentSigner || !documentData.currentSigner.canSign)
+  console.log("Annotation layer clicked", e);
+
+  if (!documentData) {
+    console.warn("Document data not loaded yet");
+    showToast("Document is still loading, please wait", "warning");
     return;
+  }
+
+  if (!documentData.currentSigner || !documentData.currentSigner.canSign) {
+    console.warn("User cannot sign this document");
+    showToast("You are not authorized to sign this document", "error");
+    return;
+  }
 
   const rect = annotationLayer.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
+  console.log("Click position:", { x, y, page: currentPage });
+
   pendingAnnotation = { x, y, page: currentPage };
 
   switch (currentTool) {
     case "signature":
+      console.log("Opening signature panel");
       signaturePanel.style.display = "block";
       break;
     case "text":
+      console.log("Opening text panel");
       textPanel.style.display = "block";
       document.getElementById("textInput").focus();
       break;
     case "date":
+      console.log("Adding date annotation");
       addDateAnnotation(x, y);
       break;
+    default:
+      console.warn("Unknown tool:", currentTool);
   }
 }
 
@@ -500,6 +624,13 @@ function renderAnnotations() {
 
 // Signature Canvas
 function initializeSignatureCanvas() {
+  console.log("Initializing signature canvas");
+
+  if (!signatureCanvas) {
+    console.error("Signature canvas element not found");
+    return;
+  }
+
   signatureCtx = signatureCanvas.getContext("2d");
   signatureCtx.strokeStyle = "#000";
   signatureCtx.lineWidth = 2;
@@ -509,6 +640,7 @@ function initializeSignatureCanvas() {
   let lastY = 0;
 
   signatureCanvas.addEventListener("mousedown", (e) => {
+    console.log("Signature canvas mousedown");
     isDrawing = true;
     const rect = signatureCanvas.getBoundingClientRect();
     lastX = e.clientX - rect.left;
@@ -532,6 +664,7 @@ function initializeSignatureCanvas() {
   });
 
   signatureCanvas.addEventListener("mouseup", () => {
+    console.log("Signature canvas mouseup");
     isDrawing = false;
   });
 
@@ -542,6 +675,7 @@ function initializeSignatureCanvas() {
   // Touch support
   signatureCanvas.addEventListener("touchstart", (e) => {
     e.preventDefault();
+    console.log("Signature canvas touchstart");
     const touch = e.touches[0];
     const mouseEvent = new MouseEvent("mousedown", {
       clientX: touch.clientX,
@@ -565,6 +699,8 @@ function initializeSignatureCanvas() {
     const mouseEvent = new MouseEvent("mouseup", {});
     signatureCanvas.dispatchEvent(mouseEvent);
   });
+
+  console.log("Signature canvas initialized successfully");
 }
 
 // Submit Signature
@@ -575,10 +711,16 @@ async function submitSignature() {
   }
 
   try {
-    // Get the primary signature annotation
+    // Check if we have any annotations
+    if (annotations.length === 0) {
+      showToast("Please add your signature before submitting", "error");
+      return;
+    }
+
+    // Get the primary signature annotation (required)
     const signatureAnnotation = annotations.find((a) => a.type === "signature");
     if (!signatureAnnotation) {
-      showToast("Please add your signature before submitting", "error");
+      showToast("Please add at least one signature before submitting", "error");
       return;
     }
 
@@ -586,13 +728,39 @@ async function submitSignature() {
     confirmBtn.disabled = true;
     confirmBtn.textContent = "Signing...";
 
+    console.log("Submitting signature with annotations:", annotations);
+    console.log("Canvas dimensions:", {
+      width: pdfCanvas.width,
+      height: pdfCanvas.height,
+      scale: scale,
+    });
+
+    // Prepare annotation data with positioning and scaling information
+    const annotationData = annotations.map((annotation) => ({
+      type: annotation.type,
+      data: annotation.data,
+      x: annotation.x,
+      y: annotation.y,
+      page: annotation.page,
+      fontSize: annotation.fontSize || null,
+      canvasWidth: pdfCanvas.width,
+      canvasHeight: pdfCanvas.height,
+      scale: scale,
+      timestamp: new Date().toISOString(),
+    }));
+
     const addSignature = functions.httpsCallable("addSignature");
     const result = await addSignature({
       documentId: documentId,
       signerId: documentData.currentSigner.id,
       accessToken: accessToken,
-      signatureData: signatureAnnotation.data,
+      signatureData: signatureAnnotation.data, // Keep main signature for backward compatibility
       signatureType: "image",
+      annotations: annotationData, // Send all positioned annotations
+      documentMetadata: {
+        totalPages: pdfDoc ? pdfDoc.numPages : 1,
+        currentScale: scale,
+      },
     });
 
     if (result.data.success) {
@@ -649,6 +817,58 @@ async function downloadDocument() {
   }
 }
 
+// Mock PDF for testing
+function createMockPDF() {
+  console.log("Creating mock PDF for testing");
+
+  // Create a simple canvas to act as our PDF
+  const canvas = pdfCanvas;
+  const context = canvas.getContext("2d");
+
+  // Set canvas size
+  canvas.width = 600;
+  canvas.height = 800;
+
+  // Draw a simple document layout
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  context.fillStyle = "#000000";
+  context.font = "24px Arial";
+  context.fillText("TEST DOCUMENT", 50, 50);
+
+  context.font = "16px Arial";
+  context.fillText("This is a test document for signature testing.", 50, 100);
+  context.fillText(
+    "Click anywhere on this document to add annotations.",
+    50,
+    130
+  );
+  context.fillText("Use the toolbar above to select different tools.", 50, 160);
+
+  // Draw signature areas
+  context.strokeStyle = "#cccccc";
+  context.strokeRect(50, 300, 200, 80);
+  context.fillText("Signature Area 1", 60, 350);
+
+  context.strokeRect(350, 300, 200, 80);
+  context.fillText("Signature Area 2", 360, 350);
+
+  // Mock PDF doc object
+  pdfDoc = {
+    numPages: 1,
+  };
+
+  pageCount.textContent = "1";
+  currentPage = 1;
+
+  // Update annotation layer
+  updateAnnotationLayer();
+  updateNavigationButtons();
+
+  console.log("Mock PDF created successfully");
+}
+
 // Utility Functions
 function isCanvasEmpty(canvas) {
   const ctx = canvas.getContext("2d");
@@ -678,21 +898,35 @@ function createTextSignature(text, font) {
 
 function saveSignatureToStorage(signatureData) {
   try {
-    let signatures = JSON.parse(
-      localStorage.getItem("savedSignatures") || "[]"
-    );
-    signatures.unshift({
-      id: Date.now(),
-      data: signatureData,
-      date: new Date().toISOString(),
-    });
+    if (window.signatureStorage) {
+      // Use enhanced signature storage
+      const signatureId = window.signatureStorage.saveSignature(signatureData, {
+        type: "canvas",
+        name: `Signature ${new Date().toLocaleDateString()}`,
+      });
 
-    // Keep only last 5 signatures
-    signatures = signatures.slice(0, 5);
+      loadSavedSignatures();
+      showToast("Signature saved", "success");
 
-    localStorage.setItem("savedSignatures", JSON.stringify(signatures));
-    loadSavedSignatures();
-    showToast("Signature saved", "success");
+      return signatureId;
+    } else {
+      // Fallback to old method
+      let signatures = JSON.parse(
+        localStorage.getItem("savedSignatures") || "[]"
+      );
+      signatures.unshift({
+        id: Date.now(),
+        data: signatureData,
+        date: new Date().toISOString(),
+      });
+
+      // Keep only last 5 signatures
+      signatures = signatures.slice(0, 5);
+
+      localStorage.setItem("savedSignatures", JSON.stringify(signatures));
+      loadSavedSignatures();
+      showToast("Signature saved", "success");
+    }
   } catch (error) {
     console.error("Save error:", error);
     showToast("Failed to save signature", "error");
@@ -700,10 +934,25 @@ function saveSignatureToStorage(signatureData) {
 }
 
 function loadSavedSignatures() {
+  console.log("Loading saved signatures");
+
   try {
-    const signatures = JSON.parse(
-      localStorage.getItem("savedSignatures") || "[]"
-    );
+    let signatures = [];
+
+    if (window.signatureStorage) {
+      // Use enhanced signature storage
+      console.log("Using enhanced signature storage");
+      signatures = window.signatureStorage.getAllSignatures();
+      console.log("Found signatures:", signatures.length);
+    } else {
+      // Fallback to old method
+      console.log("Using fallback signature storage");
+      const stored = localStorage.getItem("savedSignatures");
+      if (stored) {
+        signatures = JSON.parse(stored);
+      }
+      console.log("Found signatures:", signatures.length);
+    }
 
     if (signatures.length === 0) {
       savedSignatures.innerHTML = "<p>No saved signatures</p>";
@@ -711,40 +960,91 @@ function loadSavedSignatures() {
     }
 
     savedSignatures.innerHTML = "";
-    signatures.forEach((sig) => {
-      const item = document.createElement("div");
-      item.className = "saved-sig-item";
-      item.dataset.signature = sig.data;
-      item.innerHTML = `
-                <img src="${sig.data}" alt="Saved signature">
-                <button class="btn-icon" onclick="deleteSavedSignature(${sig.id})">×</button>
-            `;
+    signatures.forEach((sig, index) => {
+      try {
+        const item = document.createElement("div");
+        item.className = "saved-sig-item";
 
-      item.addEventListener("click", () => {
-        document.querySelectorAll(".saved-sig-item").forEach((i) => {
-          i.classList.remove("selected");
+        // Ensure the signature data is properly formatted as a data URL
+        let imageData = sig.data;
+        if (!imageData.startsWith("data:")) {
+          imageData = `data:image/png;base64,${sig.data}`;
+        }
+        item.dataset.signature = imageData;
+
+        // Enhanced display with more information
+        const displayName = sig.name || `Signature ${index + 1}`;
+        const displayDate = sig.date
+          ? new Date(sig.date).toLocaleDateString()
+          : "Unknown date";
+
+        item.innerHTML = `
+                  <img src="${imageData}" alt="${displayName}" title="${displayName} - ${displayDate}" 
+                       style="max-width: 100px; max-height: 50px; border: 1px solid #ccc;">
+                  <div class="sig-info">
+                    <small>${displayName}</small>
+                    <small>${displayDate}</small>
+                  </div>
+                  <button class="btn-icon" onclick="deleteSavedSignature('${sig.id}')" title="Delete signature">×</button>
+              `;
+
+        item.addEventListener("click", (e) => {
+          // Don't select if clicking delete button
+          if (e.target.classList.contains("btn-icon")) return;
+
+          document.querySelectorAll(".saved-sig-item").forEach((i) => {
+            i.classList.remove("selected");
+          });
+          item.classList.add("selected");
+          console.log("Selected signature:", sig.id);
         });
-        item.classList.add("selected");
-      });
 
-      savedSignatures.appendChild(item);
+        savedSignatures.appendChild(item);
+      } catch (itemError) {
+        console.error("Error rendering signature item:", itemError, sig);
+      }
     });
+
+    // Show storage stats if enhanced storage is available
+    if (window.signatureStorage) {
+      const stats = window.signatureStorage.getStorageStats();
+      const statsInfo = document.createElement("div");
+      statsInfo.className = "storage-stats";
+      statsInfo.innerHTML = `
+        <small>Signatures: ${stats.count}/${
+        stats.maxSignatures
+      } | Storage: ${Math.round(stats.totalSize / 1024)}KB</small>
+      `;
+      savedSignatures.appendChild(statsInfo);
+    }
+
+    console.log("Saved signatures loaded successfully");
   } catch (error) {
     console.error("Load signatures error:", error);
+    savedSignatures.innerHTML = "<p>Error loading signatures</p>";
+    showToast("Error loading saved signatures", "error");
   }
 }
 
 window.deleteSavedSignature = function (id) {
   try {
-    let signatures = JSON.parse(
-      localStorage.getItem("savedSignatures") || "[]"
-    );
-    signatures = signatures.filter((sig) => sig.id !== id);
-    localStorage.setItem("savedSignatures", JSON.stringify(signatures));
+    if (window.signatureStorage) {
+      // Use enhanced signature storage
+      window.signatureStorage.deleteSignature(id);
+    } else {
+      // Fallback to old method
+      let signatures = JSON.parse(
+        localStorage.getItem("savedSignatures") || "[]"
+      );
+      signatures = signatures.filter((sig) => sig.id != id); // Use != for compatibility
+      localStorage.setItem("savedSignatures", JSON.stringify(signatures));
+    }
+
     loadSavedSignatures();
     showToast("Signature deleted", "success");
   } catch (error) {
     console.error("Delete error:", error);
+    showToast("Failed to delete signature", "error");
   }
 };
 
@@ -797,4 +1097,92 @@ function showToast(message, type = "info") {
 // Modal functions
 window.closeConfirmModal = function () {
   document.getElementById("confirmModal").classList.remove("show");
+};
+
+// Debug functions for testing
+window.debugSigningSystem = function () {
+  console.group("🔍 Signing System Debug");
+  console.log("Document ID:", documentId);
+  console.log("Access Token:", accessToken ? "Present" : "Missing");
+  console.log("Document Data:", documentData);
+  console.log("PDF Doc:", pdfDoc);
+  console.log("Current Page:", currentPage);
+  console.log("Current Tool:", currentTool);
+  console.log("Annotations:", annotations);
+  console.log(
+    "Signature Storage:",
+    window.signatureStorage ? "Available" : "Not Available"
+  );
+  console.log("Annotation Layer:", {
+    element: annotationLayer,
+    style: annotationLayer ? annotationLayer.style.cssText : "Not found",
+    classList: annotationLayer
+      ? Array.from(annotationLayer.classList)
+      : "Not found",
+  });
+  console.log("Signature Canvas:", {
+    element: signatureCanvas,
+    context: signatureCtx,
+  });
+  console.groupEnd();
+
+  if (window.signatureStorage) {
+    console.log(
+      "Signature Storage Stats:",
+      window.signatureStorage.getStorageStats()
+    );
+  }
+};
+
+// Test annotation layer click
+window.testAnnotationClick = function () {
+  if (!annotationLayer) {
+    console.error("Annotation layer not found");
+    return;
+  }
+
+  console.log("Testing annotation layer click simulation");
+  const event = new MouseEvent("click", {
+    clientX: 100,
+    clientY: 100,
+    bubbles: true,
+  });
+
+  annotationLayer.dispatchEvent(event);
+};
+
+// Test annotation preview function
+window.previewAnnotationsOnPDF = function () {
+  console.group("📝 Annotation Preview");
+  console.log("Current annotations:", annotations);
+  console.log("Canvas dimensions:", {
+    width: pdfCanvas.width,
+    height: pdfCanvas.height,
+    scale: scale,
+  });
+
+  if (annotations.length === 0) {
+    console.log("No annotations to preview");
+    console.groupEnd();
+    return;
+  }
+
+  // Simulate the annotation data that will be sent to the backend
+  const annotationData = annotations.map((annotation) => ({
+    type: annotation.type,
+    data: annotation.data,
+    x: annotation.x,
+    y: annotation.y,
+    page: annotation.page,
+    fontSize: annotation.fontSize || null,
+    canvasWidth: pdfCanvas.width,
+    canvasHeight: pdfCanvas.height,
+    scale: scale,
+    timestamp: new Date().toISOString(),
+  }));
+
+  console.log("Annotation data to be sent:", annotationData);
+  console.groupEnd();
+
+  return annotationData;
 };
