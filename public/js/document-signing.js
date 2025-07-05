@@ -250,7 +250,7 @@ async function renderPage(pageNumber) {
     console.log("Rendering page:", pageNumber);
     const page = await pdfDoc.getPage(pageNumber);
 
-    // Get original PDF page dimensions (at scale 1.0) for accurate coordinate conversion
+    // CRITICAL: Get and store original PDF page dimensions at scale 1.0
     const originalViewport = page.getViewport({ scale: 1.0 });
     originalPdfDimensions = {
       width: originalViewport.width,
@@ -265,7 +265,7 @@ async function renderPage(pageNumber) {
     canvas.height = viewport.height;
     canvas.width = viewport.width;
 
-    console.log("PDF Dimensions:", {
+    console.log("PDF Rendering Info:", {
       original: originalPdfDimensions,
       scaled: { width: viewport.width, height: viewport.height },
       scale: scale,
@@ -288,8 +288,6 @@ async function renderPage(pageNumber) {
 
     // Update navigation buttons
     updateNavigationButtons();
-
-    console.log("Annotation layer updated");
   } catch (error) {
     console.error("Render error:", error);
     showToast("Failed to render page: " + error.message, "error");
@@ -477,39 +475,38 @@ function handleAnnotationClick(e) {
   const layerX = e.clientX - rect.left;
   const layerY = e.clientY - rect.top;
 
-  // Get the current page viewport info for proper coordinate conversion
-  let pdfPageWidth = pdfCanvas.width;
-  let pdfPageHeight = pdfCanvas.height;
-  let pdfViewportScale = scale;
+  // IMPORTANT: Ensure we have the current PDF page dimensions
+  if (!pdfDoc) {
+    console.error("PDF not loaded");
+    return;
+  }
 
   // Store comprehensive positioning data
   pendingAnnotation = {
     x: layerX,
     y: layerY,
     page: currentPage,
-    // Additional data for precise coordinate conversion
+    // Store actual canvas dimensions at time of annotation
     canvasWidth: pdfCanvas.width,
     canvasHeight: pdfCanvas.height,
     scale: scale,
-    layerRect: {
-      width: rect.width,
-      height: rect.height,
-    },
-    // Include original PDF dimensions for accurate coordinate conversion
-    originalPdfWidth: originalPdfDimensions
-      ? originalPdfDimensions.width
-      : pdfCanvas.width,
-    originalPdfHeight: originalPdfDimensions
-      ? originalPdfDimensions.height
-      : pdfCanvas.height,
+    // Store the original PDF dimensions if available
+    originalPdfWidth: originalPdfDimensions.width || pdfCanvas.width / scale,
+    originalPdfHeight: originalPdfDimensions.height || pdfCanvas.height / scale,
   };
 
-  console.log("Enhanced click position:", {
+  console.log("Click position captured:", {
     layerCoords: { x: layerX, y: layerY },
     page: currentPage,
-    canvas: { width: pdfCanvas.width, height: pdfCanvas.height },
-    scale: scale,
-    layerRect: { width: rect.width, height: rect.height },
+    canvas: {
+      width: pdfCanvas.width,
+      height: pdfCanvas.height,
+      scale: scale,
+    },
+    originalPdf: {
+      width: pendingAnnotation.originalPdfWidth,
+      height: pendingAnnotation.originalPdfHeight,
+    },
   });
 
   switch (currentTool) {
@@ -571,20 +568,30 @@ function applySignature() {
   }
 
   if (signatureData && pendingAnnotation) {
+    // Ensure we capture current state
+    const currentCanvasWidth = pdfCanvas.width;
+    const currentCanvasHeight = pdfCanvas.height;
+    const currentScale = scale;
+
     annotations.push({
       type: "signature",
       data: signatureData,
       x: pendingAnnotation.x,
       y: pendingAnnotation.y,
       page: pendingAnnotation.page,
-      // Include enhanced positioning data for accurate coordinate conversion
-      canvasWidth: pendingAnnotation.canvasWidth,
-      canvasHeight: pendingAnnotation.canvasHeight,
-      scale: pendingAnnotation.scale,
-      layerRect: pendingAnnotation.layerRect,
-      // Include original PDF dimensions for accurate coordinate conversion
-      originalPdfWidth: pendingAnnotation.originalPdfWidth,
-      originalPdfHeight: pendingAnnotation.originalPdfHeight,
+      // Store all coordinate conversion data
+      canvasWidth: currentCanvasWidth,
+      canvasHeight: currentCanvasHeight,
+      scale: currentScale,
+      originalPdfWidth: originalPdfDimensions.width,
+      originalPdfHeight: originalPdfDimensions.height,
+    });
+
+    console.log("Signature annotation added:", {
+      position: { x: pendingAnnotation.x, y: pendingAnnotation.y },
+      canvas: { width: currentCanvasWidth, height: currentCanvasHeight },
+      scale: currentScale,
+      originalPdf: originalPdfDimensions,
     });
 
     renderAnnotations();
@@ -643,13 +650,15 @@ function addDateAnnotation(x, y) {
       width: annotationLayer.getBoundingClientRect().width,
       height: annotationLayer.getBoundingClientRect().height,
     },
-    // Include original PDF dimensions for accurate coordinate conversion
-    originalPdfWidth: originalPdfDimensions
-      ? originalPdfDimensions.width
-      : pdfCanvas.width,
-    originalPdfHeight: originalPdfDimensions
-      ? originalPdfDimensions.height
-      : pdfCanvas.height,
+    // Ensure we always have original PDF dimensions
+    originalPdfWidth:
+      originalPdfDimensions && originalPdfDimensions.width
+        ? originalPdfDimensions.width
+        : pdfCanvas.width / scale,
+    originalPdfHeight:
+      originalPdfDimensions && originalPdfDimensions.height
+        ? originalPdfDimensions.height
+        : pdfCanvas.height / scale,
   });
 
   renderAnnotations();
@@ -814,6 +823,7 @@ async function submitSignature() {
       height: pdfCanvas.height,
       scale: scale,
     });
+    console.log("Original PDF dimensions:", originalPdfDimensions);
 
     // Prepare annotation data with positioning and scaling information
     const annotationData = annotations.map((annotation) => ({
@@ -823,9 +833,20 @@ async function submitSignature() {
       y: annotation.y,
       page: annotation.page,
       fontSize: annotation.fontSize || null,
-      canvasWidth: pdfCanvas.width,
-      canvasHeight: pdfCanvas.height,
-      scale: scale,
+      // Include all positioning data for accurate coordinate conversion
+      canvasWidth: annotation.canvasWidth || pdfCanvas.width,
+      canvasHeight: annotation.canvasHeight || pdfCanvas.height,
+      scale: annotation.scale || scale,
+      originalPdfWidth:
+        annotation.originalPdfWidth ||
+        (originalPdfDimensions
+          ? originalPdfDimensions.width
+          : pdfCanvas.width / scale),
+      originalPdfHeight:
+        annotation.originalPdfHeight ||
+        (originalPdfDimensions
+          ? originalPdfDimensions.height
+          : pdfCanvas.height / scale),
       timestamp: new Date().toISOString(),
     }));
 
@@ -1353,4 +1374,63 @@ window.testSignatureSubmission = async function () {
     console.error("Signature submission error:", error);
     return error;
   }
+};
+
+// Test function to verify coordinate conversion
+window.testCoordinateConversion = function () {
+  console.group("🔍 Coordinate Conversion Test");
+
+  // Test coordinates (center of canvas)
+  const testX = pdfCanvas.width / 2;
+  const testY = pdfCanvas.height / 2;
+
+  console.log("Test coordinates (canvas center):", { x: testX, y: testY });
+  console.log("Canvas dimensions:", {
+    width: pdfCanvas.width,
+    height: pdfCanvas.height,
+  });
+  console.log("Original PDF dimensions:", originalPdfDimensions);
+  console.log("Current scale:", scale);
+
+  // Calculate expected PDF coordinates using the simplified method
+  const canvasWidth = pdfCanvas.width;
+  const canvasHeight = pdfCanvas.height;
+
+  // Convert to normalized coordinates (0-1)
+  const normalizedX = testX / canvasWidth;
+  const normalizedY = testY / canvasHeight;
+
+  console.log("Normalized coordinates:", { x: normalizedX, y: normalizedY });
+
+  // For the actual PDF, we would apply these to the PDF page size
+  // and flip the Y coordinate
+  if (originalPdfDimensions) {
+    const pdfX = normalizedX * originalPdfDimensions.width;
+    const pdfY =
+      originalPdfDimensions.height - normalizedY * originalPdfDimensions.height;
+    console.log("Expected PDF coordinates:", { x: pdfX, y: pdfY });
+  }
+
+  console.groupEnd();
+};
+
+// Test function to add a test annotation at the center
+window.addTestAnnotation = function () {
+  const centerX = annotationLayer.getBoundingClientRect().width / 2;
+  const centerY = annotationLayer.getBoundingClientRect().height / 2;
+
+  console.log("Adding test annotation at center:", { x: centerX, y: centerY });
+
+  // Simulate a click at the center
+  const testEvent = {
+    clientX: annotationLayer.getBoundingClientRect().left + centerX,
+    clientY: annotationLayer.getBoundingClientRect().top + centerY,
+  };
+
+  const rect = annotationLayer.getBoundingClientRect();
+  const layerX = testEvent.clientX - rect.left;
+  const layerY = testEvent.clientY - rect.top;
+
+  addDateAnnotation(layerX, layerY);
+  console.log("Test annotation added");
 };
