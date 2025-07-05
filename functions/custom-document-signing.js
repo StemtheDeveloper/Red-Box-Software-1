@@ -434,25 +434,45 @@ exports.getDocumentPdf = onCall(
 
       // Get the PDF data from Firestore document
       try {
-        const fileData = documentData.fileData;
-        if (!fileData || !fileData.originalData) {
-          throw new Error("PDF data not found in document");
+        // Check if there's a signed version available first
+        let pdfData, fileName;
+
+        if (
+          documentData.signedDocumentData &&
+          documentData.signedDocumentData.data
+        ) {
+          // Return the signed PDF if available
+          pdfData = documentData.signedDocumentData.data;
+          fileName = documentData.signedDocumentData.fileName;
+
+          logger.info("Signed PDF retrieved successfully", {
+            documentId,
+            fileName: fileName,
+            accessorEmail,
+            fileSize: documentData.signedDocumentData.fileSize,
+          });
+        } else {
+          // Fall back to original PDF
+          const fileData = documentData.fileData;
+          if (!fileData || !fileData.originalData) {
+            throw new Error("PDF data not found in document");
+          }
+
+          pdfData = fileData.originalData;
+          fileName = documentData.fileName;
+
+          logger.info("Original PDF retrieved successfully", {
+            documentId,
+            fileName: fileName,
+            accessorEmail,
+            fileSize: fileData.fileSize,
+          });
         }
-
-        // Return the stored base64 data directly
-        const base64Data = fileData.originalData;
-
-        logger.info("PDF retrieved successfully", {
-          documentId,
-          fileName: documentData.fileName,
-          accessorEmail,
-          fileSize: fileData.fileSize,
-        });
 
         return {
           success: true,
-          pdfData: base64Data,
-          fileName: documentData.fileName,
+          pdfData: pdfData,
+          fileName: fileName,
           contentType: "application/pdf",
         };
       } catch (dataError) {
@@ -557,6 +577,18 @@ exports.addSignature = onCall(
       const updatedSigners = [...documentData.signers];
       const currentTimestamp = admin.firestore.Timestamp.now();
 
+      logger.info("Signature submission data received", {
+        documentId,
+        signerId,
+        hasSignatureData: !!signatureData,
+        signatureType,
+        annotationsCount: request.data.annotations
+          ? request.data.annotations.length
+          : 0,
+        documentMetadata: request.data.documentMetadata,
+        annotations: request.data.annotations,
+      });
+
       updatedSigners[signerIndex] = {
         ...signer,
         status: "completed",
@@ -598,15 +630,15 @@ exports.addSignature = onCall(
 
       await documentRef.update(updateData);
 
-      // If all signatures collected, generate final signed PDF
-      if (allCompleted) {
-        await generateSignedPDF(
-          documentId,
-          documentData.fileName,
-          updatedSigners
-        );
+      // Always regenerate the PDF with current signatures to show progress
+      await generateSignedPDF(
+        documentId,
+        documentData.fileName,
+        updatedSigners
+      );
 
-        // Send completion notifications
+      // If all signatures collected, send completion notifications
+      if (allCompleted) {
         await sendCompletionNotifications(documentId, {
           ...documentData,
           signers: updatedSigners,
@@ -753,6 +785,14 @@ async function generateSignedPDF(documentId, originalFileName, signers) {
     for (let i = 0; i < signers.length; i++) {
       const signer = signers[i];
       if (signer.status === "completed") {
+        logger.info("Processing completed signer for PDF generation", {
+          signerEmail: signer.email,
+          hasAnnotations: !!(
+            signer.annotations && signer.annotations.length > 0
+          ),
+          annotationCount: signer.annotations ? signer.annotations.length : 0,
+        });
+
         // Use positioned annotations if available, otherwise fallback to old method
         if (signer.annotations && signer.annotations.length > 0) {
           await addPositionedAnnotations(
@@ -763,6 +803,9 @@ async function generateSignedPDF(documentId, originalFileName, signers) {
           );
         } else if (signer.signatureData) {
           // Fallback to old positioning method
+          logger.info("Using legacy signature positioning for signer", {
+            signerEmail: signer.email,
+          });
           await addLegacySignature(pdfDoc, firstPage, signer, i, height);
         }
       }
@@ -811,6 +854,11 @@ async function addPositionedAnnotations(
   const { StandardFonts, rgb } = PDFLib;
 
   try {
+    logger.info("Starting addPositionedAnnotations", {
+      annotationsCount: annotations.length,
+      documentMetadata: documentMetadata,
+    });
+
     // Group annotations by page
     const annotationsByPage = {};
     annotations.forEach((annotation) => {
@@ -819,6 +867,11 @@ async function addPositionedAnnotations(
         annotationsByPage[pageIndex] = [];
       }
       annotationsByPage[pageIndex].push(annotation);
+    });
+
+    logger.info("Annotations grouped by page", {
+      pageGroups: Object.keys(annotationsByPage),
+      totalPages: pages.length,
     });
 
     // Process each page
@@ -830,16 +883,74 @@ async function addPositionedAnnotations(
         const page = pages[pageNum];
         const { width, height } = page.getSize();
 
-        // Calculate scaling factors
-        const canvasWidth = documentMetadata?.canvasWidth || 600;
-        const canvasHeight = documentMetadata?.canvasHeight || 800;
-        const scaleX = width / canvasWidth;
-        const scaleY = height / canvasHeight;
+        // Calculate scaling factors from the original PDF dimensions to browser display
+        // The frontend now provides both canvas dimensions (for display) and original PDF dimensions
+        const firstAnnotation = pageAnnotations[0];
+
+        // Use original PDF dimensions if available, otherwise fall back to canvas dimensions
+        const originalPdfWidth = firstAnnotation.originalPdfWidth || width;
+        const originalPdfHeight = firstAnnotation.originalPdfHeight || height;
+        const canvasWidth =
+          firstAnnotation.canvasWidth || documentMetadata?.canvasWidth || 600;
+        const canvasHeight =
+          firstAnnotation.canvasHeight || documentMetadata?.canvasHeight || 800;
+
+        // For coordinate conversion, we need to convert from the canvas display coordinates
+        // to the original PDF coordinate space, then scale to the current PDF size if different
+
+        // Step 1: Convert from canvas display coordinates to original PDF coordinates
+        const canvasToOriginalScaleX = originalPdfWidth / canvasWidth;
+        const canvasToOriginalScaleY = originalPdfHeight / canvasHeight;
+
+        // Step 2: If the current PDF page size differs from original, scale accordingly
+        const finalScaleX = width / originalPdfWidth;
+        const finalScaleY = height / originalPdfHeight;
+
+        logger.info("PDF annotation coordinate conversion", {
+          pageIndex,
+          currentPdfSize: { width, height },
+          originalPdfSize: {
+            width: originalPdfWidth,
+            height: originalPdfHeight,
+          },
+          canvasSize: { width: canvasWidth, height: canvasHeight },
+          canvasToOriginalScale: {
+            x: canvasToOriginalScaleX,
+            y: canvasToOriginalScaleY,
+          },
+          finalScale: { x: finalScaleX, y: finalScaleY },
+        });
 
         for (const annotation of pageAnnotations) {
-          // Convert coordinates (PDF coordinate system has origin at bottom-left)
-          const pdfX = annotation.x * scaleX;
-          const pdfY = height - annotation.y * scaleY; // Flip Y coordinate
+          // Convert coordinates from canvas display space to PDF space
+          // Step 1: Scale from canvas coordinates to original PDF coordinates
+          const originalPdfX = annotation.x * canvasToOriginalScaleX;
+          const originalPdfY = annotation.y * canvasToOriginalScaleY;
+
+          // Step 2: Scale to current PDF size if different from original
+          const scaledX = originalPdfX * finalScaleX;
+          const scaledY = originalPdfY * finalScaleY;
+
+          // Step 3: Convert from canvas coordinate system (top-left origin, Y down)
+          //         to PDF coordinate system (bottom-left origin, Y up)
+          const pdfX = scaledX;
+          const pdfY = height - scaledY; // Flip Y coordinate
+
+          logger.info("Enhanced coordinate conversion", {
+            annotationType: annotation.type,
+            canvasCoords: { x: annotation.x, y: annotation.y },
+            originalPdfCoords: { x: originalPdfX, y: originalPdfY },
+            scaledCoords: { x: scaledX, y: scaledY },
+            finalPdfCoords: { x: pdfX, y: pdfY },
+            dimensions: {
+              canvas: { width: canvasWidth, height: canvasHeight },
+              originalPdf: {
+                width: originalPdfWidth,
+                height: originalPdfHeight,
+              },
+              currentPdf: { width, height },
+            },
+          });
 
           try {
             switch (annotation.type) {
@@ -850,8 +961,8 @@ async function addPositionedAnnotations(
                   annotation,
                   pdfX,
                   pdfY,
-                  scaleX,
-                  scaleY
+                  canvasToOriginalScaleX * finalScaleX,
+                  canvasToOriginalScaleY * finalScaleY
                 );
                 break;
               case "text":
@@ -867,6 +978,7 @@ async function addPositionedAnnotations(
             logger.warn("Failed to add annotation", {
               type: annotation.type,
               error: annotationError.message,
+              coordinates: { x: pdfX, y: pdfY },
             });
           }
         }
@@ -906,18 +1018,41 @@ async function addSignatureAnnotation(
       signatureImage = await pdfDoc.embedPng(signatureImageBuffer);
     } catch (pngError) {
       // Try as JPEG if PNG fails
-      signatureImage = await pdfDoc.embedJpg(signatureImageBuffer);
+      try {
+        signatureImage = await pdfDoc.embedJpg(signatureImageBuffer);
+      } catch (jpgError) {
+        logger.warn("Failed to embed signature as PNG or JPG", {
+          pngError: pngError.message,
+          jpgError: jpgError.message,
+        });
+        throw new Error("Unable to embed signature image");
+      }
     }
 
-    // Scale the signature appropriately
-    const signatureWidth = 100 * scaleX;
-    const signatureHeight = 50 * scaleY;
+    // Calculate appropriate signature dimensions
+    // Use proportional sizing based on the scale factors
+    const baseWidth = 120;
+    const baseHeight = 60;
+    const signatureWidth = baseWidth * Math.min(scaleX, scaleY); // Use minimum scale to maintain aspect ratio
+    const signatureHeight = baseHeight * Math.min(scaleX, scaleY);
+
+    // Position signature so the click point is at the center-left of the signature
+    // This provides intuitive placement for most signature scenarios
+    const adjustedX = x - signatureWidth * 0.1; // Slightly left of click point
+    const adjustedY = y - signatureHeight * 0.5; // Center vertically around click point
 
     page.drawImage(signatureImage, {
-      x: x,
-      y: y - signatureHeight, // Adjust for image height
+      x: adjustedX,
+      y: adjustedY,
       width: signatureWidth,
       height: signatureHeight,
+    });
+
+    logger.info("Signature annotation added", {
+      originalCoords: { x, y },
+      adjustedCoords: { x: adjustedX, y: adjustedY },
+      dimensions: { width: signatureWidth, height: signatureHeight },
+      scaleFactors: { scaleX, scaleY },
     });
   } catch (error) {
     logger.warn("Failed to embed signature image", { error: error.message });
@@ -935,12 +1070,24 @@ async function addTextAnnotation(pdfDoc, page, annotation, x, y) {
     const fontSize = annotation.fontSize ? parseInt(annotation.fontSize) : 14;
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
+    // Position text so click point is at the beginning of the text baseline
+    // This provides intuitive text placement
+    const adjustedX = x;
+    const adjustedY = y - fontSize * 0.2; // Slight adjustment for better visual alignment
+
     page.drawText(annotation.data, {
-      x: x,
-      y: y,
+      x: adjustedX,
+      y: adjustedY,
       size: fontSize,
       font: font,
       color: rgb(0, 0, 0),
+    });
+
+    logger.info("Text annotation added", {
+      text: annotation.data,
+      originalCoords: { x, y },
+      adjustedCoords: { x: adjustedX, y: adjustedY },
+      fontSize: fontSize,
     });
   } catch (error) {
     logger.warn("Failed to add text annotation", { error: error.message });
@@ -956,13 +1103,25 @@ async function addDateAnnotation(pdfDoc, page, annotation, x, y) {
 
   try {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontSize = 12;
+
+    // Position date so click point is at the beginning of the text baseline
+    const adjustedX = x;
+    const adjustedY = y - fontSize * 0.2; // Slight adjustment for better visual alignment
 
     page.drawText(annotation.data, {
-      x: x,
-      y: y,
-      size: 12,
+      x: adjustedX,
+      y: adjustedY,
+      size: fontSize,
       font: font,
       color: rgb(0, 0, 0),
+    });
+
+    logger.info("Date annotation added", {
+      date: annotation.data,
+      originalCoords: { x, y },
+      adjustedCoords: { x: adjustedX, y: adjustedY },
+      fontSize: fontSize,
     });
   } catch (error) {
     logger.warn("Failed to add date annotation", { error: error.message });

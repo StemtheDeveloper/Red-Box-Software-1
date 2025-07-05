@@ -70,6 +70,9 @@ let isDrawing = false;
 let signatureCtx = null;
 let pendingAnnotation = null;
 
+// Store original PDF page dimensions for accurate coordinate conversion
+let originalPdfDimensions = { width: 0, height: 0 };
+
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
   // Initialize signature storage first
@@ -246,6 +249,15 @@ async function renderPage(pageNumber) {
   try {
     console.log("Rendering page:", pageNumber);
     const page = await pdfDoc.getPage(pageNumber);
+
+    // Get original PDF page dimensions (at scale 1.0) for accurate coordinate conversion
+    const originalViewport = page.getViewport({ scale: 1.0 });
+    originalPdfDimensions = {
+      width: originalViewport.width,
+      height: originalViewport.height,
+    };
+
+    // Get scaled viewport for rendering
     const viewport = page.getViewport({ scale });
 
     const canvas = pdfCanvas;
@@ -253,7 +265,12 @@ async function renderPage(pageNumber) {
     canvas.height = viewport.height;
     canvas.width = viewport.width;
 
-    console.log("Canvas dimensions:", canvas.width, "x", canvas.height);
+    console.log("PDF Dimensions:", {
+      original: originalPdfDimensions,
+      scaled: { width: viewport.width, height: viewport.height },
+      scale: scale,
+      canvas: { width: canvas.width, height: canvas.height },
+    });
 
     const renderContext = {
       canvasContext: context,
@@ -455,13 +472,45 @@ function handleAnnotationClick(e) {
     return;
   }
 
+  // Get click coordinates relative to the annotation layer
   const rect = annotationLayer.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  const layerX = e.clientX - rect.left;
+  const layerY = e.clientY - rect.top;
 
-  console.log("Click position:", { x, y, page: currentPage });
+  // Get the current page viewport info for proper coordinate conversion
+  let pdfPageWidth = pdfCanvas.width;
+  let pdfPageHeight = pdfCanvas.height;
+  let pdfViewportScale = scale;
 
-  pendingAnnotation = { x, y, page: currentPage };
+  // Store comprehensive positioning data
+  pendingAnnotation = {
+    x: layerX,
+    y: layerY,
+    page: currentPage,
+    // Additional data for precise coordinate conversion
+    canvasWidth: pdfCanvas.width,
+    canvasHeight: pdfCanvas.height,
+    scale: scale,
+    layerRect: {
+      width: rect.width,
+      height: rect.height,
+    },
+    // Include original PDF dimensions for accurate coordinate conversion
+    originalPdfWidth: originalPdfDimensions
+      ? originalPdfDimensions.width
+      : pdfCanvas.width,
+    originalPdfHeight: originalPdfDimensions
+      ? originalPdfDimensions.height
+      : pdfCanvas.height,
+  };
+
+  console.log("Enhanced click position:", {
+    layerCoords: { x: layerX, y: layerY },
+    page: currentPage,
+    canvas: { width: pdfCanvas.width, height: pdfCanvas.height },
+    scale: scale,
+    layerRect: { width: rect.width, height: rect.height },
+  });
 
   switch (currentTool) {
     case "signature":
@@ -475,10 +524,10 @@ function handleAnnotationClick(e) {
       break;
     case "date":
       console.log("Adding date annotation");
-      addDateAnnotation(x, y);
+      addDateAnnotation(layerX, layerY);
       break;
     default:
-      console.warn("Unknown tool:", currentTool);
+      console.log("Unknown tool:", currentTool);
   }
 }
 
@@ -528,6 +577,14 @@ function applySignature() {
       x: pendingAnnotation.x,
       y: pendingAnnotation.y,
       page: pendingAnnotation.page,
+      // Include enhanced positioning data for accurate coordinate conversion
+      canvasWidth: pendingAnnotation.canvasWidth,
+      canvasHeight: pendingAnnotation.canvasHeight,
+      scale: pendingAnnotation.scale,
+      layerRect: pendingAnnotation.layerRect,
+      // Include original PDF dimensions for accurate coordinate conversion
+      originalPdfWidth: pendingAnnotation.originalPdfWidth,
+      originalPdfHeight: pendingAnnotation.originalPdfHeight,
     });
 
     renderAnnotations();
@@ -553,6 +610,14 @@ function applyText() {
       x: pendingAnnotation.x,
       y: pendingAnnotation.y,
       page: pendingAnnotation.page,
+      // Include enhanced positioning data for accurate coordinate conversion
+      canvasWidth: pendingAnnotation.canvasWidth,
+      canvasHeight: pendingAnnotation.canvasHeight,
+      scale: pendingAnnotation.scale,
+      layerRect: pendingAnnotation.layerRect,
+      // Include original PDF dimensions for accurate coordinate conversion
+      originalPdfWidth: pendingAnnotation.originalPdfWidth,
+      originalPdfHeight: pendingAnnotation.originalPdfHeight,
     });
 
     renderAnnotations();
@@ -570,6 +635,21 @@ function addDateAnnotation(x, y) {
     x: x,
     y: y,
     page: currentPage,
+    // Include enhanced positioning data for accurate coordinate conversion
+    canvasWidth: pdfCanvas.width,
+    canvasHeight: pdfCanvas.height,
+    scale: scale,
+    layerRect: {
+      width: annotationLayer.getBoundingClientRect().width,
+      height: annotationLayer.getBoundingClientRect().height,
+    },
+    // Include original PDF dimensions for accurate coordinate conversion
+    originalPdfWidth: originalPdfDimensions
+      ? originalPdfDimensions.width
+      : pdfCanvas.width,
+    originalPdfHeight: originalPdfDimensions
+      ? originalPdfDimensions.height
+      : pdfCanvas.height,
   });
 
   renderAnnotations();
@@ -749,6 +829,8 @@ async function submitSignature() {
       timestamp: new Date().toISOString(),
     }));
 
+    console.log("Annotation data being sent:", annotationData);
+
     const addSignature = functions.httpsCallable("addSignature");
     const result = await addSignature({
       documentId: documentId,
@@ -760,6 +842,8 @@ async function submitSignature() {
       documentMetadata: {
         totalPages: pdfDoc ? pdfDoc.numPages : 1,
         currentScale: scale,
+        canvasWidth: pdfCanvas.width,
+        canvasHeight: pdfCanvas.height,
       },
     });
 
@@ -1134,6 +1218,39 @@ window.debugSigningSystem = function () {
   }
 };
 
+// Debug function to check annotation data before submission
+window.debugAnnotationData = function () {
+  console.log("=== ANNOTATION DEBUG INFO ===");
+  console.log("Current annotations:", annotations);
+  console.log("PDF Canvas dimensions:", {
+    width: pdfCanvas.width,
+    height: pdfCanvas.height,
+    scale: scale,
+  });
+  console.log("Current page:", currentPage);
+  console.log("Document data:", documentData);
+
+  if (annotations.length > 0) {
+    annotations.forEach((annotation, index) => {
+      console.log(`Annotation ${index}:`, {
+        type: annotation.type,
+        position: { x: annotation.x, y: annotation.y },
+        page: annotation.page,
+        dataLength: annotation.data ? annotation.data.length : 0,
+      });
+    });
+  } else {
+    console.log("No annotations found");
+  }
+
+  return {
+    annotations,
+    canvasDimensions: { width: pdfCanvas.width, height: pdfCanvas.height },
+    scale,
+    currentPage,
+  };
+};
+
 // Test annotation layer click
 window.testAnnotationClick = function () {
   if (!annotationLayer) {
@@ -1185,4 +1302,55 @@ window.previewAnnotationsOnPDF = function () {
   console.groupEnd();
 
   return annotationData;
+};
+
+// Test function to manually test signature submission with debug data
+window.testSignatureSubmission = async function () {
+  if (!documentData.currentSigner) {
+    console.error("No current signer found");
+    return;
+  }
+
+  if (annotations.length === 0) {
+    console.error("No annotations to submit");
+    return;
+  }
+
+  const testData = {
+    documentId: documentId,
+    signerId: documentData.currentSigner.id,
+    accessToken: accessToken,
+    signatureData: annotations.find((a) => a.type === "signature")?.data,
+    signatureType: "image",
+    annotations: annotations.map((annotation) => ({
+      type: annotation.type,
+      data: annotation.data,
+      x: annotation.x,
+      y: annotation.y,
+      page: annotation.page,
+      fontSize: annotation.fontSize || null,
+      canvasWidth: pdfCanvas.width,
+      canvasHeight: pdfCanvas.height,
+      scale: scale,
+      timestamp: new Date().toISOString(),
+    })),
+    documentMetadata: {
+      totalPages: pdfDoc ? pdfDoc.numPages : 1,
+      currentScale: scale,
+      canvasWidth: pdfCanvas.width,
+      canvasHeight: pdfCanvas.height,
+    },
+  };
+
+  console.log("Test signature data being sent:", testData);
+
+  try {
+    const addSignature = functions.httpsCallable("addSignature");
+    const result = await addSignature(testData);
+    console.log("Signature submission result:", result);
+    return result;
+  } catch (error) {
+    console.error("Signature submission error:", error);
+    return error;
+  }
 };
